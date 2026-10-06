@@ -1817,6 +1817,12 @@ function isDeferActive(atom, today = todayISO()) {
   return !!(atom && atom.deferUntil && today < atom.deferUntil);
 }
 
+// The lesson on which an active Defer ends and the atom is surfaced again, or null.
+function deferredLesson(atom) {
+  if (!isDeferActive(atom)) return null;
+  return sortedLessonDates().find(d => d >= atom.deferUntil) || null;
+}
+
 // Older data may contain "miss" (Missed) and "skip" (Skipped) retrieval records. Neither
 // outcome exists any more: they are kept in saved data but treated as if absent.
 function isLegacyNonEvent(r) {
@@ -2054,12 +2060,8 @@ function nextSuggestedDate(atom, options = {}) {
   if (atom.retrieve === "N" && sched.hasRealPass) return null;
   const dates = sortedLessonDates();
 
-  // An active Defer suppresses the current recommendation until the deferred lesson. The
-  // underlying schedule is untouched: once the Defer ends, the atom is due/overdue again
-  // from its unchanged date.
-  if (isDeferActive(atom)) {
-    return dates.find(d => d >= atom.deferUntil && d > sched.last_date) || null;
-  }
+  // Defer is not handled here: it only suppresses the recommendation in the views
+  // (see isDeferActive), so this always reports the underlying scheduled date.
 
   const gap = plannedGap(sched, ctx().settings);
   const target = addDays(sched.last_date, gap);
@@ -2090,9 +2092,6 @@ function noLessonAvailableNote(atom) {
   const sched = getAtomSchedulingState(atom);
   if (!sched.last_date) return null;
   if (atom.retrieve === "N" && sched.hasRealPass) return null;
-  if (isDeferActive(atom)) {
-    return `No lesson in the calendar on or after ${formatDateNice(atom.deferUntil)}`;
-  }
   const target = addDays(sched.last_date, plannedGap(sched, ctx().settings));
   return `No lesson in the calendar after ${formatDateNice(target)}`;
 }
@@ -2231,7 +2230,7 @@ function todaysSchedule(isoDate) {
     }
 
     const next = nextSuggestedDate(atom);
-    if (!next || next > isoDate) continue;
+    if (!next || next > isoDate || isDeferActive(atom, isoDate)) continue;
 
     const hasPassedSinceAnchor = sched.history.some(r => r.outcome === "pass");
     retrievals.push({
@@ -2658,7 +2657,7 @@ function renderCoverage() {
     const schedulerHighlight = status === "scheduled" && isPlannedRetrieval(atom);
     const schedulerClass = schedulerHighlight ? "scheduler-due" : "";
     // Name the lesson the scheduler will actually use, which differs if the Defer lesson was removed.
-    const deferTitle = deferActive ? `Deferred until ${formatDateNice(next || atom.deferUntil)}` : null;
+    const deferTitle = deferActive ? `Deferred until ${formatDateNice(deferredLesson(atom) || atom.deferUntil)}` : null;
     const title = schedulerHighlight
       ? `Retrieve ${planningHorizon === "next-lesson" ? "next lesson" : "today"} · click for atom history and Defer`
       : 'Click for atom history';
@@ -2855,8 +2854,8 @@ function openAtomHistory(atomId) {
     lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Ideal retrieval</div>`);
     if (idealDate) {
       lines.push(`<div style="font-weight:500;">${formatDateNice(idealDate)}</div>`);
-      if (scheduledDate && isDeferActive(atom)) {
-        lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Deferred until ${formatDateNice(scheduledDate)}</div>`);
+      if (isDeferActive(atom)) {
+        lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Deferred until ${formatDateNice(deferredLesson(atom) || atom.deferUntil)}</div>`);
       } else if (scheduledDate && scheduledDate !== idealDate) {
         lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Next lesson: ${formatDateNice(scheduledDate)}</div>`);
       }
