@@ -20,6 +20,7 @@
     --struggle-bg: #332211;
     --reteach: #f44336;
     --reteach-bg: #331111;
+    --unscheduled: #8a8a8a;
     --accent-bg: #1e293b;
     --warning-bg: #2d2516;
     --warning-text: #d6a34a;
@@ -363,7 +364,11 @@
   .badge.struggle { background: var(--struggle-bg); color: var(--struggle); }
   .badge.reteach { background: var(--reteach-bg); color: var(--reteach); }
   .badge.ad-hoc { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border-strong); }
-  .badge.miss { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border-strong); }
+  .badge.outcome-dot { display: inline-block; width: 14px; height: 14px; padding: 0; border-radius: 50%; vertical-align: middle; }
+  .badge.outcome-dot.pass { background: var(--pass); }
+  .badge.outcome-dot.struggle { background: var(--struggle); }
+  .badge.outcome-dot.reteach { background: var(--reteach); }
+  .badge.outcome-dot.ad-hoc { background: var(--unscheduled); border: none; }
   .badge.new { background: var(--accent-bg); color: var(--primary); }
   .badge.type-categorical { background: #eef4f8; color: #2c5f7f; }
   .badge.type-comparative { background: #f1eef8; color: #6c4f9b; }
@@ -415,8 +420,8 @@
   }
   .retrieval-row:last-child { margin-bottom: 0; }
   .retrieval-row.overdue {
-    border-left-color: var(--struggle);
-    background: linear-gradient(90deg, var(--warning-bg), var(--bg) 60%);
+    border-left-color: var(--text-muted);
+    background: var(--surface);
   }
   .retrieval-info .name {
     font-weight: 600;
@@ -478,38 +483,13 @@
     font-family: inherit;
     transition: all 0.15s;
   }
-  .retrieval-actions button.pass {
-    background: var(--pass-bg); color: var(--pass); border-color: var(--pass);
-  }
-  .retrieval-actions button.struggle {
-    background: var(--struggle-bg); color: var(--struggle); border-color: var(--struggle);
-  }
-  .retrieval-actions button.reteach {
-    background: var(--reteach-bg); color: var(--reteach); border-color: var(--reteach);
-  }
-  .retrieval-actions button.pass:hover,
-  .retrieval-actions button.pass.selected { background: #23452d; }
-  .retrieval-actions button.struggle:hover,
-  .retrieval-actions button.struggle.selected { background: #4a3017; }
-  .retrieval-actions button.reteach:hover,
-  .retrieval-actions button.reteach.selected { background: #4a1919; }
-  .retrieval-actions button.ad-hoc {
-    background: var(--accent-bg);
-    color: var(--primary);
-    border-color: var(--primary);
-    font-weight: 600;
-  }
-  .retrieval-actions button.ad-hoc:hover,
-  .retrieval-actions button.ad-hoc.selected {
-    background: #26384a;
-    color: var(--primary-hover);
-  }
-  .retrieval-actions button.miss:hover,
-  .retrieval-actions button.miss.selected,
-  .retrieval-actions button.skip:hover,
-  .retrieval-actions button.skip.selected {
-    background: var(--bg); color: var(--text); border-color: var(--border-strong);
-  }
+  .retrieval-actions button.outcome { min-width: 36px; min-height: 30px; padding: 0; border-color: transparent; }
+  .retrieval-actions button.outcome.pass { background: var(--pass); }
+  .retrieval-actions button.outcome.struggle { background: var(--struggle); }
+  .retrieval-actions button.outcome.reteach { background: var(--reteach); }
+  .retrieval-actions button.outcome.ad-hoc { background: var(--unscheduled); }
+  .retrieval-actions button.outcome:hover { filter: brightness(1.15); }
+  .retrieval-actions button.outcome.selected { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
   .empty-state {
     text-align: center;
     padding: 36px 20px;
@@ -731,12 +711,11 @@
   .cell-pass { background: var(--pass-bg); color: var(--pass); font-weight: 500; }
   .cell-struggle { background: var(--struggle-bg); color: var(--struggle); font-weight: 500; }
   .cell-reteach { background: var(--reteach-bg); color: var(--reteach); font-weight: 500; }
-  .cell-pending { background: var(--warning-bg); color: var(--struggle); }
+  .cell-pending { background: var(--surface); color: var(--text); font-weight: 700; box-shadow: inset 0 0 0 1px var(--text-muted); }
   .cell-projected { color: var(--text-muted); opacity: 0.65; }
-  .cell-missed { background: var(--bg); color: var(--text-muted); text-decoration: line-through; }
   .cell-superseded { background: var(--reteach-bg); color: var(--reteach); text-decoration: line-through; opacity: 0.85; }
   .cell-reteach-event { background: var(--reteach); color: #fff; font-weight: 700; }
-  .cell-skipped { background: var(--bg); color: var(--text-muted); font-weight: 600; }
+  .cell-skipped { background: var(--bg); color: var(--unscheduled); font-weight: 600; }
   /* Curriculum coverage table */
   .coverage-add-atoms-btn {
     background: var(--accent-bg);
@@ -828,7 +807,7 @@
     flex: 1 1 auto;
   }
   .coverage-table td.atom-name a:hover { color: var(--primary); }
-  .coverage-table td.atom-name a.skip-active {
+  .coverage-table td.atom-name a.defer-active {
     text-decoration-line: underline;
     text-decoration-style: dotted;
     text-decoration-color: var(--text-muted);
@@ -836,8 +815,10 @@
     text-underline-offset: 3px;
     cursor: help;
   }
-  .coverage-table td.atom-name a.scheduler-due { color: var(--warning-text); font-weight: 600; }
-  .coverage-table td.atom-name a.scheduler-due:hover { color: var(--warning-text); }
+  .coverage-table td.atom-name a.scheduler-due { color: var(--text); font-weight: 700; }
+  .coverage-table td.atom-name a.scheduler-due:hover { color: var(--primary); }
+  .coverage-table tr.due-row td { background: var(--border); }
+  .coverage-table tr.due-row td:first-child { box-shadow: inset 3px 0 0 var(--text); }
   .coverage-table td.count { width: 42px; }
   .coverage-table td.days { width: 72px; }
   .coverage-table td.action { width: 38px; padding-left: 2px; padding-right: 2px; }
@@ -878,47 +859,18 @@
   .record-retrieval-date { width: 150px; }
   .record-retrieval-outcomes { display: flex; gap: 8px; align-items: center; }
   .record-retrieval-outcomes button {
-    min-width: 44px;
-    min-height: 36px;
-    font-size: 17px;
+    min-width: 48px;
+    min-height: 40px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
   }
-  .record-retrieval-outcomes button.pass {
-    background: var(--pass-bg);
-    color: var(--pass);
-    border: 1px solid var(--pass);
-  }
-  .record-retrieval-outcomes button.struggle {
-    background: var(--struggle-bg);
-    color: var(--struggle);
-    border: 1px solid var(--struggle);
-  }
-  .record-retrieval-outcomes button.reteach {
-    background: var(--reteach-bg);
-    color: var(--reteach);
-    border: 1px solid var(--reteach);
-  }
-  .record-retrieval-outcomes button.ad-hoc {
-    min-width: 68px;
-    font-size: 12px;
-    font-weight: 600;
-    background: var(--accent-bg);
-    color: var(--primary);
-    border: 1px solid var(--primary);
-  }
-  .record-retrieval-outcomes button.pass:hover {
-    background: #23452d;
-  }
-  .record-retrieval-outcomes button.struggle:hover {
-    background: #4a3017;
-  }
-  .record-retrieval-outcomes button.reteach:hover {
-    background: #4a1919;
-  }
-  .record-retrieval-outcomes button.ad-hoc:hover {
-    background: #26384a;
-    color: var(--primary-hover);
-  }
-  .record-retrieval-skip { margin-top: -4px; align-self: flex-start; font-size: 12px; padding: 6px 10px; }
+  .record-retrieval-outcomes button.pass { background: var(--pass); }
+  .record-retrieval-outcomes button.struggle { background: var(--struggle); }
+  .record-retrieval-outcomes button.reteach { background: var(--reteach); }
+  .record-retrieval-outcomes button.ad-hoc { background: var(--unscheduled); }
+  .record-retrieval-outcomes button:hover { filter: brightness(1.15); }
+  .record-retrieval-outcomes button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
   .coverage-table td.date { min-width: 64px; }
   .coverage-table tr:last-child td { border-bottom: none; }
   .coverage-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
@@ -1182,7 +1134,7 @@ Share a quantity in a given ratio
   <section id="screen-schedule" class="screen">
     <div class="card">
       <h2>Schedule overview</h2>
-      <div class="subtitle">Every atom on every lesson date for the active class. Past retrievals show their outcome; future ones are projections assuming each subsequent retrieval passes.</div>
+      <div class="subtitle">Every atom on every lesson date for the active class. Past retrievals show their outcome; future ones are projections assuming each subsequent retrieval is green.</div>
       <div class="schedule-wrap" id="schedule-wrap">
         <div id="schedule-empty" style="padding: 36px 20px; text-align: center; color: var(--text-muted);">
           Add atoms and lesson dates to see the schedule.
@@ -1190,13 +1142,12 @@ Share a quantity in a given ratio
       </div>
       <div class="schedule-legend">
         <span><span class="swatch cell-I"></span>Initial instruction</span>
-        <span><span class="swatch cell-pass"></span>Passed</span>
-        <span><span class="swatch cell-struggle"></span>Struggled</span>
-        <span><span class="swatch cell-reteach-event"></span>Re-taught (reset point)</span>
-        <span><span class="swatch cell-superseded"></span>Superseded (before re-teach)</span>
-        <span><span class="swatch cell-missed"></span>Missed</span>
-        <span><span class="swatch cell-skipped"></span>Unscheduled retrieval</span>
-        <span><span class="swatch cell-pending"></span>Pending (next)</span>
+        <span><span class="swatch cell-pass"></span>Green: successful retrieval</span>
+        <span><span class="swatch cell-struggle"></span>Amber: retrieval not secure</span>
+        <span><span class="swatch cell-reteach-event"></span>Red: re-teach required (sequence restarts)</span>
+        <span><span class="swatch cell-superseded"></span>Earlier retrievals, before a red</span>
+        <span><span class="swatch cell-skipped"></span>Grey: unscheduled retrieval</span>
+        <span><span class="swatch cell-pending"></span>Due next</span>
         <span><span class="swatch cell-projected"></span>Projected</span>
       </div>
     </div>
@@ -1534,13 +1485,12 @@ Share a quantity in a given ratio
       <div>
         <label>Outcome</label>
         <div class="record-retrieval-outcomes">
-          <button class="btn ghost ad-hoc" data-record-modal-outcome="ad_hoc" title="Unscheduled retrieval — does not affect the scheduler" aria-label="unscheduled">unscheduled</button>
-          <button class="pass" data-record-modal-outcome="pass" title="Pass" aria-label="Pass">✓</button>
-          <button class="struggle" data-record-modal-outcome="struggle" title="Struggled" aria-label="Struggled">~</button>
-          <button class="reteach" data-record-modal-outcome="reteach" title="Re-teach" aria-label="Re-teach">✕</button>
+          <button type="button" class="pass" data-record-modal-outcome="pass" title="Green: successful retrieval" aria-label="Green: successful retrieval"></button>
+          <button type="button" class="struggle" data-record-modal-outcome="struggle" title="Amber: retrieval happened but wasn't secure" aria-label="Amber: retrieval happened but wasn't secure"></button>
+          <button type="button" class="reteach" data-record-modal-outcome="reteach" title="Red: re-teach required" aria-label="Red: re-teach required"></button>
+          <button type="button" class="ad-hoc" data-record-modal-outcome="ad_hoc" title="Grey: unscheduled retrieval (does not affect the schedule)" aria-label="Grey: unscheduled retrieval (does not affect the schedule)"></button>
         </div>
       </div>
-      <button class="btn ghost record-retrieval-skip" id="record-retrieval-skip" type="button">Skip for 1 week</button>
     </div>
   </div>
 </div>
@@ -1640,6 +1590,7 @@ function loadState() {
         if (typeof c.notes !== "string") c.notes = "";
         for (const atom of c.atoms) {
           if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
+          migrateLegacySkip(atom);
         }
       }
       if (parsed.classes.length === 0) return defaultState();
@@ -1657,6 +1608,7 @@ function loadState() {
     cls.notes = typeof parsed.notes === "string" ? parsed.notes : "";
     for (const atom of cls.atoms) {
       if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
+      migrateLegacySkip(atom);
     }
     return { classes: [cls], active_class_id: cls.id };
   } catch (e) {
@@ -1859,10 +1811,27 @@ function formatTimestampUK(ts) {
   return `${formatDateNice(toISO(d))} ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
-function isSkipActive(atom, today = todayISO()) {
-  if (!atom || !atom.skippedAt) return false;
-  const days = Math.round((fromISO(today) - fromISO(atom.skippedAt)) / 86400000);
-  return days >= 0 && days < 7;
+// Defer: a teacher's decision not to surface a due atom until a chosen lesson date.
+// It is stored as atom.deferUntil and never touches retrieval history or spacing.
+function isDeferActive(atom, today = todayISO()) {
+  return !!(atom && atom.deferUntil && today < atom.deferUntil);
+}
+
+// Older data may contain "miss" (Missed) and "skip" (Skipped) retrieval records. Neither
+// outcome exists any more: they are kept in saved data but treated as if absent.
+function isLegacyNonEvent(r) {
+  return r.outcome === "miss" || r.outcome === "skip";
+}
+
+// Older data stored a one-week skip as atom.skippedAt, active for seven days and returning
+// on the first lesson on or after skippedAt + 7. deferUntil = skippedAt + 7 behaves identically.
+function migrateLegacySkip(atom) {
+  if (!atom || !atom.skippedAt) return;
+  if (!atom.deferUntil) {
+    const until = addDays(atom.skippedAt, 7);
+    if (until > todayISO()) atom.deferUntil = until;
+  }
+  delete atom.skippedAt;
 }
 
 // ----- Scheduler engine -----
@@ -2085,29 +2054,21 @@ function nextSuggestedDate(atom, options = {}) {
   if (atom.retrieve === "N" && sched.hasRealPass) return null;
   const dates = sortedLessonDates();
 
-  // A manual one-week skip suppresses the current recommendation itself. The next
-  // scheduled lesson must be on or after the seven-day return date, rather than merely
-  // hiding the item in the UI. This leaves the underlying spacing history unchanged.
-  if (isSkipActive(atom)) {
-    const returnDate = addDays(atom.skippedAt, 7);
-    return dates.find(d => d >= returnDate && d > sched.last_date) || null;
+  // An active Defer suppresses the current recommendation until the deferred lesson. The
+  // underlying schedule is untouched: once the Defer ends, the atom is due/overdue again
+  // from its unchanged date.
+  if (isDeferActive(atom)) {
+    return dates.find(d => d >= atom.deferUntil && d > sched.last_date) || null;
   }
 
   const gap = plannedGap(sched, ctx().settings);
   const target = addDays(sched.last_date, gap);
-  // Determine the earliest possible next lesson: must be after last_date AND after any
-  // missed lesson dates (so a Missed click pushes the schedule forward to the next lesson).
-  const allEventDates = ctx().retrievals
-    .filter(r => r.atom_id === atom.id && r.outcome !== "ad_hoc")
-    .map(r => r.lesson_date)
-    .sort();
-  const latestEventDate = allEventDates.length > 0 ? allEventDates[allEventDates.length - 1] : null;
-  const earliestAllowed = (latestEventDate && latestEventDate > sched.last_date) ? latestEventDate : sched.last_date;
   // Snap backwards only when the resulting lesson gap is not too short relative to
   // the intended interval. Otherwise, skip the early lesson and roll forwards.
+  // (Historical Missed records no longer push the schedule forward; they are ignored.)
   const minAcceptableGap = Math.ceil(gap * MIN_SNAP_GAP_FRACTION);
   const eligible = dates.filter(d => {
-    if (!(d > earliestAllowed && d <= target)) return false;
+    if (!(d > sched.last_date && d <= target)) return false;
     const actualGap = daysBetween(sched.last_date, d);
     return actualGap >= minAcceptableGap;
   });
@@ -2117,7 +2078,7 @@ function nextSuggestedDate(atom, options = {}) {
   // recommendation can never break the minimum-gap rule. Any lesson that satisfies the rule
   // is already in `eligible`; if the calendar has no lesson after the target there is no
   // suitable date, so return null.
-  return dates.find(d => d > target && d > earliestAllowed) || null;
+  return dates.find(d => d > target && d > sched.last_date) || null;
 }
 
 // When a scheduled atom is due another retrieval but nextSuggestedDate finds no lesson to
@@ -2129,17 +2090,11 @@ function noLessonAvailableNote(atom) {
   const sched = getAtomSchedulingState(atom);
   if (!sched.last_date) return null;
   if (atom.retrieve === "N" && sched.hasRealPass) return null;
-  if (isSkipActive(atom)) {
-    return `No lesson in the calendar on or after ${formatDateNice(addDays(atom.skippedAt, 7))}`;
+  if (isDeferActive(atom)) {
+    return `No lesson in the calendar on or after ${formatDateNice(atom.deferUntil)}`;
   }
   const target = addDays(sched.last_date, plannedGap(sched, ctx().settings));
-  const eventDates = ctx().retrievals
-    .filter(r => r.atom_id === atom.id && r.outcome !== "ad_hoc")
-    .map(r => r.lesson_date)
-    .sort();
-  const latestEventDate = eventDates.length > 0 ? eventDates[eventDates.length - 1] : null;
-  const after = latestEventDate && latestEventDate > target ? latestEventDate : target;
-  return `No lesson in the calendar after ${formatDateNice(after)}`;
+  return `No lesson in the calendar after ${formatDateNice(target)}`;
 }
 
 // Build the full event timeline for an atom: initial instruction, recorded retrievals,
@@ -2162,23 +2117,17 @@ function fullScheduleForAtom(atom, maxProjections = 10) {
   const allMyRetrievals = atomRetrievals(atom.id);
   let currentSeqN = 0; // numbering of the CURRENT sequence (resets at the latest reteach)
   for (const r of allMyRetrievals) {
+    // Historical Missed/Skipped records are not retrievals and are not shown.
+    if (isLegacyNonEvent(r)) continue;
     const isPreReteach = r.lesson_date < sched.anchorDate;
     const isTheReteach = (r.outcome === "reteach" && r.lesson_date === sched.anchorDate);
     if (isPreReteach) {
-      if (r.outcome === "miss") {
-        events.push({ date: r.lesson_date, type: 'M', n: null, status: 'superseded', outcome: 'miss' });
-      } else {
-        events.push({ date: r.lesson_date, type: 'R', n: null, status: 'superseded', outcome: r.outcome });
-      }
+      events.push({ date: r.lesson_date, type: 'R', n: null, status: 'superseded', outcome: r.outcome });
     } else if (isTheReteach) {
       events.push({ date: r.lesson_date, type: 'reteach', n: 0, status: 'recorded', outcome: 'reteach' });
       currentSeqN = 0;
     } else {
-      if (r.outcome === "miss") {
-        events.push({ date: r.lesson_date, type: 'M', n: null, status: 'missed', outcome: 'miss' });
-      } else if (r.outcome === "skip") {
-        events.push({ date: r.lesson_date, type: 'S', n: null, status: 'skipped', outcome: 'skip' });
-      } else if (r.outcome === "ad_hoc") {
+      if (r.outcome === "ad_hoc") {
         events.push({ date: r.lesson_date, type: 'A', n: null, status: 'ad_hoc', outcome: 'ad_hoc' });
       } else {
         currentSeqN++;
@@ -2191,22 +2140,13 @@ function fullScheduleForAtom(atom, maxProjections = 10) {
   if (atom.retrieve === "N" && sched.hasPassed) return events;
 
   // Initial gap for the FIRST projection (pending) uses the current scheduling state.
-  const allEventDates = ctx().retrievals
-    .filter(r => r.atom_id === atom.id && r.outcome !== "ad_hoc")
-    .map(r => r.lesson_date)
-    .sort();
-  const latestEventDate = allEventDates.length
-    ? allEventDates[allEventDates.length - 1]
-    : null;
-  let last_date = (latestEventDate && latestEventDate > sched.last_date)
-    ? latestEventDate
-    : sched.last_date;
+  let last_date = sched.last_date;
   let n = sched.history.length + 1;
   let firstGap = plannedGap(sched, settings);
   const dates = sortedLessonDates();
   let isFirstProjection = true;
   let lastUsedGap = firstGap;
-  const skipActive = isSkipActive(atom);
+  const deferActive = isDeferActive(atom);
 
   for (let i = 0; i < maxProjections; i++) {
     const gap = isFirstProjection ? firstGap : Math.min(Math.round(lastUsedGap * settings.multiplier), settings.interval_cap);
@@ -2220,10 +2160,9 @@ function fullScheduleForAtom(atom, maxProjections = 10) {
     // If no lesson inside the acceptable window exists, roll forward to the first lesson
     // after the target (never to an earlier lesson). No such lesson ends the projection.
     let candidate = eligible.length > 0 ? eligible[eligible.length - 1] : dates.find(d => d > target);
-    // An active one-week skip places the pending retrieval exactly as nextSuggestedDate does.
-    if (isFirstProjection && skipActive) {
-      const returnDate = addDays(atom.skippedAt, 7);
-      candidate = dates.find(d => d >= returnDate && d > sched.last_date);
+    // An active Defer places the pending retrieval exactly as nextSuggestedDate does.
+    if (isFirstProjection && deferActive) {
+      candidate = dates.find(d => d >= atom.deferUntil && d > sched.last_date);
     }
     if (!candidate) break;
     events.push({
@@ -2252,7 +2191,7 @@ function todaysSchedule(isoDate) {
     if (atomStatus(atom) !== "scheduled") continue;
     if (!atom.initial_instruction_date) continue;
     const sched = getAtomSchedulingState(atom);
-    const onDate = ctx().retrievals.find(r => r.atom_id === atom.id && r.lesson_date === isoDate);
+    const onDate = ctx().retrievals.find(r => r.atom_id === atom.id && r.lesson_date === isoDate && !isLegacyNonEvent(r));
 
     // Show in Initial Instruction whenever isoDate is the atom's original instruction date
     // OR its current (post-reteach) anchor. This keeps the historical "first taught here"
@@ -2264,9 +2203,9 @@ function todaysSchedule(isoDate) {
     }
 
     if (onDate) {
-      if (onDate.outcome === "miss" || onDate.outcome === "skip" || onDate.outcome === "ad_hoc") {
-        // Misses, skips and unscheduled retrievals are excluded from sched.history. Unscheduled retrievals
-        // remain visible on the date they were recorded but do not affect scheduling.
+      if (onDate.outcome === "ad_hoc") {
+        // Unscheduled retrievals are excluded from sched.history. They remain visible on the
+        // date they were recorded but do not affect scheduling.
         retrievals.push({
           atom,
           scheduled_for: isoDate,
@@ -2321,6 +2260,14 @@ function todaysSchedule(isoDate) {
   return { retrievals, initial_instructions };
 }
 
+// Teacher-facing names for the four recorded outcomes. The stored values are unchanged.
+const OUTCOME_LABELS = {
+  pass: "Green: successful retrieval",
+  struggle: "Amber: retrieval happened but wasn't secure",
+  reteach: "Red: re-teach required",
+  ad_hoc: "Grey: unscheduled retrieval"
+};
+
 function recordRetrieval(atom_id, lesson_date, outcome) {
   const c = ctx();
   if (!lesson_date || !outcome) return false;
@@ -2328,15 +2275,9 @@ function recordRetrieval(atom_id, lesson_date, outcome) {
   // There can be only one retrieval record for an atom on a given date. If one
   // already exists, make any change explicit rather than silently overwriting it.
   const existing = c.retrievals.find(r => r.atom_id === atom_id && r.lesson_date === lesson_date);
-  if (existing && existing.outcome !== outcome) {
-    const outcomeLabels = {
-      pass: "✓ Pass",
-      struggle: "~ Struggled",
-      reteach: "✕ Re-teach",
-      ad_hoc: "unscheduled",
-      miss: "Missed",
-      skip: "Skipped"
-    };
+  // A historical Missed/Skipped record is not a retrieval, so it is replaced without asking.
+  if (existing && existing.outcome !== outcome && !isLegacyNonEvent(existing)) {
+    const outcomeLabels = OUTCOME_LABELS;
     const atom = c.atoms.find(a => a.id === atom_id);
     const atomName = atom ? atom.name : "this atom";
     const dateLabel = formatDateNice(lesson_date) || lesson_date;
@@ -2353,8 +2294,8 @@ function recordRetrieval(atom_id, lesson_date, outcome) {
   c.retrievals = c.retrievals.filter(r => !(r.atom_id === atom_id && r.lesson_date === lesson_date));
   c.retrievals.push({ atom_id, lesson_date, outcome });
   const recordedAtom = c.atoms.find(a => a.id === atom_id);
-  // An unscheduled retrieval is outside the spacing programme, so it must not cancel an active skip.
-  if (outcome !== "ad_hoc" && recordedAtom && recordedAtom.skippedAt) delete recordedAtom.skippedAt;
+  // An unscheduled retrieval is outside the spacing programme, so it must not cancel an active Defer.
+  if (outcome !== "ad_hoc" && recordedAtom && recordedAtom.deferUntil) delete recordedAtom.deferUntil;
   // The original first-taught date is preserved. The current scheduling anchor is
   // computed from the most recent re-teach in getAtomSchedulingState.
   saveState();
@@ -2384,12 +2325,6 @@ function openRecordRetrieval(atomId) {
   dateInput.min = atom.initial_instruction_date || "";
   dateInput.max = todayISO();
   document.getElementById("record-retrieval-sub").textContent = atom.name;
-  const skipButton = document.getElementById("record-retrieval-skip");
-  if (skipButton) {
-    const next = atomStatus(atom) === "scheduled" ? nextSuggestedDate(atom) : null;
-    const due = !!next && next <= todayISO();
-    skipButton.style.display = due && !isSkipActive(atom) ? "inline-flex" : "none";
-  }
   document.getElementById("record-retrieval-modal").classList.add("open");
   dateInput.focus();
 }
@@ -2399,16 +2334,28 @@ function closeRecordRetrieval() {
   document.getElementById("record-retrieval-modal").classList.remove("open");
 }
 
-function skipRetrievalForWeek(atomId) {
-  const atom = ctx().atoms.find(a => a.id === atomId);
-  if (!atom) return;
-  const today = todayISO();
+// Defer is only offered for an atom that is due or overdue today (and not already deferred).
+function canDefer(atom) {
+  if (!atom || atomStatus(atom) !== "scheduled" || isDeferActive(atom)) return false;
   const next = nextSuggestedDate(atom);
-  if (!next || next > today) return;
-  atom.skippedAt = today;
+  return !!next && next <= todayISO();
+}
+
+// The first class lesson on or after today + the given number of weeks, or null.
+function deferLessonForWeeks(weeks) {
+  const from = addDays(todayISO(), 7 * weeks);
+  return sortedLessonDates().find(d => d >= from) || null;
+}
+
+function deferAtom(atomId, untilDate) {
+  const atom = ctx().atoms.find(a => a.id === atomId);
+  if (!canDefer(atom)) return false;
+  // The Defer date must be a future lesson date of this class.
+  if (!untilDate || untilDate <= todayISO() || !ctx().lesson_dates.includes(untilDate)) return false;
+  atom.deferUntil = untilDate;
   saveState();
-  closeRecordRetrieval();
   renderAll();
+  return true;
 }
 
 function deleteRetrieval(recordIndex) {
@@ -2628,8 +2575,8 @@ function renderCoverage() {
   const isPlannedRetrieval = atom => {
     if (atomStatus(atom) !== "scheduled" || !atom.initial_instruction_date || !planningDate) return false;
     const next = nextSuggestedDate(atom);
-    // Judge the skip on the lesson being planned for, so a skip that ends by then does not hide it.
-    return !!next && next <= planningDate && !isSkipActive(atom, planningDate);
+    // Judge the Defer on the lesson being planned for, so a Defer that ends by then does not hide it.
+    return !!next && next <= planningDate && !isDeferActive(atom, planningDate);
   };
 
   const visibleByStatus = c.atoms.filter(atom => {
@@ -2707,22 +2654,22 @@ function renderCoverage() {
   for (const item of sortedRows) {
     const { atom, total, last, daysSinceLast, status } = item;
     const next = status === "scheduled" ? nextSuggestedDate(atom) : null;
-    const skipActive = status === "scheduled" && isSkipActive(atom, today);
+    const deferActive = status === "scheduled" && isDeferActive(atom, today);
     const schedulerHighlight = status === "scheduled" && isPlannedRetrieval(atom);
     const schedulerClass = schedulerHighlight ? "scheduler-due" : "";
-    const skipTitle = skipActive ? `Due again ${formatDateNice(addDays(atom.skippedAt, 7))}` : null;
+    const deferTitle = deferActive ? `Deferred until ${formatDateNice(atom.deferUntil)}` : null;
     const title = schedulerHighlight
-      ? `Retrieve ${planningHorizon === "next-lesson" ? "next lesson" : "today"} · click for atom history`
+      ? `Retrieve ${planningHorizon === "next-lesson" ? "next lesson" : "today"} · click for atom history and Defer`
       : 'Click for atom history';
     const noLessonNote = status === "scheduled" && !next ? noLessonAvailableNote(atom) : null;
     const daysLabel = daysSinceLast == null ? "Never" : String(daysSinceLast);
     const taughtLabel = status === "historic" ? "Historic" : formatDateNice(item.taught);
     rows.push(`
-      <tr>
+      <tr${schedulerHighlight ? ' class="due-row"' : ''}>
         <td class="atom-name">
           <div class="atom-name-inner">
             <button class="btn ghost coverage-add" data-action="add-retrieval" data-atom-id="${atom.id}" title="Record a retrieval" aria-label="Record a retrieval">+</button>
-            <a href="#" class="${schedulerClass}${schedulerHighlight ? ' ' : ''}${skipActive ? 'skip-active' : ''}" data-atom-id="${atom.id}" title="${escapeHtml(skipTitle || title)}">${escapeHtml(atom.name)}</a>
+            <a href="#" class="${schedulerClass}${schedulerHighlight ? ' ' : ''}${deferActive ? 'defer-active' : ''}" data-atom-id="${atom.id}" title="${escapeHtml(deferTitle || title)}">${escapeHtml(atom.name)}</a>
             ${noLessonNote ? `<span style="font-size:12px; color:var(--text-muted); flex:0 0 auto; white-space:nowrap;" title="Add lesson dates in Classes">${escapeHtml(noLessonNote)}</span>` : ""}
           </div>
         </td>
@@ -2822,39 +2769,27 @@ function renderSchedule() {
       } else if (e.type === 'reteach') {
         label = '↻';
         klass = 'cell-reteach-event';
-        title = `Re-taught (sequence reset) · ${d}`;
-      } else if (e.type === 'M' && e.status === 'superseded') {
-        label = '×';
-        klass = 'cell-superseded';
-        title = `Missed (before re-teach) · ${d}`;
-      } else if (e.type === 'M') {
-        label = '×';
-        klass = 'cell-missed';
-        title = `Missed · ${d} (didn't count as a retrieval)`;
-      } else if (e.type === 'S') {
-        label = 'SK';
-        klass = 'cell-skipped';
-        title = `Skipped · ${d} (teacher chose not to retrieve; schedule unchanged)`;
+        title = `${OUTCOME_LABELS.reteach} (sequence restarts) · ${d}`;
       } else if (e.type === 'A') {
         label = 'A';
         klass = 'cell-skipped';
-        title = `Unscheduled retrieval · ${d} (does not affect the scheduler)`;
+        title = `${OUTCOME_LABELS.ad_hoc} · ${d} (does not affect the schedule)`;
       } else if (e.status === 'superseded') {
         label = 'R';
         klass = 'cell-superseded';
-        title = `Earlier retrieval (${e.outcome}) — superseded by a later re-teach · ${d}`;
+        title = `Earlier retrieval (${OUTCOME_LABELS[e.outcome] || e.outcome}) — before a later red · ${d}`;
       } else if (e.status === 'recorded') {
         label = 'R' + e.n;
         klass = 'cell-' + e.outcome;
-        title = `Retrieval #${e.n} · ${e.outcome} · ${d}`;
+        title = `Retrieval #${e.n} · ${OUTCOME_LABELS[e.outcome] || e.outcome} · ${d}`;
       } else if (e.status === 'pending') {
         label = 'R' + e.n;
         klass = 'cell-pending';
-        title = `Retrieval #${e.n} · pending · ${d}`;
+        title = `Retrieval #${e.n} · due next · ${d}`;
       } else {
         label = 'R' + e.n;
         klass = 'cell-projected';
-        title = `Retrieval #${e.n} · projected (assumes pass) · ${d}`;
+        title = `Retrieval #${e.n} · projected (assumes green) · ${d}`;
       }
       parts.push(`<td class="${klass}" title="${title}">${label}</td>`);
     }
@@ -2919,7 +2854,9 @@ function openAtomHistory(atomId) {
     lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Ideal retrieval</div>`);
     if (idealDate) {
       lines.push(`<div style="font-weight:500;">${formatDateNice(idealDate)}</div>`);
-      if (scheduledDate && scheduledDate !== idealDate) {
+      if (scheduledDate && isDeferActive(atom)) {
+        lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Deferred until ${formatDateNice(scheduledDate)}</div>`);
+      } else if (scheduledDate && scheduledDate !== idealDate) {
         lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Next lesson: ${formatDateNice(scheduledDate)}</div>`);
       }
       const noLessonNote = scheduledDate ? null : noLessonAvailableNote(atom);
@@ -2951,6 +2888,25 @@ function openAtomHistory(atomId) {
   statusActions.push(`<button class="btn danger history-status-action" data-status-action="delete-atom" data-atom-id="${atom.id}">Delete atom</button>`);
   if (statusActions.length) lines.push(`<div class="history-status-actions">${statusActions.join('')}</div>`);
 
+  // Defer: a scheduling action, kept apart from the recorded outcomes. Offered only while due.
+  if (canDefer(atom)) {
+    const deferActions = [1, 2, 4].map(weeks => {
+      const until = deferLessonForWeeks(weeks);
+      const label = `Defer ${weeks} week${weeks === 1 ? "" : "s"}`;
+      return until
+        ? `<button class="btn ghost history-status-action" data-defer-until="${until}" data-atom-id="${atom.id}" title="Not surfaced again until the lesson on ${formatDateNice(until)}">${label}</button>`
+        : `<button class="btn ghost history-status-action" disabled title="No lesson in the calendar on or after ${formatDateNice(addDays(todayISO(), 7 * weeks))}">${label}</button>`;
+    });
+    const futureLessons = sortedLessonDates().filter(d => d > todayISO());
+    deferActions.push(`<select class="history-defer-choose" data-atom-id="${atom.id}" aria-label="Defer until a chosen lesson date" style="width:auto;" ${futureLessons.length ? "" : "disabled"}>
+      <option value="">Choose date…</option>
+      ${futureLessons.map(d => `<option value="${d}">${formatDateNice(d)}</option>`).join("")}
+    </select>`);
+    lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;">Defer</div>`);
+    lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:-8px;">Due now. Defer hides it until the chosen lesson; its history and schedule are unchanged.</div>`);
+    lines.push(`<div class="history-status-actions">${deferActions.join('')}</div>`);
+  }
+
   lines.push('<div style="font-size:12px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;">Retrievals</div>');
 
   if (actualEvents.length === 0) {
@@ -2962,19 +2918,12 @@ function openAtomHistory(atomId) {
 
     for (const r of actualEvents) {
       const isAdHoc = r.outcome === 'ad_hoc';
-      const outcomeLabel = r.outcome === 'pass' ? '✓'
-        : r.outcome === 'struggle' ? '~'
-        : r.outcome === 'ad_hoc' ? 'unscheduled'
-        : '✕';
-      const outcomeClass = r.outcome === 'reteach' ? 'reteach' : (isAdHoc ? 'ad-hoc' : r.outcome);
+      const outcomeClass = isAdHoc ? 'ad-hoc' : r.outcome;
       const recordIndex = ctx().retrievals.indexOf(r);
-      const isReteach = r.outcome === 'reteach';
       if (!isAdHoc) retrievalNumber++;
       const displayNumber = isAdHoc ? '' : retrievalNumber;
-      const tooltip = isAdHoc
-        ? 'Unscheduled retrieval — does not affect the scheduler'
-        : (isReteach ? 'Re-teach' : (r.outcome === 'pass' ? 'Pass' : r.outcome === 'struggle' ? 'Struggled' : 'Re-teach'));
-      lines.push(`<tr><td>${displayNumber}</td><td>${formatDateNice(r.lesson_date)}</td><td><span class="badge ${outcomeClass}" title="${tooltip}">${outcomeLabel}</span></td><td style="text-align:right;"><button class="history-delete-btn" data-retrieval-index="${recordIndex}" title="Delete this retrieval" aria-label="Delete this retrieval">&times;</button></td></tr>`);
+      const tooltip = OUTCOME_LABELS[r.outcome] || r.outcome;
+      lines.push(`<tr><td>${displayNumber}</td><td>${formatDateNice(r.lesson_date)}</td><td><span class="badge outcome-dot ${outcomeClass}" role="img" aria-label="${tooltip}" title="${tooltip}"></span></td><td style="text-align:right;"><button class="history-delete-btn" data-retrieval-index="${recordIndex}" title="Delete this retrieval" aria-label="Delete this retrieval">&times;</button></td></tr>`);
     }
     lines.push('</tbody></table>');
   }
@@ -2984,6 +2933,17 @@ function openAtomHistory(atomId) {
   // but they do not contribute to the scheduled retrieval sequence.
 
   document.getElementById("history-body").innerHTML = lines.join('');
+
+  document.querySelectorAll("#history-body [data-defer-until]").forEach(b => {
+    b.addEventListener("click", () => {
+      if (deferAtom(b.dataset.atomId, b.dataset.deferUntil)) openAtomHistory(b.dataset.atomId);
+    });
+  });
+  document.querySelectorAll("#history-body .history-defer-choose").forEach(sel => {
+    sel.addEventListener("change", () => {
+      if (sel.value && deferAtom(sel.dataset.atomId, sel.value)) openAtomHistory(sel.dataset.atomId);
+    });
+  });
 
   document.querySelectorAll("#history-body .history-delete-btn").forEach(b => {
     b.addEventListener("click", () => {
@@ -3127,10 +3087,6 @@ document.getElementById("record-retrieval-close").addEventListener("click", clos
 document.getElementById("record-retrieval-modal").addEventListener("click", (e) => {
   if (e.target.id === "record-retrieval-modal") closeRecordRetrieval();
 });
-document.getElementById("record-retrieval-skip").addEventListener("click", () => {
-  if (!recordRetrievalAtomId) return;
-  skipRetrievalForWeek(recordRetrievalAtomId);
-});
 document.querySelectorAll("#record-retrieval-modal [data-record-modal-outcome]").forEach(b => {
   b.addEventListener("click", () => {
     if (!recordRetrievalAtomId) return;
@@ -3263,7 +3219,7 @@ function renderAtoms() {
       ? `<div style="display:flex; align-items:center; gap:6px;">
            <span style="padding: 5px 0; font-size: 13px; color: var(--text);">${formatDateNice(atom.initial_instruction_date)}</span>
            <span style="font-size: 12px; color: var(--text-muted);" title="Locked">&#128274;</span>
-           <span class="help-icon" data-help="Locked because this atom already has recorded retrievals since this date. Changing it would orphan that history. To restart the atom from a new date, use the Re-teach button on Today's Lesson.">?</span>
+           <span class="help-icon" data-help="Locked because this atom already has recorded retrievals since this date. Changing it would orphan that history. To restart the atom's sequence from a new date, record a red retrieval (re-teach required).">?</span>
          </div>`
       : `<select class="inline-select ${!atom.initial_instruction_date ? 'not-set' : ''}" data-atom-id="${atom.id}" data-field="initial">${dateOptionsFor(atom.initial_instruction_date)}</select>`;
 
@@ -3376,7 +3332,7 @@ function editAtomDialog(id) {
   let initial = null;
   let updateInitial = false;
   if (hasRecordedRetrievals) {
-    alert("Initial instruction date is locked because this atom has recorded retrievals. To restart from a new date, use Re-teach on Today's Lesson.");
+    alert("Initial instruction date is locked because this atom has recorded retrievals. To restart the sequence from a new date, record a red retrieval (re-teach required).");
   } else {
     initial = prompt("Initial instruction date (YYYY-MM-DD), or blank to clear:", atom.initial_instruction_date || "");
     if (initial === null) return;
@@ -3627,7 +3583,7 @@ function renderTodayContent() {
   const overdueCount = sched.retrievals.filter(e => e.overdue).length;
   if (overdueCount > 0) {
     const help = document.createElement("div");
-    help.className = "helper warn";
+    help.className = "helper";
     help.innerHTML = `<strong>${overdueCount} overdue:</strong> these were scheduled for an earlier lesson and rolled forward to this one.`;
     container.appendChild(help);
   }
@@ -3737,15 +3693,13 @@ function renderRetrievalRow(entry, date) {
   // Outcome is shown via selected button state — no redundant badge.
   const metaParts = [];
   if (entry.recorded_outcome === "ad_hoc") {
-    metaParts.push('<span style="color:var(--text-muted); font-weight:500;">unscheduled &mdash; schedule unchanged</span>');
+    metaParts.push('<span style="color:var(--text-muted); font-weight:500;">Grey: unscheduled &mdash; schedule unchanged</span>');
   } else {
     metaParts.push(`${ordinal(entry.retrieval_number)} retrieval`);
   }
   if (entry.planned_gap !== undefined && !entry.is_first) {
     metaParts.push(`${entry.planned_gap}d gap`);
   }
-  if (entry.recorded_outcome === "miss") metaParts.push('<span style="color:var(--text-muted); font-weight:500;">Missed &mdash; pushed forward</span>');
-  if (entry.recorded_outcome === "skip") metaParts.push('<span style="color:var(--text-muted); font-weight:500;">Skipped &mdash; schedule unchanged</span>');
   if (atom.retrieve === "N") metaParts.push('<span style="color:var(--text-muted); font-style:italic;" title="Long-term retrieval off: checked once after instruction, then not scheduled again">No long-term</span>');
   // (Notes indicator removed 2026-06-08 — notes now live in the Atom detail modal, so the separate "N notes" button was redundant.)
   // Golden-thread indicator (yellow) — only if the atom carries golden-thread/parameter data synced from the Curriculum Writer.
@@ -3760,11 +3714,7 @@ function renderRetrievalRow(entry, date) {
       <div class="meta">${metaParts.join(" &middot; ")}</div>
     </div>
     <div class="retrieval-actions">
-      <button class="btn ghost ad-hoc ${selected === "ad_hoc" ? "selected" : ""}" data-outcome="ad_hoc" title="Unscheduled retrieval — does not affect the scheduler" aria-label="unscheduled">unscheduled</button>
-      <button class="pass ${selected === "pass" ? "selected" : ""}" data-outcome="pass" title="Pass" aria-label="Pass">✓</button>
-      <button class="struggle ${selected === "struggle" ? "selected" : ""}" data-outcome="struggle" title="Struggled" aria-label="Struggled">~</button>
-      <button class="reteach ${selected === "reteach" ? "selected" : ""}" data-outcome="reteach" title="Re-teach" aria-label="Re-teach">✕</button>
-      <button class="miss ${selected === "miss" ? "selected" : ""}" data-outcome="miss" title="Record that this planned retrieval was not carried out and push it to the next available lesson">Missed</button>
+      ${["pass", "struggle", "reteach", "ad_hoc"].map(o => `<button type="button" class="outcome ${o === "ad_hoc" ? "ad-hoc" : o} ${selected === o ? "selected" : ""}" data-outcome="${o}" title="${OUTCOME_LABELS[o]}" aria-label="${OUTCOME_LABELS[o]}" aria-pressed="${selected === o}"></button>`).join("")}
     </div>`;
   row.querySelectorAll(".retrieval-actions button[data-outcome]").forEach(b => {
     b.addEventListener("click", () => {
@@ -4002,6 +3952,7 @@ document.getElementById("data-import").addEventListener("change", (e) => {
       } else {
         throw new Error("Unrecognised file structure.");
       }
+      for (const cls of newState.classes) for (const atom of (cls.atoms || [])) migrateLegacySkip(atom);
       state = newState;
       settingsDraftDirty = false;
       settingsDraftClassId = null;
@@ -4336,9 +4287,9 @@ document.getElementById("data-backfill").addEventListener("click", () => {
   if (c.atoms.length === 0) { alert("No atoms in this class to backfill."); return; }
   if (c.lesson_dates.length === 0) { alert("This class has no lesson dates yet. Set up the lesson calendar first — the engine can only place retrievals on dates that exist."); return; }
   const todayIso = todayISO();
-  const skippedAtoms = c.atoms.filter(atom => isSkipActive(atom, todayIso));
+  const skippedAtoms = c.atoms.filter(atom => isDeferActive(atom, todayIso));
   const skipNote = skippedAtoms.length > 0
-    ? `\n\n${skippedAtoms.length} atom${skippedAtoms.length === 1 ? " has" : "s have"} an active 1-week skip. Those atoms will be left unchanged by Backfill.`
+    ? `\n\n${skippedAtoms.length} atom${skippedAtoms.length === 1 ? " is" : "s are"} currently deferred. Those atoms will be left unchanged by Backfill.`
     : "";
   const ok = confirm(`Backfill past retrievals for "${c.name}"?\n\nFor every atom, the engine will reconstruct the past retrieval pattern from its original instruction date and lesson calendar, and add records where no retrieval is already recorded. Make sure the lesson calendar includes the historical lesson dates covering the period you want reconstructed. Existing retrievals are left untouched.${skipNote}\n\nA snapshot is saved automatically so you can roll back.`);
   if (!ok) return;
@@ -4348,7 +4299,7 @@ document.getElementById("data-backfill").addEventListener("click", () => {
   let skipped = 0;
   const collisions = [];
   for (const atom of c.atoms) {
-    if (isSkipActive(atom, todayIso)) {
+    if (isDeferActive(atom, todayIso)) {
       skipped++;
       continue;
     }
@@ -4376,7 +4327,7 @@ document.getElementById("data-backfill").addEventListener("click", () => {
   }
   saveState();
   renderAll();
-  const skippedMessage = skipped > 0 ? ` ${skipped} atom${skipped === 1 ? " was" : "s were"} skipped because an active 1-week skip is in effect.` : "";
+  const skippedMessage = skipped > 0 ? ` ${skipped} atom${skipped === 1 ? " was left unchanged because it is" : "s were left unchanged because they are"} currently deferred.` : "";
   const collisionMessage = collisions.length > 0
     ? `\n\n${collisions.length} atom${collisions.length === 1 ? " was" : "s were"} not reconstructed beyond a date that already has an Unscheduled retrieval. The Unscheduled retrieval was kept, and these atoms remain due from that date:\n${collisions.join("\n")}`
     : "";
@@ -4528,7 +4479,7 @@ const annotationDefs = {
     {
       anchor: () => document.querySelector('#today-content .retrieval-row .retrieval-actions'),
       placement: "after-parent",
-      text: "Tap one of these on each atom. Pass stretches the next interval; Struggled holds it; Missed records that the planned retrieval was not carried out and pushes it to the next lesson; Re-teach resets. If you choose not to follow a recommendation, simply leave it unrecorded."
+      text: "Tap a colour on each atom. Green (successful) stretches the next interval; amber (not secure) holds it; red (re-teach required) restarts the sequence; grey records an unscheduled retrieval that leaves the schedule unchanged. If a retrieval doesn't happen, simply leave it unrecorded."
     },
     {
       anchor: () => document.querySelector('#today-content [data-section="instruction"]'),
@@ -4545,7 +4496,7 @@ const annotationDefs = {
     {
       anchor: () => document.querySelector('#screen-schedule .schedule-wrap'),
       placement: "before",
-      text: "Every atom across every lesson date. Coloured cells are recorded outcomes; muted ones are projected forward assuming each retrieval passes. Click any atom name on the left to see its full history."
+      text: "Every atom across every lesson date. Coloured cells are recorded outcomes; muted ones are projected forward assuming each retrieval is green. Click any atom name on the left to see its full history."
     },
     {
       anchor: () => document.querySelector('#screen-schedule .schedule-legend'),
