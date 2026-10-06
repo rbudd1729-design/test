@@ -1681,19 +1681,19 @@ function updateBackupButton() {
   const indicator = document.getElementById("backup-needed-indicator");
   if (!btn) return;
   const baseline = localStorage.getItem(BACKUP_BASELINE_KEY);
-  const needsBackup = !!baseline && hashState() !== baseline;
+  const needsBackup = !!baseline && snapshotDataHash(state) !== baseline;
   btn.classList.toggle("needs-backup", needsBackup);
   if (indicator) indicator.classList.toggle("visible", needsBackup);
 }
 
 function markBackupClean() {
-  localStorage.setItem(BACKUP_BASELINE_KEY, hashState());
+  localStorage.setItem(BACKUP_BASELINE_KEY, snapshotDataHash(state));
   updateBackupButton();
 }
 
 function initialiseBackupBaseline() {
   if (!localStorage.getItem(BACKUP_BASELINE_KEY)) {
-    localStorage.setItem(BACKUP_BASELINE_KEY, hashState());
+    localStorage.setItem(BACKUP_BASELINE_KEY, snapshotDataHash(state));
   }
   updateBackupButton();
 }
