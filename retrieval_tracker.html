@@ -1715,11 +1715,15 @@ function loadSnapshots() {
 }
 
 let lastSnapshotHash = null;
+// Snapshot dedupe ignores active_class_id: switching class is navigation, not a data change.
+function snapshotDataHash(value) {
+  return hashState({ ...value, active_class_id: undefined });
+}
 function snapshotState() {
   try {
     const json = JSON.stringify(state);
     // Cheap dedupe: skip if state hasn't actually changed
-    let h = 0; for (let i = 0; i < json.length; i++) { h = (h * 31 + json.charCodeAt(i)) | 0; }
+    const h = snapshotDataHash(state);
     if (h === lastSnapshotHash) return;
     lastSnapshotHash = h;
     const snaps = loadSnapshots();
@@ -2116,6 +2120,28 @@ function nextSuggestedDate(atom, options = {}) {
   return dates.find(d => d > target && d > earliestAllowed) || null;
 }
 
+// When a scheduled atom is due another retrieval but nextSuggestedDate finds no lesson to
+// place it on, return a short explanation naming the date the calendar would need to go
+// beyond; otherwise null. Mirrors nextSuggestedDate's own conditions.
+function noLessonAvailableNote(atom) {
+  if (atomStatus(atom) !== "scheduled" || !atom.initial_instruction_date) return null;
+  if (nextSuggestedDate(atom)) return null;
+  const sched = getAtomSchedulingState(atom);
+  if (!sched.last_date) return null;
+  if (atom.retrieve === "N" && sched.hasRealPass) return null;
+  if (isSkipActive(atom)) {
+    return `No lesson in the calendar on or after ${formatDateNice(addDays(atom.skippedAt, 7))}`;
+  }
+  const target = addDays(sched.last_date, plannedGap(sched, ctx().settings));
+  const eventDates = ctx().retrievals
+    .filter(r => r.atom_id === atom.id && r.outcome !== "ad_hoc")
+    .map(r => r.lesson_date)
+    .sort();
+  const latestEventDate = eventDates.length > 0 ? eventDates[eventDates.length - 1] : null;
+  const after = latestEventDate && latestEventDate > target ? latestEventDate : target;
+  return `No lesson in the calendar after ${formatDateNice(after)}`;
+}
+
 // Build the full event timeline for an atom: initial instruction, recorded retrievals,
 // the next pending retrieval, then future projections assuming each is passed.
 // Returns events: { date, type: 'I'|'R', n, status: 'recorded'|'pending'|'projected', outcome? }
@@ -2180,6 +2206,7 @@ function fullScheduleForAtom(atom, maxProjections = 10) {
   const dates = sortedLessonDates();
   let isFirstProjection = true;
   let lastUsedGap = firstGap;
+  const skipActive = isSkipActive(atom);
 
   for (let i = 0; i < maxProjections; i++) {
     const gap = isFirstProjection ? firstGap : Math.min(Math.round(lastUsedGap * settings.multiplier), settings.interval_cap);
@@ -2192,7 +2219,12 @@ function fullScheduleForAtom(atom, maxProjections = 10) {
     });
     // If no lesson inside the acceptable window exists, roll forward to the first lesson
     // after the target (never to an earlier lesson). No such lesson ends the projection.
-    const candidate = eligible.length > 0 ? eligible[eligible.length - 1] : dates.find(d => d > target);
+    let candidate = eligible.length > 0 ? eligible[eligible.length - 1] : dates.find(d => d > target);
+    // An active one-week skip places the pending retrieval exactly as nextSuggestedDate does.
+    if (isFirstProjection && skipActive) {
+      const returnDate = addDays(atom.skippedAt, 7);
+      candidate = dates.find(d => d >= returnDate && d > sched.last_date);
+    }
     if (!candidate) break;
     events.push({
       date: candidate,
@@ -2404,7 +2436,8 @@ function newId(prefix) {
 function switchClass(class_id) {
   if (!state.classes.find(c => c.id === class_id)) return;
   state.active_class_id = class_id;
-  saveState();
+  // Switching class is navigation: persist the selection without creating a snapshot.
+  saveState({ snapshot: false });
   renderAll();
 }
 
@@ -2595,7 +2628,8 @@ function renderCoverage() {
   const isPlannedRetrieval = atom => {
     if (atomStatus(atom) !== "scheduled" || !atom.initial_instruction_date || !planningDate) return false;
     const next = nextSuggestedDate(atom);
-    return !!next && next <= planningDate && !isSkipActive(atom, today);
+    // Judge the skip on the lesson being planned for, so a skip that ends by then does not hide it.
+    return !!next && next <= planningDate && !isSkipActive(atom, planningDate);
   };
 
   const visibleByStatus = c.atoms.filter(atom => {
@@ -2638,6 +2672,10 @@ function renderCoverage() {
         ? `Nothing to retrieve ${horizonLabel} (${planningDateLabel})`
         : `${planningItems.length} atom${planningItems.length === 1 ? "" : "s"} to retrieve ${horizonLabel} (${planningDateLabel})`;
     }
+    const noLessonCount = c.atoms.filter(atom => noLessonAvailableNote(atom)).length;
+    if (noLessonCount > 0) {
+      statusWrap.textContent += ` · ${noLessonCount} atom${noLessonCount === 1 ? " has" : "s have"} no lesson available — add lesson dates in Classes`;
+    }
   }
 
   if (rowsData.length === 0) {
@@ -2676,6 +2714,7 @@ function renderCoverage() {
     const title = schedulerHighlight
       ? `Retrieve ${planningHorizon === "next-lesson" ? "next lesson" : "today"} · click for atom history`
       : 'Click for atom history';
+    const noLessonNote = status === "scheduled" && !next ? noLessonAvailableNote(atom) : null;
     const daysLabel = daysSinceLast == null ? "Never" : String(daysSinceLast);
     const taughtLabel = status === "historic" ? "Historic" : formatDateNice(item.taught);
     rows.push(`
@@ -2684,6 +2723,7 @@ function renderCoverage() {
           <div class="atom-name-inner">
             <button class="btn ghost coverage-add" data-action="add-retrieval" data-atom-id="${atom.id}" title="Record a retrieval" aria-label="Record a retrieval">+</button>
             <a href="#" class="${schedulerClass}${schedulerHighlight ? ' ' : ''}${skipActive ? 'skip-active' : ''}" data-atom-id="${atom.id}" title="${escapeHtml(skipTitle || title)}">${escapeHtml(atom.name)}</a>
+            ${noLessonNote ? `<span style="font-size:12px; color:var(--text-muted); flex:0 0 auto; white-space:nowrap;" title="Add lesson dates in Classes">${escapeHtml(noLessonNote)}</span>` : ""}
           </div>
         </td>
         <td class="date">${taughtLabel}</td>
@@ -2881,6 +2921,10 @@ function openAtomHistory(atomId) {
       lines.push(`<div style="font-weight:500;">${formatDateNice(idealDate)}</div>`);
       if (scheduledDate && scheduledDate !== idealDate) {
         lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Next lesson: ${formatDateNice(scheduledDate)}</div>`);
+      }
+      const noLessonNote = scheduledDate ? null : noLessonAvailableNote(atom);
+      if (noLessonNote) {
+        lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">${noLessonNote}</div>`);
       }
     } else {
       lines.push('<div style="font-size:13px; color:var(--text-muted); font-style:italic;">No further standalone retrieval</div>');
@@ -3450,7 +3494,8 @@ document.getElementById("date-generate").addEventListener("click", () => {
     const daysBackToMon = (anchorDow + 6) % 7; // Sun=6, Mon=0, Tue=1...
     const cycleStart = new Date(anchor); cycleStart.setDate(cycleStart.getDate() - daysBackToMon);
     dateMatches = (d) => {
-      const diffDays = Math.floor((d - cycleStart) / 86400000);
+      // Count calendar days, not elapsed milliseconds, so a GMT/BST change cannot shift the week.
+      const diffDays = daysBetween(toISO(cycleStart), toISO(d));
       const weekIndex = Math.floor(diffDays / 7);
       const isWeekA = (((weekIndex % 2) + 2) % 2) === 0;
       const dow = d.getDay();
@@ -3573,7 +3618,7 @@ function renderTodayContent() {
   }
   if (c.atoms.length === 0) {
     container.innerHTML = `<div class="empty-state"><h3>No atoms yet</h3><div>Atoms are the smallest things you teach &mdash; add some to start tracking retrievals for <strong>${escapeHtml(c.name)}</strong>.</div><div class="cta-row"><a data-goto="coverage">Add atoms &rarr;</a></div></div>`;
-    container.querySelector('a[data-goto="atoms"]').addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="atoms"]').click(); });
+    container.querySelector('a[data-goto="coverage"]').addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="coverage"]').click(); });
     return;
   }
 
@@ -4301,6 +4346,7 @@ document.getElementById("data-backfill").addEventListener("click", () => {
   snapshotState();
   let filled = 0;
   let skipped = 0;
+  const collisions = [];
   for (const atom of c.atoms) {
     if (isSkipActive(atom, todayIso)) {
       skipped++;
@@ -4309,13 +4355,17 @@ document.getElementById("data-backfill").addEventListener("click", () => {
     let safety = 500; // hard cap to prevent any pathological loop
     while (safety-- > 0) {
       const next = nextSuggestedDate(atom, { ignoreBootstrap: true });
-      if (!next || next > todayIso) break;
+      // Only lessons strictly before today: today's lesson may not have happened yet.
+      if (!next || next >= todayIso) break;
       // Defensive: don't overwrite anything that's already there.
       const existing = c.retrievals.find(r => r.atom_id === atom.id && r.lesson_date === next);
       if (existing) {
         // There is already a recorded outcome at this date. Do not add a duplicate.
         // The scheduler has already incorporated this event, so if this date is still
         // returned here there is no safe forward step to make without changing state.
+        // An Unscheduled retrieval is kept as it is and reported, so the teacher knows
+        // why this atom was not reconstructed beyond that date.
+        if (existing.outcome === "ad_hoc") collisions.push(`${atom.name} (${formatDateNice(next)})`);
         break;
       }
       c.retrievals.push({ atom_id: atom.id, lesson_date: next, outcome: "pass" });
@@ -4327,7 +4377,10 @@ document.getElementById("data-backfill").addEventListener("click", () => {
   saveState();
   renderAll();
   const skippedMessage = skipped > 0 ? ` ${skipped} atom${skipped === 1 ? " was" : "s were"} skipped because an active 1-week skip is in effect.` : "";
-  alert(`Backfilled ${filled} retrieval${filled === 1 ? "" : "s"} for "${c.name}".${skippedMessage} A snapshot of the previous state was saved.`);
+  const collisionMessage = collisions.length > 0
+    ? `\n\n${collisions.length} atom${collisions.length === 1 ? " was" : "s were"} not reconstructed beyond a date that already has an Unscheduled retrieval. The Unscheduled retrieval was kept, and these atoms remain due from that date:\n${collisions.join("\n")}`
+    : "";
+  alert(`Backfilled ${filled} retrieval${filled === 1 ? "" : "s"} for "${c.name}".${skippedMessage} A snapshot of the previous state was saved.${collisionMessage}`);
 });
 
 document.getElementById("data-seed").addEventListener("click", () => {
