@@ -2657,7 +2657,8 @@ function renderCoverage() {
     const deferActive = status === "scheduled" && isDeferActive(atom, today);
     const schedulerHighlight = status === "scheduled" && isPlannedRetrieval(atom);
     const schedulerClass = schedulerHighlight ? "scheduler-due" : "";
-    const deferTitle = deferActive ? `Deferred until ${formatDateNice(atom.deferUntil)}` : null;
+    // Name the lesson the scheduler will actually use, which differs if the Defer lesson was removed.
+    const deferTitle = deferActive ? `Deferred until ${formatDateNice(next || atom.deferUntil)}` : null;
     const title = schedulerHighlight
       ? `Retrieve ${planningHorizon === "next-lesson" ? "next lesson" : "today"} · click for atom history and Defer`
       : 'Click for atom history';
