@@ -906,6 +906,24 @@
   }
 
   /* Modal */
+  /* Record type: a selected Tutee hides school-only UI; a Class hides tutee-only UI. */
+  body.tutee-mode .school-only { display: none !important; }
+  body:not(.tutee-mode) .tutee-only { display: none !important; }
+  /* Tuition sessions */
+  .sessions-summary { font-size: 13px; color: var(--text-muted); }
+  .session-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .session-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .session-date { font-weight: 700; color: var(--text); }
+  .session-actions { margin-left: auto; display: flex; gap: 6px; }
+  .session-topics { margin: 8px 0 0; padding-left: 20px; color: var(--text); }
+  .session-topics li { margin: 2px 0; }
+  .session-notes { margin-top: 8px; white-space: pre-wrap; color: var(--text-muted); font-size: 13px; }
+  .session-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
+  .paid-toggle { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); border-radius: 999px; padding: 2px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .paid-toggle.unpaid { color: var(--text); border-color: var(--text); font-weight: 700; }
+  .session-topic-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .session-topic-row input { flex: 1 1 auto; }
+  .session-paid-choice[aria-pressed="true"] { border-color: var(--text); color: var(--text); font-weight: 700; }
   .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -992,7 +1010,7 @@
       <button data-screen="classes">Classes</button>
       <button data-screen="notes">Notes</button>
       <button data-screen="atoms">Atoms</button>
-      <button data-screen="coverage" class="active">Atoms</button>
+      <button data-screen="coverage" class="active"><span class="school-only">Atoms</span><span class="tutee-only">Sessions</span></button>
       <button data-screen="today">Today's Lesson</button>
       <button data-screen="schedule">Schedule</button>
     </nav>
@@ -1002,7 +1020,7 @@
       <button class="btn ghost" id="top-data-import" title="Import a backup file">Import</button>
       <span class="backup-top-status" id="last-backup-status">Last backup: Never</span>
       <div class="class-switcher">
-        <label for="class-select">Class</label>
+        <label for="class-select"><span class="school-only">Class</span><span class="tutee-only">Tutee</span></label>
         <select id="class-select"></select>
       </div>
     </div>
@@ -1103,7 +1121,14 @@ Share a quantity in a given ratio
 
   <!-- ============ COVERAGE ============ -->
   <section id="screen-coverage" class="screen active">
-    <div class="card">
+    <div class="card tutee-only" id="sessions-card">
+      <div class="row" style="justify-content: space-between; align-items: center; gap:12px; flex-wrap:wrap;">
+        <button class="coverage-add-atoms-btn" id="session-add" type="button">+ Add session</button>
+        <div class="sessions-summary" id="sessions-summary" aria-live="polite"></div>
+      </div>
+      <div id="sessions-list" style="margin-top: 14px;"></div>
+    </div>
+    <div class="card school-only">
       <div class="row" style="justify-content: space-between; align-items: center; gap:12px; flex-wrap:wrap;">
         <div class="row" style="gap:8px;">
           <button class="coverage-add-atoms-btn" id="coverage-add-atoms" type="button" title="Add atoms to this class">Add atoms</button>
@@ -1156,17 +1181,25 @@ Share a quantity in a given ratio
   <!-- ============ CLASSES ============ -->
   <section id="screen-classes" class="screen">
     <div class="card">
-      <h2>New class</h2>
+      <h2>New class or tutee</h2>
       <div class="row" style="align-items: flex-end;">
+        <div style="flex: 0 0 auto;">
+          <label for="new-class-type">Type</label>
+          <select id="new-class-type" style="width:auto;">
+            <option value="class" selected>Class</option>
+            <option value="tutee">Tutee</option>
+          </select>
+        </div>
         <div style="flex: 1 1 220px;">
+          <label for="new-class-name">Name</label>
           <input type="text" id="new-class-name" placeholder="e.g. 8X3 Maths">
         </div>
-        <button class="btn" id="new-class-add">Create class</button>
+        <button class="btn" id="new-class-add">Create</button>
       </div>
     </div>
 
     <div class="card">
-      <h2>Your classes</h2>
+      <h2>Your classes and tutees</h2>
       <div class="subtitle"><span id="classes-count">0</span> of 10.</div>
       <table>
         <thead>
@@ -1183,7 +1216,7 @@ Share a quantity in a given ratio
     </div>
 
 
-    <div class="card">
+    <div class="card school-only">
       <h2>Lesson dates</h2>
       <div class="row" style="align-items: flex-end;">
         <div>
@@ -1256,7 +1289,7 @@ Share a quantity in a given ratio
       </details>
     </div>
 
-    <div class="card">
+    <div class="card school-only">
       <h2>Scheduled dates</h2>
       <div id="dates-count" style="display:none;">0</div>
       <div id="dates-list" class="pill-input"></div>
@@ -1265,7 +1298,7 @@ Share a quantity in a given ratio
 
   <!-- ============ SETTINGS ============ -->
   <section id="screen-settings" class="screen">
-    <div class="card">
+    <div class="card school-only">
       <h2>Spacing settings</h2>
         <div class="settings-grid">
         <div>
@@ -1329,7 +1362,7 @@ Share a quantity in a given ratio
         <input type="file" id="writer-sync" accept="application/json" style="display:none;">
       </div>
 
-      <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
+      <div class="school-only" style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
         <div style="font-weight: 600; font-size: 13px;">Tools</div>
         <div class="row" style="margin-top: 8px;">
           <button class="btn ghost" id="data-backfill">Backfill past retrievals</button>
@@ -1495,6 +1528,45 @@ Share a quantity in a given ratio
   </div>
 </div>
 
+<!-- ============ TUITION SESSION EDITOR ============ -->
+<div class="modal-backdrop" id="session-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="session-modal-title" style="max-width: 520px;">
+    <div class="modal-header">
+      <div>
+        <h2 id="session-modal-title">Add session</h2>
+        <div class="modal-sub" id="session-modal-sub"></div>
+      </div>
+      <button class="modal-close" id="session-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="record-retrieval-form">
+      <div>
+        <label for="session-date">Date</label>
+        <input type="date" id="session-date" class="record-retrieval-date">
+      </div>
+      <div>
+        <label>Topics covered</label>
+        <div id="session-topics"></div>
+        <button type="button" class="btn ghost" id="session-add-topic">+ Add topic</button>
+      </div>
+      <div>
+        <label for="session-notes">Notes</label>
+        <textarea id="session-notes" rows="4" style="width:100%; resize:vertical;"></textarea>
+      </div>
+      <div>
+        <label>Payment</label>
+        <div class="row" style="gap:8px;">
+          <button type="button" class="btn ghost session-paid-choice" data-paid="false" aria-pressed="true">Unpaid</button>
+          <button type="button" class="btn ghost session-paid-choice" data-paid="true" aria-pressed="false">Paid</button>
+        </div>
+      </div>
+      <div class="row" style="gap:8px;">
+        <button type="button" class="btn" id="session-save">Save session</button>
+        <button type="button" class="btn ghost" id="session-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ============ EXPORT / DELETE ATOMS MODAL ============ -->
 <div class="modal-backdrop" id="atoms-export-modal">
   <div class="modal" role="dialog" aria-modal="true" style="max-width: 580px;">
@@ -1557,6 +1629,7 @@ function defaultProfile() {
 function defaultClass(name) {
   return {
     id: newId("c"),
+    type: "class",
     name: name || "Class 1",
     atoms: [],
     lesson_dates: [],
@@ -1566,6 +1639,29 @@ function defaultClass(name) {
     notes: ""
   };
 }
+// A private tuition student. Tutees have no atoms, lesson dates, retrievals or spacing
+// settings: only a chronological record of sessions (date, topics, notes, paid).
+function defaultTutee(name) {
+  return { id: newId("t"), type: "tutee", name, sessions: [], notes: "" };
+}
+
+// Each record in state.classes is a school Class or a Tutee. Records saved before tutees
+// existed have no type and are Classes (they are not rewritten, so their data is unchanged).
+function isTutee(cls = ctx()) {
+  return !!cls && cls.type === "tutee";
+}
+
+function normaliseTutee(t) {
+  t.sessions = Array.isArray(t.sessions) ? t.sessions : [];
+  for (const sess of t.sessions) {
+    if (!sess.id) sess.id = newId("s");
+    sess.topics = Array.isArray(sess.topics) ? sess.topics.map(String) : [];
+    if (typeof sess.notes !== "string") sess.notes = "";
+    sess.paid = sess.paid === true;
+  }
+  if (typeof t.notes !== "string") t.notes = "";
+}
+
 function defaultState() {
   const cls = defaultClass("Class 1");
   return { classes: [cls], active_class_id: cls.id };
@@ -1582,6 +1678,7 @@ function loadState() {
     if (parsed.classes && Array.isArray(parsed.classes)) {
       // Already multi-class; merge defaults
       for (const c of parsed.classes) {
+        if (c.type === "tutee") { normaliseTutee(c); continue; }
         c.atoms = c.atoms || [];
         c.lesson_dates = c.lesson_dates || [];
         c.retrievals = c.retrievals || [];
@@ -2268,6 +2365,7 @@ const OUTCOME_LABELS = {
 };
 
 function recordRetrieval(atom_id, lesson_date, outcome) {
+  if (isTutee()) return false; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!lesson_date || !outcome) return false;
 
@@ -2302,6 +2400,7 @@ function recordRetrieval(atom_id, lesson_date, outcome) {
 }
 
 function clearOutcome(atom_id, lesson_date) {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   c.retrievals = c.retrievals.filter(r => !(r.atom_id === atom_id && r.lesson_date === lesson_date));
   saveState();
@@ -2316,6 +2415,7 @@ function recordOutcome(atom_id, lesson_date, outcome) {
 let recordRetrievalAtomId = null;
 
 function openRecordRetrieval(atomId) {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const atom = ctx().atoms.find(a => a.id === atomId);
   if (!atom) return;
   recordRetrievalAtomId = atomId;
@@ -2347,6 +2447,7 @@ function deferLessonForWeeks(weeks) {
 }
 
 function deferAtom(atomId, untilDate) {
+  if (isTutee()) return false; // school data only; a Tutee has no atoms, dates or retrievals
   const atom = ctx().atoms.find(a => a.id === atomId);
   if (!canDefer(atom)) return false;
   // The Defer date must be a future lesson date of this class.
@@ -2358,6 +2459,7 @@ function deferAtom(atomId, untilDate) {
 }
 
 function deleteRetrieval(recordIndex) {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   const index = Number(recordIndex);
   if (!Number.isInteger(index) || index < 0 || index >= c.retrievals.length) return;
@@ -2387,10 +2489,11 @@ function switchClass(class_id) {
   renderAll();
 }
 
-function createClass(name) {
-  if (state.classes.length >= MAX_CLASSES) { alert(`Limit is ${MAX_CLASSES} classes.`); return null; }
-  if (!name || !name.trim()) { alert("Class name is required."); return null; }
-  const cls = defaultClass(name.trim());
+function createClass(name, type = "class") {
+  if (state.classes.length >= MAX_CLASSES) { alert(`Limit is ${MAX_CLASSES} classes and tutees.`); return null; }
+  if (!name || !name.trim()) { alert("A name is required."); return null; }
+  // The type is fixed at creation; there is no conversion between Class and Tutee.
+  const cls = type === "tutee" ? defaultTutee(name.trim()) : defaultClass(name.trim());
   state.classes.push(cls);
   state.active_class_id = cls.id;
   saveState();
@@ -2405,10 +2508,11 @@ function renameClass(class_id, new_name) {
 }
 
 function deleteClass(class_id) {
-  if (state.classes.length <= 1) { alert("You need at least one class."); return; }
+  if (state.classes.length <= 1) { alert("You need at least one class or tutee."); return; }
   const cls = state.classes.find(c => c.id === class_id);
   if (!cls) return;
-  if (!confirm(`Delete "${cls.name}" and all its atoms, dates and retrievals? This cannot be undone.`)) return;
+  const contents = isTutee(cls) ? "all its sessions" : "all its atoms, dates and retrievals";
+  if (!confirm(`Delete "${cls.name}" and ${contents}? This cannot be undone.`)) return;
   state.classes = state.classes.filter(c => c.id !== class_id);
   if (state.active_class_id === class_id) {
     state.active_class_id = state.classes[0].id;
@@ -2447,11 +2551,20 @@ document.getElementById("class-select").addEventListener("change", (e) => {
 function renderClassSwitcher() {
   const sel = document.getElementById("class-select");
   sel.innerHTML = "";
-  for (const c of state.classes) {
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.name;
-    sel.appendChild(opt);
+  const hasTutees = state.classes.some(c => isTutee(c));
+  const groups = hasTutees
+    ? [["Classes", state.classes.filter(c => !isTutee(c))], ["Tutees", state.classes.filter(c => isTutee(c))]]
+    : [[null, state.classes]];
+  for (const [label, members] of groups) {
+    if (members.length === 0) continue;
+    const parent = label ? document.createElement("optgroup") : sel;
+    if (label) { parent.label = label; sel.appendChild(parent); }
+    for (const c of members) {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.name;
+      parent.appendChild(opt);
+    }
   }
   sel.value = state.active_class_id;
 }
@@ -2475,11 +2588,14 @@ function renderClasses() {
     tr.innerHTML = `
       <td>
         <strong>${escapeHtml(c.name)}</strong>
+        ${isTutee(c) ? '<span class="badge ad-hoc" style="margin-left:6px;">tutee</span>' : ""}
         ${isActive ? '<span class="badge new" style="margin-left:6px;">active</span>' : ""}
       </td>
-      <td>${c.atoms.length}</td>
+      ${isTutee(c)
+        ? `<td colspan="3" style="color:var(--text-muted);">${escapeHtml(sessionSummary(c))}</td>`
+        : `<td>${c.atoms.length}</td>
       <td>${c.lesson_dates.length}</td>
-      <td>${c.retrievals.length}</td>
+      <td>${c.retrievals.length}</td>`}
       <td style="text-align:right;">
         ${isActive ? "" : `<button class="icon-btn" data-action="switch" data-id="${c.id}">Switch to</button>`}
         <button class="icon-btn" data-action="up" data-id="${c.id}" ${state.classes.indexOf(c) === 0 ? "disabled" : ""}>Up</button>
@@ -2502,7 +2618,7 @@ function renderClasses() {
   tbody.querySelectorAll("button[data-action='rename']").forEach(b => {
     b.addEventListener("click", () => {
       const c = state.classes.find(x => x.id === b.dataset.id);
-      const name = prompt("New class name:", c.name);
+      const name = prompt("New name:", c.name);
       if (name) { renameClass(b.dataset.id, name); renderAll(); }
     });
   });
@@ -2515,11 +2631,169 @@ function renderClasses() {
 
 document.getElementById("new-class-add").addEventListener("click", () => {
   const name = document.getElementById("new-class-name").value;
-  const cls = createClass(name);
+  const cls = createClass(name, document.getElementById("new-class-type").value);
   if (cls) {
     document.getElementById("new-class-name").value = "";
     renderAll();
   }
+});
+
+// ----- Tuition: sessions for a Tutee -----
+// A session records what happened: date, topics covered, notes and whether it has been
+// paid for. Nothing here is scheduled, retrieved or counted towards the school workflow.
+function sortedSessions(t) {
+  return (t.sessions || [])
+    .map((sess, i) => ({ sess, i }))
+    .sort((a, b) => String(b.sess.date).localeCompare(String(a.sess.date)) || b.i - a.i)
+    .map(x => x.sess);
+}
+
+function sessionSummary(t) {
+  const sessions = t.sessions || [];
+  if (sessions.length === 0) return "No sessions yet";
+  const unpaid = sessions.filter(sess => !sess.paid).length;
+  const last = sortedSessions(t)[0].date;
+  return `${sessions.length} session${sessions.length === 1 ? "" : "s"} · ${unpaid} unpaid · last session ${formatDateNice(last)}`;
+}
+
+function renderSessions() {
+  const t = ctx();
+  document.getElementById("sessions-summary").textContent = sessionSummary(t);
+  const list = document.getElementById("sessions-list");
+  const sessions = sortedSessions(t);
+  if (sessions.length === 0) {
+    list.innerHTML = `<div class="session-empty">No sessions recorded for ${escapeHtml(t.name)} yet. Use + Add session after each lesson.</div>`;
+    return;
+  }
+  list.innerHTML = sessions.map(sess => `
+    <div class="session-card">
+      <div class="session-head">
+        <span class="session-date">${formatDateNice(sess.date)}</span>
+        <button type="button" class="paid-toggle ${sess.paid ? "paid" : "unpaid"}" data-session-paid="${sess.id}" aria-pressed="${sess.paid}" title="${sess.paid ? "Paid · click to mark as unpaid" : "Unpaid · click to mark as paid"}">${sess.paid ? "Paid" : "Unpaid"}</button>
+        <div class="session-actions">
+          <button type="button" class="icon-btn" data-session-edit="${sess.id}">Edit</button>
+          <button type="button" class="icon-btn" data-session-delete="${sess.id}">Delete</button>
+        </div>
+      </div>
+      ${(sess.topics || []).length ? `<ul class="session-topics">${sess.topics.map(topic => `<li>${escapeHtml(topic)}</li>`).join("")}</ul>` : ""}
+      ${sess.notes ? `<div class="session-notes">${escapeHtml(sess.notes)}</div>` : ""}
+    </div>`).join("");
+  list.querySelectorAll("[data-session-paid]").forEach(b => b.addEventListener("click", () => toggleSessionPaid(b.dataset.sessionPaid)));
+  list.querySelectorAll("[data-session-edit]").forEach(b => b.addEventListener("click", () => openSessionEditor(b.dataset.sessionEdit)));
+  list.querySelectorAll("[data-session-delete]").forEach(b => b.addEventListener("click", () => deleteSession(b.dataset.sessionDelete)));
+}
+
+function findSession(id) {
+  const t = ctx();
+  return isTutee(t) ? (t.sessions || []).find(sess => sess.id === id) || null : null;
+}
+
+function toggleSessionPaid(id) {
+  const sess = findSession(id);
+  if (!sess) return;
+  sess.paid = !sess.paid;
+  saveState();
+  renderAll();
+}
+
+function deleteSession(id) {
+  const t = ctx();
+  const sess = findSession(id);
+  if (!sess) return;
+  if (!confirm(`Delete the session on ${formatDateNice(sess.date)}?`)) return;
+  t.sessions = t.sessions.filter(x => x.id !== id);
+  saveState();
+  renderAll();
+}
+
+let sessionEditId = null;
+
+function addSessionTopicRow(value = "", focus = false) {
+  const wrap = document.getElementById("session-topics");
+  const row = document.createElement("div");
+  row.className = "session-topic-row";
+  row.innerHTML = `<input type="text" class="session-topic" placeholder="e.g. Completing the square" aria-label="Topic">
+    <button type="button" class="icon-btn" aria-label="Remove topic" title="Remove topic">&times;</button>`;
+  const input = row.querySelector("input");
+  input.value = value;
+  // Enter adds the next topic, so several can be typed quickly.
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); addSessionTopicRow("", true); }
+  });
+  row.querySelector("button").addEventListener("click", () => {
+    row.remove();
+    if (!wrap.querySelector(".session-topic")) addSessionTopicRow();
+  });
+  wrap.appendChild(row);
+  if (focus) input.focus();
+}
+
+function setSessionPaidChoice(paid) {
+  document.querySelectorAll("#session-modal .session-paid-choice").forEach(b => {
+    b.setAttribute("aria-pressed", String((b.dataset.paid === "true") === paid));
+  });
+}
+
+function openSessionEditor(id = null) {
+  const t = ctx();
+  if (!isTutee(t)) return;
+  const sess = id ? findSession(id) : null;
+  if (id && !sess) return;
+  sessionEditId = sess ? sess.id : null;
+  document.getElementById("session-modal-title").textContent = sess ? "Edit session" : "Add session";
+  document.getElementById("session-modal-sub").textContent = t.name;
+  const dateInput = document.getElementById("session-date");
+  dateInput.value = sess ? sess.date : todayISO();
+  dateInput.max = todayISO();
+  document.getElementById("session-topics").innerHTML = "";
+  const topics = sess && sess.topics.length ? sess.topics : [""];
+  topics.forEach(topic => addSessionTopicRow(topic));
+  document.getElementById("session-notes").value = sess ? sess.notes : "";
+  // New sessions start Unpaid so that payment is marked explicitly.
+  setSessionPaidChoice(sess ? sess.paid : false);
+  document.getElementById("session-modal").classList.add("open");
+  dateInput.focus();
+}
+
+function closeSessionEditor() {
+  sessionEditId = null;
+  document.getElementById("session-modal").classList.remove("open");
+}
+
+function saveSessionEditor() {
+  const t = ctx();
+  if (!isTutee(t)) return;
+  const date = document.getElementById("session-date").value;
+  if (!date) { alert("Please choose the session date."); return; }
+  if (date > todayISO()) { alert("The session date cannot be in the future."); return; }
+  const topics = [...document.querySelectorAll("#session-topics .session-topic")]
+    .map(input => input.value.trim())
+    .filter(Boolean);
+  const notes = document.getElementById("session-notes").value;
+  const paid = document.querySelector('#session-modal .session-paid-choice[data-paid="true"]').getAttribute("aria-pressed") === "true";
+  if (sessionEditId) {
+    const sess = findSession(sessionEditId);
+    if (!sess) { closeSessionEditor(); return; }
+    Object.assign(sess, { date, topics, notes, paid });
+  } else {
+    t.sessions = t.sessions || [];
+    t.sessions.push({ id: newId("s"), date, topics, notes, paid });
+  }
+  saveState();
+  closeSessionEditor();
+  renderAll();
+}
+
+document.getElementById("session-add").addEventListener("click", () => openSessionEditor());
+document.getElementById("session-add-topic").addEventListener("click", () => addSessionTopicRow("", true));
+document.getElementById("session-save").addEventListener("click", saveSessionEditor);
+document.getElementById("session-cancel").addEventListener("click", closeSessionEditor);
+document.getElementById("session-close").addEventListener("click", closeSessionEditor);
+document.getElementById("session-modal").addEventListener("click", (e) => {
+  if (e.target.id === "session-modal") closeSessionEditor();
+});
+document.querySelectorAll("#session-modal .session-paid-choice").forEach(b => {
+  b.addEventListener("click", () => setSessionPaidChoice(b.dataset.paid === "true"));
 });
 
 // Coverage sort state. Defaults to newest taught atoms first.
@@ -3020,6 +3294,7 @@ function syncAddAtomsStatusUI() {
 }
 
 function openAddAtoms() {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!c) return;
   document.getElementById("add-atoms-sub").textContent = `Adding atoms to ${c.name}`;
@@ -3046,6 +3321,7 @@ document.getElementById("add-atoms-modal").addEventListener("click", (e) => {
 });
 document.getElementById("coverage-atom-status").addEventListener("change", syncAddAtomsStatusUI);
 document.getElementById("add-atoms-save").addEventListener("click", () => {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!c) return;
   const names = document.getElementById("coverage-atom-names").value
@@ -3138,6 +3414,7 @@ document.addEventListener("keydown", (e) => {
     closeAtomHistory();
     closeAddAtoms();
     closeWorksheetModal();
+    closeSessionEditor();
     if (document.getElementById("welcome-modal").classList.contains("open")) closeWelcome();
     if (annotationActive) hideAnnotations();
   }
@@ -3352,6 +3629,7 @@ function editAtomDialog(id) {
 }
 
 document.getElementById("atom-add").addEventListener("click", () => {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const name = document.getElementById("atom-name").value.trim();
   const type = document.getElementById("atom-type").value;
   const initial = document.getElementById("atom-initial").value;
@@ -3368,6 +3646,7 @@ document.getElementById("atom-add").addEventListener("click", () => {
 });
 
 document.getElementById("atom-bulk-add").addEventListener("click", () => {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const text = document.getElementById("atom-bulk").value;
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
   if (lines.length === 0) { alert("Paste some atom names first."); return; }
@@ -3408,6 +3687,7 @@ function renderDates() {
 }
 
 document.getElementById("date-add-one").addEventListener("click", () => {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const d = document.getElementById("date-single").value;
   if (!d) return;
   const c = ctx();
@@ -3427,6 +3707,7 @@ document.getElementById("date-pattern").addEventListener("change", (e) => {
 });
 
 document.getElementById("date-generate").addEventListener("click", () => {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const from = document.getElementById("date-from").value;
   const to = document.getElementById("date-to").value;
   const pattern = document.getElementById("date-pattern").value;
@@ -3748,7 +4029,7 @@ let settingsDraftClassId = null;
 function renderSettings() {
   const c = ctx();
   const s = c.settings;
-  const preserveDraft = settingsDraftDirty && settingsDraftClassId === c.id;
+  const preserveDraft = isTutee(c) || (settingsDraftDirty && settingsDraftClassId === c.id);
   if (!preserveDraft) {
     document.getElementById("set-seed").value = s.seed_interval;
     document.getElementById("set-mult").value = s.multiplier;
@@ -3806,7 +4087,8 @@ function renderSnapshots() {
       const parsed = JSON.parse(s.data);
       const totalAtoms = (parsed.classes || []).reduce((n, c) => n + (c.atoms || []).length, 0);
       const totalRetrievals = (parsed.classes || []).reduce((n, c) => n + (c.retrievals || []).length, 0);
-      summary = `${parsed.classes ? parsed.classes.length : 0} classes &middot; ${totalAtoms} atoms &middot; ${totalRetrievals} retrievals`;
+      const tutees = (parsed.classes || []).filter(c => c.type === "tutee").length;
+      summary = `${(parsed.classes || []).length - tutees} classes${tutees ? ` &middot; ${tutees} tutees` : ""} &middot; ${totalAtoms} atoms &middot; ${totalRetrievals} retrievals`;
     } catch (e) { summary = "snapshot"; }
     return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
       <div>
@@ -3835,6 +4117,7 @@ function updateLadderDisplay() {
 }
 
 document.getElementById("set-save").addEventListener("click", () => {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const seed = Math.max(1, parseInt(document.getElementById("set-seed").value, 10) || 1);
   const mult = Math.max(1.1, parseFloat(document.getElementById("set-mult").value) || 2);
   const cap = Math.max(1, parseInt(document.getElementById("set-cap").value, 10) || 60);
@@ -3872,6 +4155,7 @@ function updateLastBackupStatus() {
 }
 
 function saveCoverageTextFile() {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!c) return;
   const rows = c.atoms
@@ -3985,7 +4269,7 @@ document.getElementById("writer-sync").addEventListener("change", (e) => {
       const incoming = parsed.atoms;
       if (!Array.isArray(incoming)) throw new Error("No 'atoms' array found — is this an atoms export file?");
       const c = ctx();
-      if (!c) throw new Error("No active class selected.");
+      if (!c || isTutee(c)) throw new Error("Select a class first: tutees have no atoms.");
       const unitName = (parsed.unit && parsed.unit.name) ? parsed.unit.name : "this unit";
       if (!confirm(`Merge ${incoming.length} atom(s) from "${unitName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history — only their content is updated, and new atoms are added.`)) { e.target.value = ""; return; }
       const byWriterId = new Map();
@@ -4086,7 +4370,7 @@ document.getElementById("class-merge").addEventListener("change", (e) => {
       const incoming = parsed.atoms;
       if (!Array.isArray(incoming)) throw new Error("No 'atoms' array found — is this a class export, selected-atoms, or Curriculum Writer file?");
       const c = ctx();
-      if (!c) throw new Error("No active class selected.");
+      if (!c || isTutee(c)) throw new Error("Select a class first: tutees have no atoms.");
       const srcName = parsed.class_name || parsed.source_class || (parsed.unit && parsed.unit.name) || "another class";
       // File types: le-class-export-v1 (atoms + history), le-atoms-export-v1 (content only),
       // or a Curriculum Writer atoms file (content; concept notes live in `notes`, ids in `stable_id`).
@@ -4282,6 +4566,7 @@ document.getElementById("data-clear").addEventListener("click", () => {
 // onboarding baseline into real historical retrieval records without inventing dates.
 // Existing recorded outcomes are never overwritten. A snapshot is auto-saved first.
 document.getElementById("data-backfill").addEventListener("click", () => {
+  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!c) return;
   if (c.atoms.length === 0) { alert("No atoms in this class to backfill."); return; }
@@ -4335,7 +4620,7 @@ document.getElementById("data-backfill").addEventListener("click", () => {
 });
 
 document.getElementById("data-seed").addEventListener("click", () => {
-  if (state.classes.some(c => c.atoms.length > 0) && !confirm("Replace current data with sample data?")) return;
+  if (state.classes.some(c => (c.atoms || []).length > 0 || (c.sessions || []).length > 0) && !confirm("Replace current data with sample data?")) return;
   state = makeSampleState();
   saveState();
   renderAll();
@@ -4411,11 +4696,17 @@ function ordinal(n) {
 
 function renderAll() {
   renderClassSwitcher();
-  renderAtoms();
-  renderDates();
-  renderToday();
-  renderCoverage();
-  renderSchedule();
+  // A Tutee never enters the school views (Atoms, lesson dates, Today, Schedule).
+  document.body.classList.toggle("tutee-mode", isTutee());
+  if (isTutee()) {
+    renderSessions();
+  } else {
+    renderAtoms();
+    renderDates();
+    renderToday();
+    renderCoverage();
+    renderSchedule();
+  }
   renderNotes();
   renderClasses();
   renderSettings();
