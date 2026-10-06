@@ -1,0 +1,4623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retrieval Tracker</title>
+<style>
+  :root {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --border: #2d2d2d;
+    --border-strong: #424242;
+    --text: #f0f0f0;
+    --text-muted: #a0a0a0;
+    --primary: #5294bf;
+    --primary-hover: #6ca7cc;
+    --pass: #4caf50;
+    --pass-bg: #1b3322;
+    --struggle: #ff9800;
+    --struggle-bg: #332211;
+    --reteach: #f44336;
+    --reteach-bg: #331111;
+    --accent-bg: #1e293b;
+    --warning-bg: #2d2516;
+    --warning-text: #d6a34a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 28px 0;
+  }
+  .header-top {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .pro-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #2c5f7f 0%, #1e4356 100%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 6px;
+    position: relative;
+    top: -2px;
+    text-transform: uppercase;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .prompt-vars .var-name { color: #2c5f7f; font-weight: 600; }
+  .copy-feedback {
+    display: inline-block;
+    color: #1a7f4f;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 200ms;
+  }
+  .copy-feedback.show { opacity: 1; }
+  .class-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+  }
+  .class-switcher label {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .class-switcher select {
+    border: none;
+    background: var(--bg);
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+    padding: 2px 4px;
+    cursor: pointer;
+    outline: none;
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    color-scheme: dark;
+  }
+  .class-switcher select option {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .class-switcher .manage-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-left: 1px solid var(--border);
+    font-family: inherit;
+  }
+  .class-switcher .manage-link:hover { text-decoration: underline; }
+  .backup-needed-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    align-items: center;
+    white-space: nowrap;
+    padding: 8px 11px;
+    border-radius: 6px;
+    border: 1px solid rgba(245,158,11,.55);
+    background: rgba(245,158,11,.10);
+    color: #d97706;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .035em;
+  }
+  .backup-needed-indicator.visible {
+    display: inline-flex;
+  }
+  .backup-top-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    box-shadow: none;
+  }
+  .backup-top-btn:hover {
+    background: var(--bg);
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+  .backup-top-btn.needs-backup {
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    border-color: rgba(255,255,255,.16);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(239,68,68,.22);
+  }
+  .backup-top-btn.needs-backup:hover {
+    filter: brightness(1.08);
+    color: #fff;
+  }
+  .backup-top-btn:active { transform: translateY(0); }
+  .backup-top-status {
+    color: var(--muted);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  nav.tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-left: 32px;
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-family: inherit;
+  }
+
+  /* Keep Today's Lesson and Schedule available internally, but hide their navigation tabs. */
+  nav.tabs button[data-screen="dates"],
+  nav.tabs button[data-screen="atoms"],
+  nav.tabs button[data-screen="today"],
+  nav.tabs button[data-screen="schedule"] {
+    display: none;
+  }
+  nav.tabs button.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 500;
+  }
+  nav.tabs button:hover:not(.active) {
+    color: var(--text);
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .card .subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .row > * { flex-shrink: 0; }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  input[type="text"], input[type="date"], input[type="number"], select, textarea {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  /* Keep the native date-picker control visible against the dark input surface. */
+  input[type="date"] {
+    color-scheme: dark;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.95;
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 4px;
+    background-color: var(--border-strong);
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+    width: 100%;
+  }
+  button.btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  button.btn:hover { background: var(--primary-hover); }
+  button.btn.ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+  }
+  button.btn.ghost:hover {
+    background: var(--bg);
+    color: var(--text);
+  }
+  button.btn.danger {
+    background: transparent;
+    color: var(--reteach);
+    border: 1px solid var(--border-strong);
+  }
+  button.btn.danger:hover {
+    background: var(--reteach-bg);
+    border-color: var(--reteach);
+  }
+  button.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  button.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  button.icon-btn:hover { background: var(--bg); color: var(--text); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+  td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr.empty td {
+    color: var(--text-muted);
+    text-align: center;
+    font-style: italic;
+    padding: 24px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--text-muted);
+  }
+  .badge.pass { background: var(--pass-bg); color: var(--pass); }
+  .badge.struggle { background: var(--struggle-bg); color: var(--struggle); }
+  .badge.reteach { background: var(--reteach-bg); color: var(--reteach); }
+  .badge.ad-hoc { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border-strong); }
+  .badge.miss { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border-strong); }
+  .badge.new { background: var(--accent-bg); color: var(--primary); }
+  .badge.type-categorical { background: #eef4f8; color: #2c5f7f; }
+  .badge.type-comparative { background: #f1eef8; color: #6c4f9b; }
+  .badge.type-transformation { background: #f8f1ee; color: #9b6c4f; }
+  .badge.type-fact { background: #f4f8ee; color: #5f7f2c; }
+  .badge.type-routine { background: #f8eef4; color: #9b4f7c; }
+  .pill-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 6px;
+    min-height: 40px;
+    background: var(--surface);
+  }
+  .pill {
+    background: var(--accent-bg);
+    color: var(--primary);
+    padding: 4px 8px 4px 10px;
+    border-radius: 14px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pill button {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.6;
+  }
+  .pill button:hover { opacity: 1; }
+  .retrieval-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+    background: var(--bg);
+    margin-bottom: 6px;
+  }
+  .retrieval-row:last-child { margin-bottom: 0; }
+  .retrieval-row.overdue {
+    border-left-color: var(--struggle);
+    background: linear-gradient(90deg, var(--warning-bg), var(--bg) 60%);
+  }
+  .retrieval-info .name {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .retrieval-info .meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  /* Mini type badge — quieter than the colourful Atoms-table version */
+  .type-mini {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .type-mini.type-categorical { color: #2c5f7f; border-color: #c5d4df; }
+  .type-mini.type-comparative { color: #6c4f9b; border-color: #d2cadf; }
+  .type-mini.type-transformation { color: #9b6c4f; border-color: #dfd2c5; }
+  .type-mini.type-fact { color: #5f7f2c; border-color: #d4dfc5; }
+  .type-mini.type-routine { color: #9b4f7c; border-color: #dfc5d4; }
+  /* Inline editable selects in the atom library */
+  .inline-select {
+    padding: 5px 8px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: inherit;
+    max-width: 220px;
+  }
+  .inline-select:hover { border-color: var(--border-strong); }
+  .inline-select:focus { border-color: var(--primary); outline: none; }
+  .inline-select.not-set { color: var(--text-muted); font-style: italic; }
+  .retrieval-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .retrieval-actions button {
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .retrieval-actions button.pass {
+    background: var(--pass-bg); color: var(--pass); border-color: var(--pass);
+  }
+  .retrieval-actions button.struggle {
+    background: var(--struggle-bg); color: var(--struggle); border-color: var(--struggle);
+  }
+  .retrieval-actions button.reteach {
+    background: var(--reteach-bg); color: var(--reteach); border-color: var(--reteach);
+  }
+  .retrieval-actions button.pass:hover,
+  .retrieval-actions button.pass.selected { background: #23452d; }
+  .retrieval-actions button.struggle:hover,
+  .retrieval-actions button.struggle.selected { background: #4a3017; }
+  .retrieval-actions button.reteach:hover,
+  .retrieval-actions button.reteach.selected { background: #4a1919; }
+  .retrieval-actions button.ad-hoc {
+    background: var(--accent-bg);
+    color: var(--primary);
+    border-color: var(--primary);
+    font-weight: 600;
+  }
+  .retrieval-actions button.ad-hoc:hover,
+  .retrieval-actions button.ad-hoc.selected {
+    background: #26384a;
+    color: var(--primary-hover);
+  }
+  .retrieval-actions button.miss:hover,
+  .retrieval-actions button.miss.selected,
+  .retrieval-actions button.skip:hover,
+  .retrieval-actions button.skip.selected {
+    background: var(--bg); color: var(--text); border-color: var(--border-strong);
+  }
+  .empty-state {
+    text-align: center;
+    padding: 36px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state h3 {
+    margin: 0 0 4px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .empty-state .cta-row {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .empty-state .cta-row a {
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--primary);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .empty-state .cta-row a:hover { color: var(--primary-hover); }
+  /* Help icons: small (?) markers that show a tooltip on hover */
+  .help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    color: var(--surface);
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 4px;
+    cursor: help;
+    vertical-align: middle;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    user-select: none;
+    position: relative;
+  }
+  .help-icon:hover { background: var(--primary); }
+  .help-icon::after {
+    content: attr(data-help);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2a2a;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: normal;
+    width: max-content;
+    max-width: 260px;
+    text-align: center;
+    line-height: 1.4;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 50;
+  }
+  .help-icon:hover::after { opacity: 1; }
+
+  /* Annotation overlay system: inline callouts that explain the current view. */
+  .annotation-box {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    box-shadow: 0 8px 24px rgba(44, 95, 127, 0.32);
+    animation: annotation-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .annotation-box .number {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+  .annotation-box .text { flex: 1; padding-top: 4px; }
+  @keyframes annotation-pop {
+    from { opacity: 0; transform: scale(0.94) translateY(-8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .annotation-done {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 80;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    font-family: inherit;
+  }
+  .annotation-done:hover { background: var(--primary-hover); }
+  .helper {
+    background: var(--accent-bg);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  .helper.warn { background: var(--warning-bg); }
+  .helper strong { color: var(--primary); }
+  details { margin-top: 12px; }
+  details summary {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    user-select: none;
+  }
+  details summary:hover { color: var(--text); }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .settings-grid input { width: 100%; }
+  .ladder-display {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .danger-zone {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .type-help {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 12px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .type-help dt { font-weight: 600; color: var(--text); }
+  /* Schedule grid */
+  .schedule-wrap {
+    overflow: auto;
+    max-height: 65vh;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .schedule-grid {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+    width: max-content;
+  }
+  .schedule-grid th, .schedule-grid td {
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 4px 6px;
+    text-align: center;
+    min-width: 38px;
+    height: 32px;
+    white-space: nowrap;
+  }
+  .schedule-grid thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 2;
+  }
+  .schedule-grid th.atom-col, .schedule-grid td.atom-col {
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    text-align: left;
+    min-width: 220px;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 1;
+    cursor: pointer;
+  }
+  .schedule-grid thead th.atom-col { background: var(--bg); z-index: 3; } /* top-left corner */
+  .schedule-grid td.atom-col:hover { background: var(--accent-bg); }
+  .schedule-grid th {
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .schedule-grid th.today-col { background: var(--accent-bg); color: var(--primary); }
+  .cell-I { background: var(--accent-bg); color: var(--primary); font-weight: 600; }
+  .cell-pass { background: var(--pass-bg); color: var(--pass); font-weight: 500; }
+  .cell-struggle { background: var(--struggle-bg); color: var(--struggle); font-weight: 500; }
+  .cell-reteach { background: var(--reteach-bg); color: var(--reteach); font-weight: 500; }
+  .cell-pending { background: var(--warning-bg); color: var(--struggle); }
+  .cell-projected { color: var(--text-muted); opacity: 0.65; }
+  .cell-missed { background: var(--bg); color: var(--text-muted); text-decoration: line-through; }
+  .cell-superseded { background: var(--reteach-bg); color: var(--reteach); text-decoration: line-through; opacity: 0.85; }
+  .cell-reteach-event { background: var(--reteach); color: #fff; font-weight: 700; }
+  .cell-skipped { background: var(--bg); color: var(--text-muted); font-weight: 600; }
+  /* Curriculum coverage table */
+  .coverage-add-atoms-btn {
+    background: var(--accent-bg);
+    color: var(--primary);
+    border: 1px solid #2f5065;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .coverage-add-atoms-btn:hover {
+    background: #26384a;
+    border-color: var(--primary);
+  }
+  #coverage-export-txt {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+  }
+  #screen-coverage > .card { padding-top: 10px; }
+  #screen-coverage > .card > .row { margin-bottom: 8px; }
+  .coverage-wrap {
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+  }
+  .coverage-status {
+    margin-top: 10px;
+    margin-bottom: 4px;
+    min-height: 18px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .coverage-status {
+    color: var(--text-muted);
+  }
+  .coverage-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+  }
+  .coverage-table th, .coverage-table td {
+    border-bottom: 1px solid var(--border);
+    padding: 4px 6px;
+    height: 24px;
+    line-height: 1.2;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .coverage-table th {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: right;
+    z-index: 1;
+  }
+  .coverage-table th.coverage-sort {
+    cursor: pointer;
+    user-select: none;
+  }
+  .coverage-table th.coverage-sort:hover { color: var(--text); }
+  .coverage-sort-indicator { opacity: 0.38; font-size: 10px; }
+  .coverage-table th:first-child, .coverage-table td:first-child { text-align: left; }
+  .coverage-table td { text-align: right; color: var(--text); }
+  .coverage-table td.atom-name {
+    max-width: 360px;
+    font-weight: 600;
+  }
+  .coverage-table td.atom-name > .atom-name-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .coverage-table td.atom-name a {
+    color: var(--text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .coverage-table td.atom-name a:hover { color: var(--primary); }
+  .coverage-table td.atom-name a.skip-active {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--text-muted);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    cursor: help;
+  }
+  .coverage-table td.atom-name a.scheduler-due { color: var(--warning-text); font-weight: 600; }
+  .coverage-table td.atom-name a.scheduler-due:hover { color: var(--warning-text); }
+  .coverage-table td.count { width: 42px; }
+  .coverage-table td.days { width: 72px; }
+  .coverage-table td.action { width: 38px; padding-left: 2px; padding-right: 2px; }
+  .coverage-rename {
+    padding: 2px 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background: transparent;
+    white-space: nowrap;
+  }
+  .coverage-rename:hover { color: var(--text); background: var(--bg); }
+  .btn.coverage-add {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    min-height: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--primary-hover) !important;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .btn.coverage-add:hover {
+    background: var(--primary-hover) !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+  .record-retrieval-form { display: flex; flex-direction: column; gap: 16px; }
+  .record-retrieval-date { width: 150px; }
+  .record-retrieval-outcomes { display: flex; gap: 8px; align-items: center; }
+  .record-retrieval-outcomes button {
+    min-width: 44px;
+    min-height: 36px;
+    font-size: 17px;
+  }
+  .record-retrieval-outcomes button.pass {
+    background: var(--pass-bg);
+    color: var(--pass);
+    border: 1px solid var(--pass);
+  }
+  .record-retrieval-outcomes button.struggle {
+    background: var(--struggle-bg);
+    color: var(--struggle);
+    border: 1px solid var(--struggle);
+  }
+  .record-retrieval-outcomes button.reteach {
+    background: var(--reteach-bg);
+    color: var(--reteach);
+    border: 1px solid var(--reteach);
+  }
+  .record-retrieval-outcomes button.ad-hoc {
+    min-width: 68px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--accent-bg);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+  .record-retrieval-outcomes button.pass:hover {
+    background: #23452d;
+  }
+  .record-retrieval-outcomes button.struggle:hover {
+    background: #4a3017;
+  }
+  .record-retrieval-outcomes button.reteach:hover {
+    background: #4a1919;
+  }
+  .record-retrieval-outcomes button.ad-hoc:hover {
+    background: #26384a;
+    color: var(--primary-hover);
+  }
+  .record-retrieval-skip { margin-top: -4px; align-self: flex-start; font-size: 12px; padding: 6px 10px; }
+  .coverage-table td.date { min-width: 64px; }
+  .coverage-table tr:last-child td { border-bottom: none; }
+  .coverage-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
+  .coverage-summary {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .coverage-summary strong { color: var(--text); font-size: 12px; }
+  .history-status-actions { display:flex; gap:8px; flex-wrap:wrap; margin: 16px 0 18px; }
+  .history-status-note { font-size:12px; color:var(--text-muted); margin: 2px 0 16px; }
+  @media (max-width: 700px) {
+    .coverage-table td.atom-name { max-width: 240px; }
+  }
+  .schedule-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .schedule-legend .swatch {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    margin-right: 4px;
+    vertical-align: middle;
+    border: 1px solid var(--border);
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-backdrop.open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 22px 24px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .modal h2 { margin: 0; font-size: 17px; }
+  .modal .modal-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+  .modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--text); }
+  .history-table { width: 100%; font-size: 13px; }
+  .history-table th { font-size: 11px; padding: 8px 10px; }
+  .history-table td { padding: 8px 10px; }
+  .history-sort-btn {
+    background: transparent; border: none; color: inherit; font: inherit;
+    font-size: inherit; padding: 0; cursor: pointer;
+    text-align: left; text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+  .history-sort-btn:hover { color: var(--text); }
+  .history-delete-btn {
+    background: transparent; border: none; color: var(--text-muted);
+    font-size: 15px; line-height: 1; cursor: pointer; padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .history-delete-btn:hover { color: var(--reteach); background: var(--reteach-bg); }
+
+  @media (max-width: 640px) {
+    main { padding: 16px; }
+    header { padding: 14px 16px 0; }
+    .retrieval-row { grid-template-columns: 1fr; }
+    .retrieval-actions { justify-content: flex-start; }
+    .header-top { flex-direction: column; align-items: stretch; }
+    .backup-needed-indicator.visible {
+      position: static;
+      transform: none;
+      align-self: center;
+      order: 1;
+    }
+    nav.tabs { justify-content: flex-start; margin-left: 0; }
+    .schedule-grid td.atom-col, .schedule-grid th.atom-col { min-width: 140px; max-width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <nav class="tabs">
+      <button data-screen="settings">Settings</button>
+      <button data-screen="classes">Classes</button>
+      <button data-screen="notes">Notes</button>
+      <button data-screen="atoms">Atoms</button>
+      <button data-screen="coverage" class="active">Atoms</button>
+      <button data-screen="today">Today's Lesson</button>
+      <button data-screen="schedule">Schedule</button>
+    </nav>
+    <span class="backup-needed-indicator" id="backup-needed-indicator" aria-live="polite">BACKUP NEEDED</span>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button class="backup-top-btn" id="top-data-export" title="Save a full backup of all classes and data">Backup</button>
+      <button class="btn ghost" id="top-data-import" title="Import a backup file">Import</button>
+      <span class="backup-top-status" id="last-backup-status">Last backup: Never</span>
+      <div class="class-switcher">
+        <label for="class-select">Class</label>
+        <select id="class-select"></select>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ TODAY'S LESSON ============ -->
+  <section id="screen-today" class="screen">
+    <div class="card">
+      <div class="row" style="justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h2>Today's Lesson</h2>
+          <div class="subtitle">What to introduce, what to retrieve.</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+          <div>
+            <label for="today-date">Lesson date</label>
+            <select id="today-date"></select>
+          </div>
+        </div>
+      </div>
+      <div id="today-content"></div>
+    </div>
+  </section>
+
+  <!-- ============ NOTES ============ -->
+  <section id="screen-notes" class="screen">
+    <div class="card">
+      <h2>Notes</h2>
+      <textarea id="class-notes" placeholder="Add any notes for this class..." style="min-height: 420px; width:100%; resize:vertical;"></textarea>
+    </div>
+  </section>
+
+  <!-- ============ ATOMS ============ -->
+  <section id="screen-atoms" class="screen">
+    <div class="card">
+      <h2>Add atoms</h2>
+      <div class="subtitle">Paste atom names, one per line. Set the initial instruction date for each one in the library below as you teach them.</div>
+      <textarea id="atom-bulk" placeholder="Find the total parts of a ratio
+Find the value of each part of a ratio
+Share a quantity in a given ratio
+..." style="min-height: 120px;"></textarea>
+      <div class="row" style="margin-top: 10px;">
+        <button class="btn" id="atom-bulk-add">Add atoms</button>
+      </div>
+      <details style="margin-top: 8px;">
+        <summary>Add a single atom (with date)</summary>
+        <div class="row" style="align-items: flex-end; margin-top: 10px;">
+          <div style="flex: 2 1 260px;">
+            <label for="atom-name">Atom name</label>
+            <input type="text" id="atom-name" placeholder="e.g. find the value of each part of a ratio">
+          </div>
+          <div style="flex: 0 1 170px;">
+            <label for="atom-initial">Initial instruction</label>
+            <input type="date" id="atom-initial">
+          </div>
+          <div style="flex: 0 1 140px;">
+            <label for="atom-retrieve">Long-term retrieval? <span class="help-icon" data-help="Yes = atom enters the long-term spaced retrieval schedule after its first retrieval. No = the atom gets one initial check after instruction, then is no longer scheduled.d again.">?</span></label>
+            <select id="atom-retrieve">
+              <option value="Y" selected>Yes</option>
+              <option value="N">No</option>
+            </select>
+          </div>
+          <button class="btn" id="atom-add">Add atom</button>
+        </div>
+      </details>
+      <!-- Hidden field preserved so existing JS can still read it without errors.
+           Type is no longer part of the atom UI but old data with types is kept intact. -->
+      <select id="atom-type" style="display:none;"><option value="" selected></option></select>
+    </div>
+
+    <div class="card">
+      <h2>Atom library</h2>
+      <div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="subtitle" style="margin: 0;"><span id="atoms-count">0</span> atoms in this class. Unscheduled atoms appear first.</div>
+        <input type="text" id="atom-search" placeholder="Search atoms by name…" style="flex: 0 1 260px;">
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Long-term retrieval <span class="help-icon" data-help="Yes = atom enters the spaced retrieval schedule after its first retrieval. No = atom gets one initial check after instruction, then is no longer scheduled.">?</span></th>
+            <th>Initial instruction</th>
+            <th>Retrievals</th>
+            <th>Next suggested</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="atoms-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ LESSON DATES (LEGACY SCREEN, HIDDEN) ============ -->
+  <section id="screen-dates" class="screen" aria-hidden="true" style="display:none;"></section>
+
+  <!-- ============ COVERAGE ============ -->
+  <section id="screen-coverage" class="screen active">
+    <div class="card">
+      <div class="row" style="justify-content: space-between; align-items: center; gap:12px; flex-wrap:wrap;">
+        <div class="row" style="gap:8px;">
+          <button class="coverage-add-atoms-btn" id="coverage-add-atoms" type="button" title="Add atoms to this class">Add atoms</button>
+          <button class="btn ghost" id="coverage-export-txt" title="Export atom names and teaching dates for the active class">Export .txt</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:7px;">
+          <label for="coverage-filter" style="margin:0; font-size:12px; color:var(--text-muted);">Show</label>
+          <select id="coverage-filter" style="width:auto; min-width:120px;">
+            <option value="active" selected>Active</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:7px;">
+          <label for="coverage-planning-horizon" style="margin:0; font-size:12px; color:var(--text-muted);">Planning for</label>
+          <select id="coverage-planning-horizon" style="width:auto; min-width:122px;">
+            <option value="today" selected>Today</option>
+            <option value="next-lesson">Next lesson</option>
+          </select>
+        </div>
+      </div>
+      <div class="coverage-status" id="coverage-status" aria-live="polite"></div>
+      <div class="coverage-wrap" id="coverage-wrap"></div>
+    </div>
+  </section>
+
+  <!-- ============ SCHEDULE ============ -->
+  <section id="screen-schedule" class="screen">
+    <div class="card">
+      <h2>Schedule overview</h2>
+      <div class="subtitle">Every atom on every lesson date for the active class. Past retrievals show their outcome; future ones are projections assuming each subsequent retrieval passes.</div>
+      <div class="schedule-wrap" id="schedule-wrap">
+        <div id="schedule-empty" style="padding: 36px 20px; text-align: center; color: var(--text-muted);">
+          Add atoms and lesson dates to see the schedule.
+        </div>
+      </div>
+      <div class="schedule-legend">
+        <span><span class="swatch cell-I"></span>Initial instruction</span>
+        <span><span class="swatch cell-pass"></span>Passed</span>
+        <span><span class="swatch cell-struggle"></span>Struggled</span>
+        <span><span class="swatch cell-reteach-event"></span>Re-taught (reset point)</span>
+        <span><span class="swatch cell-superseded"></span>Superseded (before re-teach)</span>
+        <span><span class="swatch cell-missed"></span>Missed</span>
+        <span><span class="swatch cell-skipped"></span>Unscheduled retrieval</span>
+        <span><span class="swatch cell-pending"></span>Pending (next)</span>
+        <span><span class="swatch cell-projected"></span>Projected</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLASSES ============ -->
+  <section id="screen-classes" class="screen">
+    <div class="card">
+      <h2>New class</h2>
+      <div class="row" style="align-items: flex-end;">
+        <div style="flex: 1 1 220px;">
+          <input type="text" id="new-class-name" placeholder="e.g. 8X3 Maths">
+        </div>
+        <button class="btn" id="new-class-add">Create class</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your classes</h2>
+      <div class="subtitle"><span id="classes-count">0</span> of 10.</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Atoms</th>
+            <th>Lesson dates</th>
+            <th>Retrievals recorded</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="classes-tbody"></tbody>
+      </table>
+    </div>
+
+
+    <div class="card">
+      <h2>Lesson dates</h2>
+      <div class="row" style="align-items: flex-end;">
+        <div>
+          <label for="date-single">Add one date</label>
+          <input type="date" id="date-single">
+        </div>
+        <button class="btn ghost" id="date-add-one">Add</button>
+      </div>
+
+      <details open>
+        <summary>Generate a recurring pattern</summary>
+        <div class="row" style="align-items: flex-end; margin-top: 8px;">
+          <div>
+            <label for="date-from">From</label>
+            <input type="date" id="date-from">
+          </div>
+          <div>
+            <label for="date-to">To</label>
+            <input type="date" id="date-to">
+          </div>
+          <div>
+            <label for="date-pattern">Pattern</label>
+            <select id="date-pattern">
+              <option value="weekly" selected>Weekly</option>
+              <option value="fortnightly">Fortnightly (2-week)</option>
+            </select>
+          </div>
+        </div>
+        <div id="pattern-weekly" style="margin-top: 10px;">
+          <label>Days of week</label>
+          <div class="row" style="gap: 6px;">
+            <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow" value="1" checked>Mon</label>
+            <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow" value="2">Tue</label>
+            <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow" value="3" checked>Wed</label>
+            <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow" value="4">Thu</label>
+            <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow" value="5" checked>Fri</label>
+          </div>
+        </div>
+        <div id="pattern-fortnightly" style="margin-top: 10px; display: none;">
+          <div class="row" style="align-items: flex-end;">
+            <div>
+              <label for="weekA-start">Week A starts on <span class="help-icon" data-help="The Monday of the first Week A in your timetable. The cycle alternates every 7 days from this anchor.">?</span></label>
+              <input type="date" id="weekA-start">
+            </div>
+          </div>
+          <div style="margin-top: 10px;">
+            <label>Week A days</label>
+            <div class="row" style="gap: 6px;">
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-a" value="1" checked>Mon</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-a" value="2">Tue</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-a" value="3" checked>Wed</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-a" value="4">Thu</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-a" value="5" checked>Fri</label>
+            </div>
+          </div>
+          <div style="margin-top: 10px;">
+            <label>Week B days</label>
+            <div class="row" style="gap: 6px;">
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-b" value="1">Mon</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-b" value="2" checked>Tue</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-b" value="3">Wed</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-b" value="4" checked>Thu</label>
+              <label style="display:flex; gap:4px; align-items:center; font-size:13px; margin:0;"><input type="checkbox" class="dow-b" value="5">Fri</label>
+            </div>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 12px;">
+          <button class="btn ghost" id="date-generate">Generate</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Scheduled dates</h2>
+      <div id="dates-count" style="display:none;">0</div>
+      <div id="dates-list" class="pill-input"></div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="screen-settings" class="screen">
+    <div class="card">
+      <h2>Spacing settings</h2>
+        <div class="settings-grid">
+        <div>
+          <label for="set-seed">Seed interval (days) <span class="help-icon" data-help="The target gap for the very first retrieval after an atom is taught. The system will snap to the closest lesson on or before this gap.">?</span></label>
+          <input type="number" id="set-seed" min="1" step="1">
+        </div>
+        <div>
+          <label for="set-mult">Spacing multiplier <span class="help-icon" data-help="Each successful retrieval expands the intended gap by this number. Calendar delays cannot make the next gap longer by themselves. Lower = tighter spacing (harder topics); higher = looser. Typical range 2 to 3.">?</span></label>
+          <input type="number" id="set-mult" min="1.1" step="0.1">
+        </div>
+        <div>
+          <label for="set-cap">Maximum interval (days) <span class="help-icon" data-help="The longest a gap is ever allowed to grow to. Caps off the expansion so atoms keep refreshing rather than disappearing.">?</span></label>
+          <input type="number" id="set-cap" min="1" step="1">
+        </div>
+      </div>
+      <div class="ladder-display" id="ladder-display"></div>
+      <div class="row" style="margin-top: 12px;">
+        <button class="btn" id="set-save">Save settings</button>
+      </div>
+    </div>
+
+
+    <div class="card" id="interest-signals-card" style="display: none;">
+      <h2>Interest signals</h2>
+      <div class="subtitle">Logged locally when teachers click features that aren&apos;t built yet. Useful for deciding what to build next.</div>
+      <div id="interest-signals"></div>
+    </div>
+
+    <div class="card">
+      <h2>Your data</h2>
+
+      <div style="margin-top: 16px;">
+        <div style="font-weight: 600; font-size: 13px;">Backup &amp; restore (this browser)</div>
+        <div class="row" style="margin-top: 8px;">
+          <button class="btn" id="data-export">Save backup file</button>
+          <button class="btn ghost" id="data-import-btn">Restore from backup</button>
+          <input type="file" id="data-import" accept="application/json" style="display:none;">
+          <button class="btn ghost" id="data-seed" style="display:none;">Load sample data</button>
+        </div>
+        <details style="margin-top: 12px;">
+          <summary>Recent snapshots (auto-saved on every change)</summary>
+          <div id="snapshots-list" style="margin-top: 8px;"></div>
+        </details>
+      </div>
+
+      <div id="settings-share-transfer" style="display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <div style="font-weight: 600; font-size: 13px;">Share &amp; transfer (between classes, teachers, years)</div>
+        <div class="subtitle" style="margin-top: 4px;">Anything exported here imports back in as a <strong>non-destructive merge</strong> into the <em>current</em> class &mdash; atoms are matched by id, existing ones keep their history, new ones are added. No classes are duplicated and nothing is wiped.</div>
+        <div class="row" style="margin-top: 10px;">
+          <button class="btn" id="atoms-export-btn">Export atoms</button>
+          <button class="btn ghost" id="class-merge-btn">Import into this class</button>
+          <input type="file" id="class-merge" accept="application/json" style="display:none;">
+          <button id="class-export" type="button" style="display:none;" aria-hidden="true"></button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.55;">
+          <strong>Export atoms</strong> &mdash; pick which atoms and exactly what to include (concept notes, example prompt &amp; response, retrieval history &amp; dates, instruction dates, teacher notes). Tick everything for a full class move with history; leave history off to share curriculum content with a team.<br>
+          <strong>Import into this class</strong> &mdash; non-destructive merge; reads any atoms or class export, plus Curriculum Writer atom files.
+        </div>
+        <!-- legacy Curriculum Writer import: now handled by "Import into this class" above; kept hidden so existing wiring stays valid -->
+        <button id="writer-sync-btn" style="display:none;" type="button">Import atoms (legacy)</button>
+        <input type="file" id="writer-sync" accept="application/json" style="display:none;">
+      </div>
+
+      <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <div style="font-weight: 600; font-size: 13px;">Tools</div>
+        <div class="row" style="margin-top: 8px;">
+          <button class="btn ghost" id="data-backfill">Backfill past retrievals</button>
+          <button class="btn ghost" id="atoms-delete-btn" style="display:none;">Delete atoms</button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;"><strong>Backfill</strong> reconstructs past retrievals for the current class from each atom's original instruction date and lesson calendar. Existing retrievals are left untouched.</div>
+      </div>
+    </div>
+
+    <div class="card danger-zone">
+      <h2>Danger zone</h2>
+      <div class="subtitle">Permanent actions. Make sure you have a backup first.</div>
+      <div class="row" style="margin-top: 8px;">
+        <button class="btn danger" id="data-clear">Clear everything</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ WELCOME MODAL (first run) ============ -->
+<div class="modal-backdrop" id="welcome-modal" style="display:none;">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width: 540px;">
+    <div class="modal-header">
+      <div>
+        <h2>Welcome to Retrieval Tracker </h2>
+        <div class="modal-sub">A 30-second tour before you start</div>
+      </div>
+      <button class="modal-close" id="welcome-close" aria-label="Close">&times;</button>
+    </div>
+    <div style="font-size: 14px;">
+      <p style="margin-top: 0;">This is a free, browser-only tool for scheduling spaced retrieval. Everything is saved on your device.</p>
+      <p style="margin-bottom: 6px;"><strong>The main tabs:</strong></p>
+      <div style="display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 13px;">
+        <div style="font-weight: 600;">Classes</div><div>Up to 10. Each one fully independent, including its lesson dates.</div>
+        <div style="font-weight: 600;">Settings</div><div>Multiplier, backups, snapshots, signals.</div>
+        <div style="font-weight: 600;">Atoms</div><div>Add atoms, record retrievals, and inspect the active class.</div>
+      </div>
+      <p style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">If you want to see how it works before adding your own data, load the sample data &mdash; it sets up two classes with lessons and a few atoms.</p>
+      <div class="row" style="margin-top: 18px;">
+        <button class="btn" id="welcome-start">Get started</button>
+        <button class="btn ghost" id="welcome-sample">Load sample data &amp; show me around</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ WORKSHEET MODAL (fake-door) ============ -->
+<div class="modal-backdrop" id="worksheet-modal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h2>Worksheet generator</h2>
+        <div class="modal-sub">An idea we&apos;re testing</div>
+      </div>
+      <button class="modal-close" id="worksheet-close" aria-label="Close">&times;</button>
+    </div>
+    <div id="worksheet-body" style="font-size: 14px;">
+      <p>This is an idea we&apos;re exploring &mdash; an interleaved worksheet covering today&apos;s atoms, generated in one click. It isn&apos;t built yet and may not be.</p>
+      <p>If something like this would be useful for you, drop your email below and we&apos;ll let you know if we go ahead with it.</p>
+      <div class="row" style="margin-top: 10px; align-items: flex-end;">
+        <div style="flex: 1 1 220px;">
+          <label for="worksheet-email">Email (optional)</label>
+          <input type="email" id="worksheet-email" placeholder="you@example.com" style="width: 100%;">
+        </div>
+        <button class="btn" id="worksheet-submit">Submit</button>
+      </div>
+      <div id="worksheet-thanks" style="display:none; margin-top: 12px; font-size: 13px; color: var(--pass);">
+        Thanks for the signal.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="golden-modal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h2>&#10022; Atom detail &amp; notes</h2>
+        <div class="modal-sub" id="golden-modal-sub"></div>
+      </div>
+      <button class="modal-close" id="golden-close" aria-label="Close">&times;</button>
+    </div>
+    <div id="golden-modal-body" style="font-size: 14px;"></div>
+  </div>
+</div>
+
+<!-- ============ ATOM HISTORY MODAL ============ -->
+<div class="modal-backdrop" id="history-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="history-title">
+    <div class="modal-header">
+      <div>
+        <h2 id="history-title">Atom history</h2>
+        <div class="modal-sub" id="history-sub"></div>
+      </div>
+      <button class="modal-close" id="history-close" aria-label="Close">&times;</button>
+    </div>
+    <div id="history-body"></div>
+  </div>
+</div>
+
+<!-- ============ ADD ATOMS MODAL ============ -->
+<div class="modal-backdrop" id="add-atoms-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-atoms-title" style="max-width: 560px;">
+    <div class="modal-header">
+      <div>
+        <h2 id="add-atoms-title">Add atoms</h2>
+        <div class="modal-sub" id="add-atoms-sub"></div>
+      </div>
+      <button class="modal-close" id="add-atoms-close" aria-label="Close">&times;</button>
+    </div>
+    <div>
+      <label for="coverage-atom-names">Atom names</label>
+      <textarea id="coverage-atom-names" placeholder="One atom per line" style="min-height: 150px;"></textarea>
+      <div class="row" style="align-items: flex-end; margin-top: 12px;">
+        <div style="flex: 0 1 190px;">
+          <label for="coverage-atom-date">Date taught</label>
+          <input type="date" id="coverage-atom-date">
+        </div>
+        <div style="flex: 0 1 180px;">
+          <label for="coverage-atom-status">Status</label>
+          <select id="coverage-atom-status">
+            <option value="scheduled" selected>Scheduled</option>
+            <option value="historic">Historic</option>
+          </select>
+        </div>
+      </div>
+      <div id="coverage-atom-date-note" style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">The date applies to every atom entered here. Historic atoms do not need an initial teaching date.</div>
+      <div class="row" style="justify-content: flex-end; margin-top: 16px; gap: 8px;">
+        <button class="btn ghost" id="add-atoms-cancel" type="button">Cancel</button>
+        <button class="btn" id="add-atoms-save" type="button">Add atoms</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ RECORD RETRIEVAL MODAL ============ -->
+<div class="modal-backdrop" id="record-retrieval-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="record-retrieval-title" style="max-width: 420px;">
+    <div class="modal-header">
+      <div>
+        <h2 id="record-retrieval-title">Record retrieval</h2>
+        <div class="modal-sub" id="record-retrieval-sub"></div>
+      </div>
+      <button class="modal-close" id="record-retrieval-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="record-retrieval-form">
+      <div>
+        <label for="record-retrieval-date">Date</label>
+        <input type="date" id="record-retrieval-date" class="record-retrieval-date">
+      </div>
+      <div>
+        <label>Outcome</label>
+        <div class="record-retrieval-outcomes">
+          <button class="btn ghost ad-hoc" data-record-modal-outcome="ad_hoc" title="Unscheduled retrieval — does not affect the scheduler" aria-label="unscheduled">unscheduled</button>
+          <button class="pass" data-record-modal-outcome="pass" title="Pass" aria-label="Pass">✓</button>
+          <button class="struggle" data-record-modal-outcome="struggle" title="Struggled" aria-label="Struggled">~</button>
+          <button class="reteach" data-record-modal-outcome="reteach" title="Re-teach" aria-label="Re-teach">✕</button>
+        </div>
+      </div>
+      <button class="btn ghost record-retrieval-skip" id="record-retrieval-skip" type="button">Skip for 1 week</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EXPORT / DELETE ATOMS MODAL ============ -->
+<div class="modal-backdrop" id="atoms-export-modal">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width: 580px;">
+    <div class="modal-header">
+      <div>
+        <h2 id="atoms-picker-title">Export atoms</h2>
+        <div class="modal-sub" id="atoms-picker-sub">Tick the atoms and choose what to include, then export.</div>
+      </div>
+      <button class="modal-close" id="atoms-export-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="row" style="margin-bottom: 8px; gap: 8px; align-items: center;">
+      <button class="btn ghost" id="atoms-export-all" type="button">Select all</button>
+      <button class="btn ghost" id="atoms-export-none" type="button">Select none</button>
+      <span style="font-size: 12px; color: var(--text-muted);" id="atoms-export-count"></span>
+    </div>
+    <div id="atoms-export-list" style="max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px;"></div>
+    <div id="atoms-export-includes" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+      <div style="font-weight: 600; font-size: 13px; margin-bottom: 6px;">Include in the export</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 13px;">
+        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-concept" checked> Concept notes</label>
+        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-examples" checked> Example prompt &amp; response</label>
+        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-history"> Retrieval history &amp; dates</label>
+        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-instruction"> Instruction dates</label>
+        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-notes"> Teacher notes</label>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Tick everything for a full class move (history included); leave history off to share curriculum content only.</div>
+    </div>
+    <div class="row" style="margin-top: 14px; gap: 8px;">
+      <button class="btn" id="atoms-export-go">Export selected</button>
+      <button class="btn danger" id="atoms-delete-go">Delete selected</button>
+      <button class="btn ghost" id="atoms-export-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================
+// THE LEARNING ENGINE - single-file webapp
+// =====================================================
+
+const STORAGE_KEY = "learning-engine-state-v1";
+const MAX_CLASSES = 10;
+const VALID_TYPES = ["Categorical", "Comparative", "Transformation", "Fact", "Routine"];
+
+function defaultSettings() {
+  return { seed_interval: 1, multiplier: 2, interval_cap: 60 };
+}
+function defaultProfile() {
+  // Per-class metadata used by the Pro prompt designer. All fields optional.
+  return {
+    year_group: "",
+    tier: "",                          // "Foundation" | "Higher" | "" (n/a, e.g. KS3)
+    exam_board: "",                    // "Edexcel" | "AQA" | "OCR" | "WJEC" | ""
+    target_grade_band: "",             // e.g. "4-6" or "7-9"
+    calculator_policy: "",             // "calculator" | "non-calculator" | "mixed"
+    send_notes: "",                    // free text
+    default_presentation_medium: ""    // "read aloud" | "projected" | "printed" | "mini-whiteboards" | "mixed"
+  };
+}
+function defaultClass(name) {
+  return {
+    id: newId("c"),
+    name: name || "Class 1",
+    atoms: [],
+    lesson_dates: [],
+    retrievals: [],
+    settings: defaultSettings(),
+    profile: defaultProfile(),
+    notes: ""
+  };
+}
+function defaultState() {
+  const cls = defaultClass("Class 1");
+  return { classes: [cls], active_class_id: cls.id };
+}
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    // Migrate old (pre-multi-class) format
+    if (parsed.classes && Array.isArray(parsed.classes)) {
+      // Already multi-class; merge defaults
+      for (const c of parsed.classes) {
+        c.atoms = c.atoms || [];
+        c.lesson_dates = c.lesson_dates || [];
+        c.retrievals = c.retrievals || [];
+        c.settings = { ...defaultSettings(), ...(c.settings || {}) };
+        c.profile = { ...defaultProfile(), ...(c.profile || {}) };
+        if (typeof c.notes !== "string") c.notes = "";
+        for (const atom of c.atoms) {
+          if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
+        }
+      }
+      if (parsed.classes.length === 0) return defaultState();
+      if (!parsed.classes.find(c => c.id === parsed.active_class_id)) {
+        parsed.active_class_id = parsed.classes[0].id;
+      }
+      return parsed;
+    }
+    // Old shape: wrap top-level fields in a single class
+    const cls = defaultClass("Class 1");
+    cls.atoms = parsed.atoms || [];
+    cls.lesson_dates = parsed.lesson_dates || [];
+    cls.retrievals = parsed.retrievals || [];
+    cls.settings = { ...defaultSettings(), ...(parsed.settings || {}) };
+    cls.notes = typeof parsed.notes === "string" ? parsed.notes : "";
+    for (const atom of cls.atoms) {
+      if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
+    }
+    return { classes: [cls], active_class_id: cls.id };
+  } catch (e) {
+    console.warn("Failed to load state, starting fresh", e);
+    return defaultState();
+  }
+}
+
+const BACKUP_BASELINE_KEY = "learning-engine-backup-baseline-hash";
+
+function hashState(value = state) {
+  const json = JSON.stringify(value);
+  let h = 0;
+  for (let i = 0; i < json.length; i++) {
+    h = (h * 31 + json.charCodeAt(i)) | 0;
+  }
+  return String(h);
+}
+
+function updateBackupButton() {
+  const btn = document.getElementById("top-data-export");
+  const indicator = document.getElementById("backup-needed-indicator");
+  if (!btn) return;
+  const baseline = localStorage.getItem(BACKUP_BASELINE_KEY);
+  const needsBackup = !!baseline && hashState() !== baseline;
+  btn.classList.toggle("needs-backup", needsBackup);
+  if (indicator) indicator.classList.toggle("visible", needsBackup);
+}
+
+function markBackupClean() {
+  localStorage.setItem(BACKUP_BASELINE_KEY, hashState());
+  updateBackupButton();
+}
+
+function initialiseBackupBaseline() {
+  if (!localStorage.getItem(BACKUP_BASELINE_KEY)) {
+    localStorage.setItem(BACKUP_BASELINE_KEY, hashState());
+  }
+  updateBackupButton();
+}
+
+function saveState(options = {}) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (options.snapshot !== false) snapshotState();
+  updateBackupButton();
+}
+
+// ----- Snapshot system: auto-save the last N states for one-click rollback -----
+const SNAPSHOTS_KEY = "learning-engine-snapshots-v1";
+const MAX_SNAPSHOTS = 20;
+
+function loadSnapshots() {
+  try {
+    return JSON.parse(localStorage.getItem(SNAPSHOTS_KEY) || "[]");
+  } catch (e) { return []; }
+}
+
+let lastSnapshotHash = null;
+function snapshotState() {
+  try {
+    const json = JSON.stringify(state);
+    // Cheap dedupe: skip if state hasn't actually changed
+    let h = 0; for (let i = 0; i < json.length; i++) { h = (h * 31 + json.charCodeAt(i)) | 0; }
+    if (h === lastSnapshotHash) return;
+    lastSnapshotHash = h;
+    const snaps = loadSnapshots();
+    snaps.unshift({ ts: Date.now(), data: json });
+    while (snaps.length > MAX_SNAPSHOTS) snaps.pop();
+    localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snaps));
+  } catch (e) { console.warn("Snapshot failed", e); }
+}
+
+function restoreSnapshot(ts) {
+  const snaps = loadSnapshots();
+  const s = snaps.find(x => x.ts === ts);
+  if (!s) return;
+  if (!confirm(`Restore the snapshot from ${formatTimestampUK(ts)}? Your current state will be replaced (a fresh snapshot of it will be saved first).`)) return;
+  // Save a "before restore" snapshot so the user can undo the restore
+  snapshotState();
+  state = JSON.parse(s.data);
+  settingsDraftDirty = false;
+  settingsDraftClassId = null;
+  // Don't trigger snapshotState again on this save (it would dedupe anyway)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  lastSnapshotHash = null;
+  updateBackupButton();
+  renderAll();
+}
+
+// ----- Worksheet fake-door: log clicks and email captures locally -----
+const WS_SIGNALS_KEY = "learning-engine-worksheet-signals-v1";
+
+function loadWorksheetSignals() {
+  try { return JSON.parse(localStorage.getItem(WS_SIGNALS_KEY) || '{"clicks":[],"emails":[]}'); }
+  catch (e) { return { clicks: [], emails: [] }; }
+}
+function saveWorksheetSignals(s) {
+  localStorage.setItem(WS_SIGNALS_KEY, JSON.stringify(s));
+}
+function logWorksheetClick(date, atomCount) {
+  const s = loadWorksheetSignals();
+  s.clicks.push({ ts: Date.now(), class_name: ctx().name, lesson_date: date, atom_count: atomCount });
+  saveWorksheetSignals(s);
+}
+function logWorksheetEmail(email) {
+  const s = loadWorksheetSignals();
+  s.emails.push({ ts: Date.now(), email, class_name: ctx().name });
+  saveWorksheetSignals(s);
+}
+
+function openWorksheetModal(atomCount) {
+  document.getElementById("worksheet-thanks").style.display = "none";
+  document.getElementById("worksheet-email").value = "";
+  document.getElementById("worksheet-modal").classList.add("open");
+}
+function closeWorksheetModal() {
+  document.getElementById("worksheet-modal").classList.remove("open");
+}
+
+function formatSnapTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.round(diffMs / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin} min ago`;
+  if (diffMin < 60 * 24) return `${Math.round(diffMin / 60)} h ago`;
+  return formatTimestampUK(ts);
+}
+
+// Current-class accessor — use this everywhere instead of state.atoms etc.
+function ctx() {
+  let cls = state.classes.find(c => c.id === state.active_class_id);
+  if (!cls) {
+    cls = state.classes[0];
+    if (cls) state.active_class_id = cls.id;
+  }
+  return cls;
+}
+
+const ATOM_STATUSES = ["scheduled", "historic", "archived"];
+function atomStatus(atom) {
+  return atom && ATOM_STATUSES.includes(atom.status) ? atom.status : "scheduled";
+}
+function setAtomStatus(atom, nextStatus) {
+  if (!atom || !ATOM_STATUSES.includes(nextStatus)) return false;
+  const current = atomStatus(atom);
+  if (current === nextStatus) return true;
+
+  if (nextStatus === "archived") {
+    atom.archived_from_status = current;
+    atom.status = "archived";
+    return true;
+  }
+
+  if (current === "archived") {
+    const restored = atom.archived_from_status === "historic" ? "historic" : "scheduled";
+    atom.status = nextStatus === restored ? restored : nextStatus;
+    delete atom.archived_from_status;
+    return true;
+  }
+
+  atom.status = nextStatus;
+  return true;
+}
+
+// ----- Date helpers -----
+function todayISO() { return toISO(new Date()); }
+function toISO(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function fromISO(s) {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+function addDays(iso, n) {
+  const d = fromISO(iso);
+  d.setDate(d.getDate() + n);
+  return toISO(d);
+}
+function daysBetween(a, b) {
+  if (!a || !b) return null;
+  return Math.round((fromISO(b) - fromISO(a)) / 86400000);
+}
+function formatDateNice(iso) {
+  if (!iso) return "—";
+  const d = fromISO(iso);
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(-2)}`;
+}
+function formatTimestampUK(ts) {
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "Unknown";
+  return `${formatDateNice(toISO(d))} ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+function isSkipActive(atom, today = todayISO()) {
+  if (!atom || !atom.skippedAt) return false;
+  const days = Math.round((fromISO(today) - fromISO(atom.skippedAt)) / 86400000);
+  return days >= 0 && days < 7;
+}
+
+// ----- Scheduler engine -----
+function intervalForStep(step, settings) {
+  const raw = settings.seed_interval * Math.pow(settings.multiplier, step);
+  return Math.min(Math.max(1, Math.round(raw)), settings.interval_cap);
+}
+
+function atomRetrievals(atom_id) {
+  return ctx().retrievals
+    .filter(r => r.atom_id === atom_id)
+    .sort((a, b) => a.lesson_date.localeCompare(b.lesson_date));
+}
+
+// Retrospective onboarding: when an atom was first taught before today but has no
+// recorded retrieval history, estimate how far through the normal spacing ladder it
+// would have progressed by now. This affects scheduling only: no fictitious retrieval
+// records are created. The inferred baseline is stored on the atom so the first real
+// outcome can continue from it. Atoms that already have retrieval history and no such
+// baseline are left completely unchanged.
+function retrospectiveBootstrap(atom, settings) {
+  if (atomStatus(atom) !== "scheduled") return null;
+  if (!atom.initial_instruction_date) return null;
+  const today = todayISO();
+  if (atom.initial_instruction_date >= today) return null;
+
+  const all = atomRetrievals(atom.id);
+  if (all.length > 0) return atom.retrospective_bootstrap || null;
+
+  const dates = sortedLessonDates();
+  if (dates.length === 0) return null;
+
+  let cursor = atom.initial_instruction_date;
+  let gap = Math.min(Math.max(1, settings.seed_interval), settings.interval_cap);
+  let virtualRetrievals = 0;
+  let safety = 500;
+
+  while (safety-- > 0) {
+    const target = addDays(cursor, gap);
+    const eligible = dates.filter(d => d > cursor && d <= target);
+    const next = eligible.length > 0
+      ? eligible[eligible.length - 1]
+      : (dates.find(d => d > cursor) || null);
+
+    if (!next || next > today) break;
+
+    cursor = next;
+    virtualRetrievals++;
+    gap = Math.min(
+      Math.max(1, Math.round(gap * settings.multiplier)),
+      settings.interval_cap
+    );
+  }
+
+  const baseline = {
+    last_date: cursor,
+    bootstrap_next_gap: gap,
+    bootstrap_count: virtualRetrievals,
+    settings: {
+      seed_interval: settings.seed_interval,
+      multiplier: settings.multiplier,
+      interval_cap: settings.interval_cap
+    }
+  };
+  atom.retrospective_bootstrap = baseline;
+  return baseline;
+}
+
+function getAtomSchedulingState(atom, options = {}) {
+  if (atomStatus(atom) !== "scheduled") {
+    return { last_date: null, history: [], anchorDate: null, last_successful_gap: null, hasPassed: false, hasRealPass: false, bootstrapped: false, bootstrap_next_gap: null, bootstrap_count: 0 };
+  }
+  // Spacing algorithm: a successful retrieval can expand the next interval, but a
+  // timetable-induced delay cannot by itself make that expansion larger. The gap used
+  // for growth is capped at the gap the scheduler had intended immediately before the
+  // retrieval. This separates memory evidence from lesson-calendar constraints.
+  // Returns: { last_date, history, anchorDate, last_successful_gap, hasPassed, hasRealPass }.
+  // hasPassed includes retrospective onboarding so an old atom does not look newly taught,
+  // while hasRealPass is reserved for an actual recorded Pass (important for retrieve=N).
+  // Missed outcomes are excluded from scheduling history — they don't count as
+  // retrievals and don't change the spacing calculation. Legacy Skip records, if present
+  // in imported data, are treated the same way for backward compatibility. A missed event
+  // moves the next occurrence beyond the dealt-with scheduled lesson; simply ignoring a
+  // recommendation creates no event at all.
+  if (!atom.initial_instruction_date) {
+    return { last_date: null, history: [], anchorDate: null, last_successful_gap: null, hasPassed: false, hasRealPass: false, bootstrapped: false, bootstrap_next_gap: null, bootstrap_count: 0 };
+  }
+  const settings = ctx().settings;
+  const all = atomRetrievals(atom.id);
+  let anchorDate = atom.initial_instruction_date;
+  let history = all.filter(r => r.lesson_date >= anchorDate);
+  // Reteach scan considers ALL events (including misses) so the most recent reteach is found.
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].outcome === "reteach") {
+      anchorDate = history[i].lesson_date;
+      history = history.slice(i + 1);
+      break;
+    }
+  }
+  // Misses, skips and unscheduled retrievals are excluded from scheduling history.
+  // Unscheduled retrievals are genuine retrievals pedagogically, but deliberately sit outside
+  // the spacing programme and therefore do not alter scheduler state.
+  history = history.filter(r => r.outcome !== "miss" && r.outcome !== "skip" && r.outcome !== "ad_hoc");
+
+  // Retrospective onboarding is retained for backward compatibility, but normal
+  // scheduling uses only actual recorded retrieval history. Backfill can still
+  // explicitly opt into the no-bootstrap path via ignoreBootstrap.
+  const bootstrap = null;
+  let last_date = bootstrap ? bootstrap.last_date : anchorDate;
+  let last_successful_gap = bootstrap ? bootstrap.bootstrap_next_gap : null;
+  let hasPassed = !!bootstrap;
+  let hasRealPass = false;
+
+  // `plannedGapForNextRetrieval` is the interval the scheduler intended immediately
+  // before the current historical retrieval. A late lesson therefore cannot inflate the
+  // interval merely because the calendar made the retrieval happen later. A retrieval inside
+  // the acceptable window (>= 75% of the planned gap) earns the full planned gap; a
+  // substantially earlier one earns its actual gap, floored at ceil(planned / multiplier).
+  let plannedGapForNextRetrieval = Math.min(Math.max(1, settings.seed_interval), settings.interval_cap);
+
+  for (let i = 0; i < history.length; i++) {
+    const r = history[i];
+    const gap = Math.max(1, Math.round((fromISO(r.lesson_date) - fromISO(last_date)) / 86400000));
+
+    if (r.outcome === "pass") {
+      // Credit for this Pass:
+      //  - at or above 75% of the planned gap (the window the scheduler itself recommends
+      //    from) the full planned gap is credited, so the calendar never penalises a
+      //    recommended lesson;
+      //  - a later retrieval cannot be credited more than the planned gap;
+      //  - a substantially earlier retrieval is credited its actual gap, but never less than
+      //    ceil(planned / multiplier), so a Pass can never leave less spacing than a Struggle
+      //    at the same point would (a Struggle holds at the previous successful gap).
+      // The epsilon guards against floating-point noise, e.g. 21 / 1.4 = 15.000000000000002.
+      const planned = plannedGapForNextRetrieval;
+      const inWindow = gap >= Math.ceil(planned * MIN_SNAP_GAP_FRACTION);
+      const effectiveSuccessfulGap = Math.min(
+        planned,
+        Math.max(inWindow ? planned : gap, Math.ceil(planned / settings.multiplier - 1e-9))
+      );
+      if (bootstrap && i === 0) last_successful_gap = bootstrap.bootstrap_next_gap;
+      else last_successful_gap = effectiveSuccessfulGap;
+      hasPassed = true;
+      hasRealPass = true;
+      plannedGapForNextRetrieval = Math.min(
+        Math.max(1, Math.round(last_successful_gap * settings.multiplier)),
+        settings.interval_cap
+      );
+    } else if (r.outcome === "struggle") {
+      // A struggle does not increase spacing. If there has already been a successful
+      // retrieval, hold at that successful effective gap; otherwise remain at the seed.
+      plannedGapForNextRetrieval = last_successful_gap == null
+        ? Math.min(Math.max(1, settings.seed_interval), settings.interval_cap)
+        : Math.min(last_successful_gap, settings.interval_cap);
+
+      if (bootstrap && i === 0) {
+        // A first real check after onboarding should hold at the inferred current spacing
+        // level rather than falling all the way back to the 1-day seed.
+        hasPassed = true;
+      }
+    }
+
+    last_date = r.lesson_date;
+  }
+
+  return {
+    last_date,
+    history,
+    anchorDate,
+    last_successful_gap,
+    hasPassed,
+    hasRealPass,
+    bootstrapped: !!bootstrap,
+    bootstrap_next_gap: bootstrap ? bootstrap.bootstrap_next_gap : null,
+    bootstrap_count: bootstrap ? bootstrap.bootstrap_count : 0
+  };
+}
+
+function sortedLessonDates() {
+  return [...ctx().lesson_dates].sort();
+}
+
+// When a target date falls between lessons, allow an earlier lesson only when the
+// resulting gap is still at least this proportion of the intended interval.
+// This prevents lesson snapping from turning a substantial spacing interval into
+// a very short retrieval gap simply because a lesson happens to occur earlier.
+const MIN_SNAP_GAP_FRACTION = 0.75;
+
+function plannedGap(sched, settings) {
+  // The next interval is based on the successful gap used for scheduling, where each
+  // successful historical retrieval had its actual gap capped at the gap the scheduler
+  // intended. Calendar delays therefore cannot compound into longer future intervals.
+  const lastEvent = sched.history[sched.history.length - 1];
+  const lastWasStruggle = lastEvent && lastEvent.outcome === "struggle";
+  if (sched.bootstrapped && sched.history.length === 0) {
+    return Math.min(sched.bootstrap_next_gap, settings.interval_cap);
+  }
+  if (!sched.hasPassed) {
+    return Math.min(settings.seed_interval, settings.interval_cap);
+  }
+  if (sched.bootstrapped && sched.history.length === 1 && !sched.hasRealPass && lastWasStruggle) {
+    return Math.min(sched.bootstrap_next_gap, settings.interval_cap);
+  }
+  if (sched.bootstrapped && sched.history.length === 1 && sched.hasRealPass) {
+    return Math.min(Math.round(sched.bootstrap_next_gap * settings.multiplier), settings.interval_cap);
+  }
+  if (lastWasStruggle) {
+    return Math.min(sched.last_successful_gap, settings.interval_cap);
+  }
+  return Math.min(Math.round(sched.last_successful_gap * settings.multiplier), settings.interval_cap);
+}
+
+function nextSuggestedDate(atom, options = {}) {
+  if (atomStatus(atom) !== "scheduled") return null;
+  if (!atom.initial_instruction_date) return null;
+  const sched = getAtomSchedulingState(atom, options);
+  if (!sched.last_date) return null;
+  // retrieve=N atoms are capped at the initial retrieval — once a real Pass has been
+  // recorded, no more scheduling. Retrospective onboarding alone must not suppress the first check.
+  if (atom.retrieve === "N" && sched.hasRealPass) return null;
+  const dates = sortedLessonDates();
+
+  // A manual one-week skip suppresses the current recommendation itself. The next
+  // scheduled lesson must be on or after the seven-day return date, rather than merely
+  // hiding the item in the UI. This leaves the underlying spacing history unchanged.
+  if (isSkipActive(atom)) {
+    const returnDate = addDays(atom.skippedAt, 7);
+    return dates.find(d => d >= returnDate && d > sched.last_date) || null;
+  }
+
+  const gap = plannedGap(sched, ctx().settings);
+  const target = addDays(sched.last_date, gap);
+  // Determine the earliest possible next lesson: must be after last_date AND after any
+  // missed lesson dates (so a Missed click pushes the schedule forward to the next lesson).
+  const allEventDates = ctx().retrievals
+    .filter(r => r.atom_id === atom.id && r.outcome !== "ad_hoc")
+    .map(r => r.lesson_date)
+    .sort();
+  const latestEventDate = allEventDates.length > 0 ? allEventDates[allEventDates.length - 1] : null;
+  const earliestAllowed = (latestEventDate && latestEventDate > sched.last_date) ? latestEventDate : sched.last_date;
+  // Snap backwards only when the resulting lesson gap is not too short relative to
+  // the intended interval. Otherwise, skip the early lesson and roll forwards.
+  const minAcceptableGap = Math.ceil(gap * MIN_SNAP_GAP_FRACTION);
+  const eligible = dates.filter(d => {
+    if (!(d > earliestAllowed && d <= target)) return false;
+    const actualGap = daysBetween(sched.last_date, d);
+    return actualGap >= minAcceptableGap;
+  });
+  if (eligible.length > 0) return eligible[eligible.length - 1];
+  // Fallback: no lesson inside the acceptable window [75% of the gap, target]. Roll forward
+  // to the first lesson AFTER the target. A lesson before the window is never returned, so a
+  // recommendation can never break the minimum-gap rule. Any lesson that satisfies the rule
+  // is already in `eligible`; if the calendar has no lesson after the target there is no
+  // suitable date, so return null.
+  return dates.find(d => d > target && d > earliestAllowed) || null;
+}
+
+// Build the full event timeline for an atom: initial instruction, recorded retrievals,
+// the next pending retrieval, then future projections assuming each is passed.
+// Returns events: { date, type: 'I'|'R', n, status: 'recorded'|'pending'|'projected', outcome? }
+function fullScheduleForAtom(atom, maxProjections = 10) {
+  if (atomStatus(atom) !== "scheduled") return [];
+  if (!atom.initial_instruction_date) return [];
+  const events = [];
+  const sched = getAtomSchedulingState(atom);
+  const settings = ctx().settings;
+
+  // Always show the ORIGINAL initial instruction as an "I" cell.
+  events.push({ date: atom.initial_instruction_date, type: 'I', n: 0, status: 'recorded' });
+
+  // Walk every recorded event chronologically. Pre-reteach events (those before the most
+  // recent reteach) are marked 'superseded' so they render in faded red but stay visible —
+  // the teacher can see the failed attempt that triggered the re-teach. The reteach event
+  // itself is shown as a distinct marker so the reset point is obvious.
+  const allMyRetrievals = atomRetrievals(atom.id);
+  let currentSeqN = 0; // numbering of the CURRENT sequence (resets at the latest reteach)
+  for (const r of allMyRetrievals) {
+    const isPreReteach = r.lesson_date < sched.anchorDate;
+    const isTheReteach = (r.outcome === "reteach" && r.lesson_date === sched.anchorDate);
+    if (isPreReteach) {
+      if (r.outcome === "miss") {
+        events.push({ date: r.lesson_date, type: 'M', n: null, status: 'superseded', outcome: 'miss' });
+      } else {
+        events.push({ date: r.lesson_date, type: 'R', n: null, status: 'superseded', outcome: r.outcome });
+      }
+    } else if (isTheReteach) {
+      events.push({ date: r.lesson_date, type: 'reteach', n: 0, status: 'recorded', outcome: 'reteach' });
+      currentSeqN = 0;
+    } else {
+      if (r.outcome === "miss") {
+        events.push({ date: r.lesson_date, type: 'M', n: null, status: 'missed', outcome: 'miss' });
+      } else if (r.outcome === "skip") {
+        events.push({ date: r.lesson_date, type: 'S', n: null, status: 'skipped', outcome: 'skip' });
+      } else if (r.outcome === "ad_hoc") {
+        events.push({ date: r.lesson_date, type: 'A', n: null, status: 'ad_hoc', outcome: 'ad_hoc' });
+      } else {
+        currentSeqN++;
+        events.push({ date: r.lesson_date, type: 'R', n: currentSeqN, status: 'recorded', outcome: r.outcome });
+      }
+    }
+  }
+
+  // Project forward unless atom is done (retrieve=N past initial pass)
+  if (atom.retrieve === "N" && sched.hasPassed) return events;
+
+  // Initial gap for the FIRST projection (pending) uses the current scheduling state.
+  const allEventDates = ctx().retrievals
+    .filter(r => r.atom_id === atom.id && r.outcome !== "ad_hoc")
+    .map(r => r.lesson_date)
+    .sort();
+  const latestEventDate = allEventDates.length
+    ? allEventDates[allEventDates.length - 1]
+    : null;
+  let last_date = (latestEventDate && latestEventDate > sched.last_date)
+    ? latestEventDate
+    : sched.last_date;
+  let n = sched.history.length + 1;
+  let firstGap = plannedGap(sched, settings);
+  const dates = sortedLessonDates();
+  let isFirstProjection = true;
+  let lastUsedGap = firstGap;
+
+  for (let i = 0; i < maxProjections; i++) {
+    const gap = isFirstProjection ? firstGap : Math.min(Math.round(lastUsedGap * settings.multiplier), settings.interval_cap);
+    const target = addDays(last_date, gap);
+    const minAcceptableGap = Math.ceil(gap * MIN_SNAP_GAP_FRACTION);
+    const eligible = dates.filter(d => {
+      if (!(d > last_date && d <= target)) return false;
+      const actualGap = daysBetween(last_date, d);
+      return actualGap >= minAcceptableGap;
+    });
+    // If no lesson inside the acceptable window exists, roll forward to the first lesson
+    // after the target (never to an earlier lesson). No such lesson ends the projection.
+    const candidate = eligible.length > 0 ? eligible[eligible.length - 1] : dates.find(d => d > target);
+    if (!candidate) break;
+    events.push({
+      date: candidate,
+      type: 'R',
+      n,
+      status: isFirstProjection ? 'pending' : 'projected'
+    });
+    last_date = candidate;
+    lastUsedGap = gap; // projections preserve the intended interval; the calendar cannot inflate it
+    n += 1;
+    isFirstProjection = false;
+    if (atom.retrieve === "N") break; // N atoms only get the initial retrieval projection
+  }
+
+  return events;
+}
+
+function todaysSchedule(isoDate) {
+  // Collapsed single Retrieval list (with is_first flag for tagging) + Initial Instruction.
+  // Sorted by retrieval_number ascending — most vulnerable atoms first.
+  const retrievals = [];
+  const initial_instructions = [];
+
+  for (const atom of ctx().atoms) {
+    if (atomStatus(atom) !== "scheduled") continue;
+    if (!atom.initial_instruction_date) continue;
+    const sched = getAtomSchedulingState(atom);
+    const onDate = ctx().retrievals.find(r => r.atom_id === atom.id && r.lesson_date === isoDate);
+
+    // Show in Initial Instruction whenever isoDate is the atom's original instruction date
+    // OR its current (post-reteach) anchor. This keeps the historical "first taught here"
+    // marker visible even when subsequent retrievals have happened, so navigating to a past
+    // lesson date still shows what was introduced that day.
+    if ((atom.initial_instruction_date === isoDate || sched.anchorDate === isoDate) && !onDate) {
+      initial_instructions.push(atom);
+      continue;
+    }
+
+    if (onDate) {
+      if (onDate.outcome === "miss" || onDate.outcome === "skip" || onDate.outcome === "ad_hoc") {
+        // Misses, skips and unscheduled retrievals are excluded from sched.history. Unscheduled retrievals
+        // remain visible on the date they were recorded but do not affect scheduling.
+        retrievals.push({
+          atom,
+          scheduled_for: isoDate,
+          overdue: false,
+          retrieval_number: onDate.outcome === "ad_hoc" ? null : sched.history.length + 1,
+          is_first: !sched.hasPassed,
+          recorded_outcome: onDate.outcome
+        });
+        continue;
+      }
+      const idx = sched.history.findIndex(r => r.lesson_date === isoDate);
+      const priorHistory = idx > 0 ? sched.history.slice(0, idx) : [];
+      const hadPassedBefore = priorHistory.some(r => r.outcome === "pass");
+      retrievals.push({
+        atom,
+        scheduled_for: isoDate,
+        overdue: false,
+        retrieval_number: idx >= 0 ? idx + 1 : 1,
+        is_first: !hadPassedBefore,
+        recorded_outcome: onDate.outcome
+      });
+      continue;
+    }
+
+    const next = nextSuggestedDate(atom);
+    if (!next || next > isoDate) continue;
+
+    const hasPassedSinceAnchor = sched.history.some(r => r.outcome === "pass");
+    retrievals.push({
+      atom,
+      scheduled_for: next,
+      overdue: next < isoDate,
+      retrieval_number: sched.history.length + 1,
+      is_first: !hasPassedSinceAnchor,
+      planned_gap: plannedGap(sched, ctx().settings),
+      recorded_outcome: null
+    });
+  }
+
+  // Most vulnerable first = fewest retrievals first.
+  // Final tiebreaker is atom-library order (the order atoms appear in ctx().atoms),
+  // not alphabetical — matches the curriculum sequence the teacher pasted.
+  const atomLibraryIndex = new Map(ctx().atoms.map((a, i) => [a.id, i]));
+  retrievals.sort((a, b) =>
+    a.retrieval_number - b.retrieval_number ||
+    a.scheduled_for.localeCompare(b.scheduled_for) ||
+    ((atomLibraryIndex.get(a.atom.id) ?? 0) - (atomLibraryIndex.get(b.atom.id) ?? 0))
+  );
+  // Initial instructions keep atom-library order (the order atoms appear in ctx().atoms),
+  // not alphabetical. This matches the curriculum sequence the teacher pasted.
+
+  return { retrievals, initial_instructions };
+}
+
+function recordRetrieval(atom_id, lesson_date, outcome) {
+  const c = ctx();
+  if (!lesson_date || !outcome) return false;
+
+  // There can be only one retrieval record for an atom on a given date. If one
+  // already exists, make any change explicit rather than silently overwriting it.
+  const existing = c.retrievals.find(r => r.atom_id === atom_id && r.lesson_date === lesson_date);
+  if (existing && existing.outcome !== outcome) {
+    const outcomeLabels = {
+      pass: "✓ Pass",
+      struggle: "~ Struggled",
+      reteach: "✕ Re-teach",
+      ad_hoc: "unscheduled",
+      miss: "Missed",
+      skip: "Skipped"
+    };
+    const atom = c.atoms.find(a => a.id === atom_id);
+    const atomName = atom ? atom.name : "this atom";
+    const dateLabel = formatDateNice(lesson_date) || lesson_date;
+    const oldLabel = outcomeLabels[existing.outcome] || existing.outcome;
+    const newLabel = outcomeLabels[outcome] || outcome;
+    const replace = confirm(
+      `A retrieval is already recorded for "${atomName}" on ${dateLabel} (${oldLabel}).\n\nReplace it with ${newLabel}?`
+    );
+    if (!replace) return false;
+  }
+
+  // Legacy "additional" records are treated exactly like every other retrieval
+  // from this point onwards.
+  c.retrievals = c.retrievals.filter(r => !(r.atom_id === atom_id && r.lesson_date === lesson_date));
+  c.retrievals.push({ atom_id, lesson_date, outcome });
+  const recordedAtom = c.atoms.find(a => a.id === atom_id);
+  // An unscheduled retrieval is outside the spacing programme, so it must not cancel an active skip.
+  if (outcome !== "ad_hoc" && recordedAtom && recordedAtom.skippedAt) delete recordedAtom.skippedAt;
+  // The original first-taught date is preserved. The current scheduling anchor is
+  // computed from the most recent re-teach in getAtomSchedulingState.
+  saveState();
+  return true;
+}
+
+function clearOutcome(atom_id, lesson_date) {
+  const c = ctx();
+  c.retrievals = c.retrievals.filter(r => !(r.atom_id === atom_id && r.lesson_date === lesson_date));
+  saveState();
+}
+
+// Compatibility wrapper for the hidden legacy Today's Lesson view. New retrievals
+// are entered through Coverage and use recordRetrieval directly.
+function recordOutcome(atom_id, lesson_date, outcome) {
+  recordRetrieval(atom_id, lesson_date, outcome);
+}
+
+let recordRetrievalAtomId = null;
+
+function openRecordRetrieval(atomId) {
+  const atom = ctx().atoms.find(a => a.id === atomId);
+  if (!atom) return;
+  recordRetrievalAtomId = atomId;
+  const dateInput = document.getElementById("record-retrieval-date");
+  dateInput.value = todayISO();
+  dateInput.min = atom.initial_instruction_date || "";
+  dateInput.max = todayISO();
+  document.getElementById("record-retrieval-sub").textContent = atom.name;
+  const skipButton = document.getElementById("record-retrieval-skip");
+  if (skipButton) {
+    const next = atomStatus(atom) === "scheduled" ? nextSuggestedDate(atom) : null;
+    const due = !!next && next <= todayISO();
+    skipButton.style.display = due && !isSkipActive(atom) ? "inline-flex" : "none";
+  }
+  document.getElementById("record-retrieval-modal").classList.add("open");
+  dateInput.focus();
+}
+
+function closeRecordRetrieval() {
+  recordRetrievalAtomId = null;
+  document.getElementById("record-retrieval-modal").classList.remove("open");
+}
+
+function skipRetrievalForWeek(atomId) {
+  const atom = ctx().atoms.find(a => a.id === atomId);
+  if (!atom) return;
+  const today = todayISO();
+  const next = nextSuggestedDate(atom);
+  if (!next || next > today) return;
+  atom.skippedAt = today;
+  saveState();
+  closeRecordRetrieval();
+  renderAll();
+}
+
+function deleteRetrieval(recordIndex) {
+  const c = ctx();
+  const index = Number(recordIndex);
+  if (!Number.isInteger(index) || index < 0 || index >= c.retrievals.length) return;
+  const retrieval = c.retrievals[index];
+  if (!retrieval || !retrieval.atom_id) return;
+  if (!confirm("Delete this retrieval? The atom's schedule will be recalculated from the remaining history.")) return;
+  const atomId = retrieval.atom_id;
+  c.retrievals.splice(index, 1);
+  saveState();
+  renderAll();
+  if (document.getElementById("history-modal").classList.contains("open")) {
+    openAtomHistory(atomId);
+  }
+}
+
+
+function newId(prefix) {
+  return (prefix || "a") + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// ----- Class management -----
+function switchClass(class_id) {
+  if (!state.classes.find(c => c.id === class_id)) return;
+  state.active_class_id = class_id;
+  saveState();
+  renderAll();
+}
+
+function createClass(name) {
+  if (state.classes.length >= MAX_CLASSES) { alert(`Limit is ${MAX_CLASSES} classes.`); return null; }
+  if (!name || !name.trim()) { alert("Class name is required."); return null; }
+  const cls = defaultClass(name.trim());
+  state.classes.push(cls);
+  state.active_class_id = cls.id;
+  saveState();
+  return cls;
+}
+
+function renameClass(class_id, new_name) {
+  const cls = state.classes.find(c => c.id === class_id);
+  if (!cls || !new_name || !new_name.trim()) return;
+  cls.name = new_name.trim();
+  saveState();
+}
+
+function deleteClass(class_id) {
+  if (state.classes.length <= 1) { alert("You need at least one class."); return; }
+  const cls = state.classes.find(c => c.id === class_id);
+  if (!cls) return;
+  if (!confirm(`Delete "${cls.name}" and all its atoms, dates and retrievals? This cannot be undone.`)) return;
+  state.classes = state.classes.filter(c => c.id !== class_id);
+  if (state.active_class_id === class_id) {
+    state.active_class_id = state.classes[0].id;
+  }
+  saveState();
+  renderAll();
+}
+
+function moveClass(class_id, direction) {
+  const index = state.classes.findIndex(c => c.id === class_id);
+  if (index < 0) return;
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= state.classes.length) return;
+  const [cls] = state.classes.splice(index, 1);
+  state.classes.splice(newIndex, 0, cls);
+  saveState();
+  renderAll();
+}
+
+// ----- Tab navigation -----
+document.querySelectorAll("nav.tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const screen = btn.dataset.screen;
+    document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === `screen-${screen}`));
+    renderAll();
+  });
+});
+
+
+document.getElementById("class-select").addEventListener("change", (e) => {
+  switchClass(e.target.value);
+});
+
+// ----- Render: class switcher -----
+function renderClassSwitcher() {
+  const sel = document.getElementById("class-select");
+  sel.innerHTML = "";
+  for (const c of state.classes) {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  }
+  sel.value = state.active_class_id;
+}
+
+// ----- Render: class notes -----
+function renderNotes() {
+  const notes = document.getElementById("class-notes");
+  if (!notes) return;
+  const c = ctx();
+  notes.value = c.notes || "";
+}
+
+// ----- Render: Classes screen -----
+function renderClasses() {
+  document.getElementById("classes-count").textContent = state.classes.length;
+  const tbody = document.getElementById("classes-tbody");
+  tbody.innerHTML = "";
+  for (const c of state.classes) {
+    const isActive = c.id === state.active_class_id;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <strong>${escapeHtml(c.name)}</strong>
+        ${isActive ? '<span class="badge new" style="margin-left:6px;">active</span>' : ""}
+      </td>
+      <td>${c.atoms.length}</td>
+      <td>${c.lesson_dates.length}</td>
+      <td>${c.retrievals.length}</td>
+      <td style="text-align:right;">
+        ${isActive ? "" : `<button class="icon-btn" data-action="switch" data-id="${c.id}">Switch to</button>`}
+        <button class="icon-btn" data-action="up" data-id="${c.id}" ${state.classes.indexOf(c) === 0 ? "disabled" : ""}>Up</button>
+        <button class="icon-btn" data-action="down" data-id="${c.id}" ${state.classes.indexOf(c) === state.classes.length - 1 ? "disabled" : ""}>Down</button>
+        <button class="icon-btn" data-action="rename" data-id="${c.id}">Rename</button>
+        <button class="icon-btn" data-action="delete" data-id="${c.id}">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-action='switch']").forEach(b => {
+    b.addEventListener("click", () => switchClass(b.dataset.id));
+  });
+  tbody.querySelectorAll("button[data-action='up']").forEach(b => {
+    b.addEventListener("click", () => moveClass(b.dataset.id, -1));
+  });
+  tbody.querySelectorAll("button[data-action='down']").forEach(b => {
+    b.addEventListener("click", () => moveClass(b.dataset.id, 1));
+  });
+
+  tbody.querySelectorAll("button[data-action='rename']").forEach(b => {
+    b.addEventListener("click", () => {
+      const c = state.classes.find(x => x.id === b.dataset.id);
+      const name = prompt("New class name:", c.name);
+      if (name) { renameClass(b.dataset.id, name); renderAll(); }
+    });
+  });
+  tbody.querySelectorAll("button[data-action='delete']").forEach(b => {
+    b.addEventListener("click", () => deleteClass(b.dataset.id));
+  });
+
+  document.getElementById("new-class-add").disabled = state.classes.length >= MAX_CLASSES;
+}
+
+document.getElementById("new-class-add").addEventListener("click", () => {
+  const name = document.getElementById("new-class-name").value;
+  const cls = createClass(name);
+  if (cls) {
+    document.getElementById("new-class-name").value = "";
+    renderAll();
+  }
+});
+
+// Coverage sort state. Defaults to newest taught atoms first.
+let coverageSortKey = "taught";
+let coverageSortDir = -1;
+
+function coverageSortIndicator(key) {
+  if (coverageSortKey !== key) return "↕";
+  return coverageSortDir === 1 ? "↑" : "↓";
+}
+
+function coverageSortValue(item, key) {
+  switch (key) {
+    case "atom": return item.atom.name || "";
+    case "taught": return item.taught || null;
+    case "last": return item.last || null;
+    case "days": return item.daysSinceLast;
+    case "total": return item.total;
+    default: return null;
+  }
+}
+
+function compareCoverageItems(a, b, key, dir = 1) {
+  const av = coverageSortValue(a, key);
+  const bv = coverageSortValue(b, key);
+  const aNull = av == null || av === "";
+  const bNull = bv == null || bv === "";
+  // Null values such as "Never" stay at the bottom in either sort direction.
+  if (aNull && bNull) return a.idx - b.idx;
+  if (aNull) return 1;
+  if (bNull) return -1;
+  if (typeof av === "number" && typeof bv === "number") return ((av - bv) || (a.idx - b.idx)) * dir;
+  const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
+  return (cmp || (a.idx - b.idx)) * dir;
+}
+
+// ----- Render: Coverage overview -----
+function renderCoverage() {
+  const wrap = document.getElementById("coverage-wrap");
+  const c = ctx();
+  const today = todayISO();
+  const filterEl = document.getElementById("coverage-filter");
+  const filter = filterEl ? filterEl.value : "active";
+  const planningEl = document.getElementById("coverage-planning-horizon");
+  const planningHorizon = planningEl ? planningEl.value : "today";
+  const nextLesson = sortedLessonDates().find(d => d > today) || null;
+  const planningDate = planningHorizon === "next-lesson" ? nextLesson : today;
+  const planningDateLabel = planningHorizon === "next-lesson"
+    ? (nextLesson ? formatDateNice(nextLesson) : null)
+    : formatDateNice(today);
+
+  const isPlannedRetrieval = atom => {
+    if (atomStatus(atom) !== "scheduled" || !atom.initial_instruction_date || !planningDate) return false;
+    const next = nextSuggestedDate(atom);
+    return !!next && next <= planningDate && !isSkipActive(atom, today);
+  };
+
+  const visibleByStatus = c.atoms.filter(atom => {
+    const status = atomStatus(atom);
+    if (filter === "archived") return status === "archived";
+    if (filter === "scheduled") return status === "scheduled" && !!atom.initial_instruction_date;
+    return status === "historic" || (status === "scheduled" && !!atom.initial_instruction_date);
+  });
+
+  const rowsData = visibleByStatus.map((atom, idx) => {
+    const retrievals = atomRetrievals(atom.id);
+    const realEvents = retrievals
+      .filter(r => r.outcome !== "miss" && r.outcome !== "skip")
+      .sort((a, b) => a.lesson_date.localeCompare(b.lesson_date));
+    const last = realEvents.length ? realEvents[realEvents.length - 1].lesson_date : null;
+    const daysSinceLast = last
+      ? Math.max(0, Math.round((fromISO(today) - fromISO(last)) / 86400000))
+      : null;
+    const total = realEvents.length;
+    const status = atomStatus(atom);
+    return {
+      atom, idx,
+      status,
+      taught: status === "historic" ? "Historic" : (atom.initial_instruction_date || null),
+      last,
+      daysSinceLast,
+      total
+    };
+  });
+
+  const statusWrap = document.getElementById("coverage-status");
+  if (statusWrap) {
+    statusWrap.className = "coverage-status";
+    if (planningHorizon === "next-lesson" && !nextLesson) {
+      statusWrap.textContent = "No upcoming lesson date is in the class calendar.";
+    } else {
+      const planningItems = c.atoms.filter(isPlannedRetrieval);
+      const horizonLabel = planningHorizon === "next-lesson" ? "next lesson" : "today";
+      statusWrap.textContent = planningItems.length === 0
+        ? `Nothing to retrieve ${horizonLabel} (${planningDateLabel})`
+        : `${planningItems.length} atom${planningItems.length === 1 ? "" : "s"} to retrieve ${horizonLabel} (${planningDateLabel})`;
+    }
+  }
+
+  if (rowsData.length === 0) {
+    const message = filter === "archived"
+      ? "No archived atoms."
+      : filter === "scheduled"
+        ? "No scheduled atoms with an initial teaching date."
+        : "No active atoms with an initial teaching date or Historic status.";
+    wrap.innerHTML = `<div class="coverage-empty">${message}</div>`;
+    return;
+  }
+
+  const sortedRows = rowsData.sort((a, b) => compareCoverageItems(a, b, coverageSortKey, coverageSortDir));
+
+  const sortTh = (key, label, extra = "") =>
+    `<th class="coverage-sort" data-sort-key="${key}"${extra}>${label} <span class="coverage-sort-indicator" aria-hidden="true">${coverageSortIndicator(key)}</span></th>`;
+
+  const rows = [];
+  rows.push(`<table class="coverage-table"><thead><tr>
+    ${sortTh("atom", "Atom", ' style="width:43%;"')}
+    ${sortTh("taught", "Taught")}
+    ${sortTh("last", "Last retrieval")}
+    ${sortTh("days", "Days since last retrieval")}
+    ${sortTh("total", "Total retrievals")}
+  </tr></thead><tbody>`);
+
+
+
+  for (const item of sortedRows) {
+    const { atom, total, last, daysSinceLast, status } = item;
+    const next = status === "scheduled" ? nextSuggestedDate(atom) : null;
+    const skipActive = status === "scheduled" && isSkipActive(atom, today);
+    const schedulerHighlight = status === "scheduled" && isPlannedRetrieval(atom);
+    const schedulerClass = schedulerHighlight ? "scheduler-due" : "";
+    const skipTitle = skipActive ? `Due again ${formatDateNice(addDays(atom.skippedAt, 7))}` : null;
+    const title = schedulerHighlight
+      ? `Retrieve ${planningHorizon === "next-lesson" ? "next lesson" : "today"} · click for atom history`
+      : 'Click for atom history';
+    const daysLabel = daysSinceLast == null ? "Never" : String(daysSinceLast);
+    const taughtLabel = status === "historic" ? "Historic" : formatDateNice(item.taught);
+    rows.push(`
+      <tr>
+        <td class="atom-name">
+          <div class="atom-name-inner">
+            <button class="btn ghost coverage-add" data-action="add-retrieval" data-atom-id="${atom.id}" title="Record a retrieval" aria-label="Record a retrieval">+</button>
+            <a href="#" class="${schedulerClass}${schedulerHighlight ? ' ' : ''}${skipActive ? 'skip-active' : ''}" data-atom-id="${atom.id}" title="${escapeHtml(skipTitle || title)}">${escapeHtml(atom.name)}</a>
+          </div>
+        </td>
+        <td class="date">${taughtLabel}</td>
+        <td class="date">${formatDateNice(last)}</td>
+        <td class="days">${daysLabel}</td>
+        <td class="count"><strong>${total}</strong></td>
+      </tr>`);
+  }
+  rows.push('</tbody></table>');
+  wrap.innerHTML = rows.join('');
+
+  wrap.querySelectorAll('th[data-sort-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sortKey;
+      if (coverageSortKey === key) {
+        coverageSortDir *= -1;
+      } else {
+        coverageSortKey = key;
+        coverageSortDir = 1;
+      }
+      renderCoverage();
+    });
+  });
+
+  wrap.querySelectorAll('a[data-atom-id]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      openAtomHistory(a.dataset.atomId);
+    });
+  });
+
+  wrap.querySelectorAll('button[data-action="add-retrieval"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openRecordRetrieval(btn.dataset.atomId);
+    });
+  });
+}
+
+// ----- Render: Schedule overview -----
+function renderSchedule() {
+  const wrap = document.getElementById("schedule-wrap");
+  const empty = document.getElementById("schedule-empty");
+  const c = ctx();
+  const scheduledAtoms = c.atoms.filter(atom => atomStatus(atom) === "scheduled");
+  if (scheduledAtoms.length === 0 || c.lesson_dates.length === 0) {
+    const missing = [];
+    if (scheduledAtoms.length === 0) missing.push('scheduled atoms');
+    if (c.lesson_dates.length === 0) missing.push('<a href="#" data-sgoto="dates" style="color:var(--primary); border-bottom:1px dotted var(--primary);">lesson dates</a>');
+    wrap.innerHTML = `<div style="padding: 36px 20px; text-align: center; color: var(--text-muted);">Add ${missing.join(' and ')} to see the schedule.</div>`;
+    wrap.querySelectorAll('a[data-sgoto]').forEach(a => {
+      a.addEventListener("click", (e) => { e.preventDefault(); document.querySelector(`nav.tabs button[data-screen="${a.dataset.sgoto}"]`).click(); });
+    });
+    return;
+  }
+
+  const dates = sortedLessonDates();
+  const todayIso = todayISO();
+
+  // Build a lookup: events[atom.id][date] -> event
+  const eventsByAtom = {};
+  for (const atom of scheduledAtoms) {
+    const events = fullScheduleForAtom(atom);
+    const map = {};
+    for (const e of events) map[e.date] = e;
+    eventsByAtom[atom.id] = map;
+  }
+
+  // Build the table
+  const parts = [];
+  parts.push('<table class="schedule-grid"><thead><tr>');
+  parts.push('<th class="atom-col">Atom</th>');
+  for (const d of dates) {
+    const dt = fromISO(d);
+    const dayLabel = formatDateNice(d);
+    const dowLabel = dt.toLocaleDateString("en-GB", { weekday: "short" });
+    const todayClass = (d === todayIso) ? " today-col" : "";
+    parts.push(`<th class="date-col${todayClass}" title="${d}"><div style="font-size:10px;">${dowLabel}</div><div>${dayLabel}</div></th>`);
+  }
+  parts.push('</tr></thead><tbody>');
+
+  for (const atom of scheduledAtoms) {
+    const eMap = eventsByAtom[atom.id];
+    parts.push('<tr>');
+    parts.push(`<td class="atom-col" data-atom-id="${atom.id}" title="${escapeHtml(atom.name)}">${escapeHtml(atom.name)}</td>`);
+    for (const d of dates) {
+      const e = eMap[d];
+      if (!e) {
+        parts.push('<td></td>');
+        continue;
+      }
+      let label, klass, title;
+      if (e.type === 'I') {
+        label = 'I';
+        klass = 'cell-I';
+        title = `Initial instruction · ${d}`;
+      } else if (e.type === 'reteach') {
+        label = '↻';
+        klass = 'cell-reteach-event';
+        title = `Re-taught (sequence reset) · ${d}`;
+      } else if (e.type === 'M' && e.status === 'superseded') {
+        label = '×';
+        klass = 'cell-superseded';
+        title = `Missed (before re-teach) · ${d}`;
+      } else if (e.type === 'M') {
+        label = '×';
+        klass = 'cell-missed';
+        title = `Missed · ${d} (didn't count as a retrieval)`;
+      } else if (e.type === 'S') {
+        label = 'SK';
+        klass = 'cell-skipped';
+        title = `Skipped · ${d} (teacher chose not to retrieve; schedule unchanged)`;
+      } else if (e.type === 'A') {
+        label = 'A';
+        klass = 'cell-skipped';
+        title = `Unscheduled retrieval · ${d} (does not affect the scheduler)`;
+      } else if (e.status === 'superseded') {
+        label = 'R';
+        klass = 'cell-superseded';
+        title = `Earlier retrieval (${e.outcome}) — superseded by a later re-teach · ${d}`;
+      } else if (e.status === 'recorded') {
+        label = 'R' + e.n;
+        klass = 'cell-' + e.outcome;
+        title = `Retrieval #${e.n} · ${e.outcome} · ${d}`;
+      } else if (e.status === 'pending') {
+        label = 'R' + e.n;
+        klass = 'cell-pending';
+        title = `Retrieval #${e.n} · pending · ${d}`;
+      } else {
+        label = 'R' + e.n;
+        klass = 'cell-projected';
+        title = `Retrieval #${e.n} · projected (assumes pass) · ${d}`;
+      }
+      parts.push(`<td class="${klass}" title="${title}">${label}</td>`);
+    }
+    parts.push('</tr>');
+  }
+  parts.push('</tbody></table>');
+  wrap.innerHTML = parts.join('');
+
+  // Click atom name -> open history modal
+  wrap.querySelectorAll('td.atom-col').forEach(td => {
+    td.addEventListener('click', () => openAtomHistory(td.dataset.atomId));
+  });
+}
+
+// ----- Atom history modal -----
+let historySortAtomId = null;
+let historySortNewestFirst = false;
+
+function toggleHistoryDateSort(atomId) {
+  if (historySortAtomId !== atomId) {
+    historySortAtomId = atomId;
+    historySortNewestFirst = true;
+  } else {
+    historySortNewestFirst = !historySortNewestFirst;
+  }
+  openAtomHistory(atomId);
+}
+
+function openAtomHistory(atomId) {
+  const atom = ctx().atoms.find(a => a.id === atomId);
+  if (!atom) return;
+
+  document.getElementById("history-title").textContent = atom.name;
+  document.getElementById("history-sub").textContent = "";
+
+  const allRecords = atomRetrievals(atom.id);
+  const actualEvents = allRecords
+    .filter(r => r.outcome !== "skip" && r.outcome !== "miss")
+    .slice()
+    .sort((a, b) => {
+      const cmp = a.lesson_date.localeCompare(b.lesson_date);
+      return historySortAtomId === atomId && historySortNewestFirst ? -cmp : cmp;
+    });
+  const lines = [];
+
+  const status = atomStatus(atom);
+
+  lines.push('<div style="display:flex; gap:28px; align-items:flex-start; margin-bottom:18px;">');
+  lines.push('<div style="min-width:0; flex:1;">');
+  lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">First taught</div>`);
+  lines.push(`<div style="font-weight:500;">${formatDateNice(atom.initial_instruction_date)}</div>`);
+  lines.push('</div>');
+
+  if (status === "scheduled") {
+    const schedulerState = getAtomSchedulingState(atom);
+    const idealGap = plannedGap(schedulerState, ctx().settings);
+    const idealDate = schedulerState.last_date && !(atom.retrieve === "N" && schedulerState.hasRealPass)
+      ? addDays(schedulerState.last_date, idealGap)
+      : null;
+    const scheduledDate = idealDate ? nextSuggestedDate(atom) : null;
+    lines.push('<div style="min-width:0; flex:1;">');
+    lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Ideal retrieval</div>`);
+    if (idealDate) {
+      lines.push(`<div style="font-weight:500;">${formatDateNice(idealDate)}</div>`);
+      if (scheduledDate && scheduledDate !== idealDate) {
+        lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Next lesson: ${formatDateNice(scheduledDate)}</div>`);
+      }
+    } else {
+      lines.push('<div style="font-size:13px; color:var(--text-muted); font-style:italic;">No further standalone retrieval</div>');
+    }
+    lines.push('</div>');
+  }
+  lines.push('</div>');
+
+  const statusActions = [];
+  statusActions.push(`<button class="btn ghost history-status-action" data-status-action="rename" data-atom-id="${atom.id}">Rename</button>`);
+  if (status === "scheduled") {
+    statusActions.push(`<button class="btn ghost history-status-action" data-status-action="historic" data-atom-id="${atom.id}">Make Historic</button>`);
+    statusActions.push(`<button class="btn ghost history-status-action" data-status-action="archive" data-atom-id="${atom.id}">Archive</button>`);
+  } else if (status === "historic") {
+    if (atom.initial_instruction_date) {
+      statusActions.push(`<button class="btn ghost history-status-action" data-status-action="scheduled" data-atom-id="${atom.id}">Make Scheduled</button>`);
+    } else {
+      statusActions.push('<div class="history-status-note">This Historic atom has no initial teaching date, so it cannot be scheduled.</div>');
+    }
+    statusActions.push(`<button class="btn ghost history-status-action" data-status-action="archive" data-atom-id="${atom.id}">Archive</button>`);
+  } else {
+    statusActions.push(`<button class="btn ghost history-status-action" data-status-action="unarchive" data-atom-id="${atom.id}">Unarchive</button>`);
+  }
+  statusActions.push(`<button class="btn danger history-status-action" data-status-action="delete-atom" data-atom-id="${atom.id}">Delete atom</button>`);
+  if (statusActions.length) lines.push(`<div class="history-status-actions">${statusActions.join('')}</div>`);
+
+  lines.push('<div style="font-size:12px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;">Retrievals</div>');
+
+  if (actualEvents.length === 0) {
+    lines.push('<div style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:16px;">None recorded yet.</div>');
+  } else {
+    const dateSortLabel = historySortAtomId === atomId && historySortNewestFirst ? 'Click to sort oldest first' : 'Click to sort most recent first';
+    lines.push(`<table class="history-table"><thead><tr><th>#</th><th><button type="button" class="history-sort-btn" data-action="sort-history-date" data-atom-id="${atom.id}" title="${dateSortLabel}">Date</button></th><th>Outcome</th><th></th></tr></thead><tbody>`);
+    let retrievalNumber = 0;
+
+    for (const r of actualEvents) {
+      const isAdHoc = r.outcome === 'ad_hoc';
+      const outcomeLabel = r.outcome === 'pass' ? '✓'
+        : r.outcome === 'struggle' ? '~'
+        : r.outcome === 'ad_hoc' ? 'unscheduled'
+        : '✕';
+      const outcomeClass = r.outcome === 'reteach' ? 'reteach' : (isAdHoc ? 'ad-hoc' : r.outcome);
+      const recordIndex = ctx().retrievals.indexOf(r);
+      const isReteach = r.outcome === 'reteach';
+      if (!isAdHoc) retrievalNumber++;
+      const displayNumber = isAdHoc ? '' : retrievalNumber;
+      const tooltip = isAdHoc
+        ? 'Unscheduled retrieval — does not affect the scheduler'
+        : (isReteach ? 'Re-teach' : (r.outcome === 'pass' ? 'Pass' : r.outcome === 'struggle' ? 'Struggled' : 'Re-teach'));
+      lines.push(`<tr><td>${displayNumber}</td><td>${formatDateNice(r.lesson_date)}</td><td><span class="badge ${outcomeClass}" title="${tooltip}">${outcomeLabel}</span></td><td style="text-align:right;"><button class="history-delete-btn" data-retrieval-index="${recordIndex}" title="Delete this retrieval" aria-label="Delete this retrieval">&times;</button></td></tr>`);
+    }
+    lines.push('</tbody></table>');
+  }
+
+  // Historical Missed/Skip events are deliberately not presented as retrievals.
+  // Unscheduled retrievals are shown separately because they are genuine teacher-recorded checks,
+  // but they do not contribute to the scheduled retrieval sequence.
+
+  document.getElementById("history-body").innerHTML = lines.join('');
+
+  document.querySelectorAll("#history-body .history-delete-btn").forEach(b => {
+    b.addEventListener("click", () => {
+      deleteRetrieval(b.dataset.retrievalIndex);
+    });
+  });
+
+  document.querySelectorAll("#history-body [data-action='sort-history-date']").forEach(b => {
+    b.addEventListener("click", () => {
+      toggleHistoryDateSort(b.dataset.atomId);
+    });
+  });
+
+  document.querySelectorAll("#history-body [data-status-action]").forEach(b => {
+    b.addEventListener("click", () => {
+      const current = ctx().atoms.find(a => a.id === b.dataset.atomId);
+      if (!current) return;
+      const action = b.dataset.statusAction;
+      if (action === "historic") {
+        setAtomStatus(current, "historic");
+      } else if (action === "scheduled") {
+        if (!current.initial_instruction_date) return;
+        setAtomStatus(current, "scheduled");
+      } else if (action === "archive") {
+        setAtomStatus(current, "archived");
+      } else if (action === "rename") {
+        renameAtomDialog(current.id, true);
+        return;
+      } else if (action === "delete-atom") {
+        const atomName = current.name;
+        if (!confirm(`Delete "${atomName}" and all its retrieval history?\n\nThis cannot be undone from the current view.`)) return;
+        snapshotState();
+        const atomId = current.id;
+        const c = ctx();
+        c.atoms = c.atoms.filter(a => a.id !== atomId);
+        c.retrievals = c.retrievals.filter(r => r.atom_id !== atomId);
+        saveState();
+        closeAtomHistory();
+        renderAll();
+        return;
+      } else if (action === "unarchive") {
+        const restored = current.archived_from_status === "historic" ? "historic" : "scheduled";
+        if (restored === "scheduled" && !current.initial_instruction_date) return;
+        setAtomStatus(current, restored);
+      }
+      saveState();
+      renderAll();
+      openAtomHistory(current.id);
+    });
+  });
+
+  document.getElementById("history-modal").classList.add("open");
+}
+
+function closeAtomHistory() {
+  document.getElementById("history-modal").classList.remove("open");
+}
+
+document.getElementById("history-close").addEventListener("click", closeAtomHistory);
+document.getElementById("history-modal").addEventListener("click", (e) => {
+  if (e.target.id === "history-modal") closeAtomHistory();
+});
+
+function syncAddAtomsStatusUI() {
+  const status = document.getElementById("coverage-atom-status").value;
+  const dateInput = document.getElementById("coverage-atom-date");
+  const dateNote = document.getElementById("coverage-atom-date-note");
+  const historic = status === "historic";
+  dateInput.disabled = historic;
+  if (historic) dateInput.value = "";
+  dateNote.textContent = historic
+    ? "Historic atoms have no initial teaching date and sit completely outside the scheduler."
+    : "The date applies to every atom entered here. You can add another batch with a different date.";
+}
+
+function openAddAtoms() {
+  const c = ctx();
+  if (!c) return;
+  document.getElementById("add-atoms-sub").textContent = `Adding atoms to ${c.name}`;
+  document.getElementById("coverage-atom-names").value = "";
+  const statusSelect = document.getElementById("coverage-atom-status");
+  statusSelect.value = "scheduled";
+  const dateInput = document.getElementById("coverage-atom-date");
+  dateInput.value = todayISO();
+  dateInput.max = todayISO();
+  syncAddAtomsStatusUI();
+  document.getElementById("add-atoms-modal").classList.add("open");
+  setTimeout(() => document.getElementById("coverage-atom-names").focus(), 0);
+}
+
+function closeAddAtoms() {
+  document.getElementById("add-atoms-modal").classList.remove("open");
+}
+
+document.getElementById("coverage-add-atoms").addEventListener("click", openAddAtoms);
+document.getElementById("add-atoms-close").addEventListener("click", closeAddAtoms);
+document.getElementById("add-atoms-cancel").addEventListener("click", closeAddAtoms);
+document.getElementById("add-atoms-modal").addEventListener("click", (e) => {
+  if (e.target.id === "add-atoms-modal") closeAddAtoms();
+});
+document.getElementById("coverage-atom-status").addEventListener("change", syncAddAtomsStatusUI);
+document.getElementById("add-atoms-save").addEventListener("click", () => {
+  const c = ctx();
+  if (!c) return;
+  const names = document.getElementById("coverage-atom-names").value
+    .split("\n").map(line => line.trim()).filter(Boolean);
+  const date = document.getElementById("coverage-atom-date").value;
+  const status = document.getElementById("coverage-atom-status").value;
+  if (names.length === 0) { alert("Enter at least one atom name."); return; }
+  if (status === "scheduled" && !date) { alert("Please choose the date taught."); return; }
+  if (status === "scheduled" && date > todayISO()) { alert("The teaching date cannot be in the future."); return; }
+
+  const existing = new Set(c.atoms.map(a => a.name.trim().toLowerCase()));
+  let added = 0;
+  for (const name of names) {
+    const key = name.toLowerCase();
+    if (existing.has(key)) continue;
+    c.atoms.push({
+      id: newId(),
+      name,
+      type: "",
+      retrieve: "Y",
+      initial_instruction_date: status === "historic" ? null : date,
+      status,
+      notes: ""
+    });
+    existing.add(key);
+    added++;
+  }
+
+  if (added === 0) {
+    alert("Those atom names are already in this class.");
+    return;
+  }
+  saveState();
+  closeAddAtoms();
+  renderAll();
+});
+
+document.getElementById("record-retrieval-close").addEventListener("click", closeRecordRetrieval);
+document.getElementById("record-retrieval-modal").addEventListener("click", (e) => {
+  if (e.target.id === "record-retrieval-modal") closeRecordRetrieval();
+});
+document.getElementById("record-retrieval-skip").addEventListener("click", () => {
+  if (!recordRetrievalAtomId) return;
+  skipRetrievalForWeek(recordRetrievalAtomId);
+});
+document.querySelectorAll("#record-retrieval-modal [data-record-modal-outcome]").forEach(b => {
+  b.addEventListener("click", () => {
+    if (!recordRetrievalAtomId) return;
+    const date = document.getElementById("record-retrieval-date").value;
+    if (!date) {
+      alert("Please choose a retrieval date.");
+      return;
+    }
+    const atom = ctx().atoms.find(a => a.id === recordRetrievalAtomId);
+    if (!atom) { closeRecordRetrieval(); return; }
+    if (atom.initial_instruction_date && date < atom.initial_instruction_date) {
+      alert("The retrieval date cannot be before the initial instruction date.");
+      return;
+    }
+    if (date > todayISO()) {
+      alert("The retrieval date cannot be in the future.");
+      return;
+    }
+    recordRetrieval(recordRetrievalAtomId, date, b.dataset.recordModalOutcome);
+    closeRecordRetrieval();
+    renderAll();
+  });
+});
+
+
+// Worksheet modal wiring
+document.getElementById("worksheet-close").addEventListener("click", closeWorksheetModal);
+document.getElementById("worksheet-modal").addEventListener("click", (e) => {
+  if (e.target.id === "worksheet-modal") closeWorksheetModal();
+});
+document.getElementById("golden-close").addEventListener("click", closeGoldenModal);
+document.getElementById("golden-modal").addEventListener("click", (e) => {
+  if (e.target.id === "golden-modal") closeGoldenModal();
+});
+document.getElementById("worksheet-submit").addEventListener("click", () => {
+  const email = document.getElementById("worksheet-email").value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert("Please enter a valid email address.");
+    return;
+  }
+  logWorksheetEmail(email);
+  document.getElementById("worksheet-thanks").style.display = "";
+  document.getElementById("worksheet-email").value = "";
+  renderSettings();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeAtomHistory();
+    closeAddAtoms();
+    closeWorksheetModal();
+    if (document.getElementById("welcome-modal").classList.contains("open")) closeWelcome();
+    if (annotationActive) hideAnnotations();
+  }
+});
+
+// ----- Render: Atoms screen -----
+function renderAtoms() {
+  const tbody = document.getElementById("atoms-tbody");
+  tbody.innerHTML = "";
+  const atoms = ctx().atoms;
+  if (atoms.length === 0) {
+    document.getElementById("atoms-count").textContent = "0";
+    tbody.innerHTML = `<tr class="empty"><td colspan="6">No atoms yet in this class. Add one above.</td></tr>`;
+    const seedLink = tbody.querySelector('a[data-goto-seed]');
+    if (seedLink) seedLink.addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="settings"]').click(); });
+    return;
+  }
+  // Precompute the lesson-date options for the Initial Instruction dropdown.
+  const sortedDates = sortedLessonDates();
+  const todayIso = todayISO();
+  const dateOptionsFor = (currentValue) => {
+    const opts = [`<option value="" ${!currentValue ? 'selected' : ''}>— not set —</option>`];
+    // If atom has a date that isn't in the lesson dates list (e.g. set via Edit), keep it visible
+    if (currentValue && !sortedDates.includes(currentValue)) {
+      opts.push(`<option value="${currentValue}" selected>${formatDateNice(currentValue)} (custom)</option>`);
+    }
+    for (const d of sortedDates) {
+      const todayTag = (d === todayIso) ? ' (today)' : '';
+      const selected = (currentValue === d) ? 'selected' : '';
+      opts.push(`<option value="${d}" ${selected}>${formatDateNice(d)}${todayTag}</option>`);
+    }
+    return opts.join("");
+  };
+
+  // Apply search filter if there's text in the search box.
+  const searchInput = document.getElementById("atom-search");
+  const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const visibleAtoms = searchTerm
+    ? atoms.filter(a => a.name.toLowerCase().includes(searchTerm))
+    : atoms;
+
+  // Update the count to reflect the filter, if any.
+  const countEl = document.getElementById("atoms-count");
+  if (countEl) {
+    countEl.textContent = searchTerm
+      ? `${visibleAtoms.length} of ${atoms.length}`
+      : String(atoms.length);
+  }
+
+  if (visibleAtoms.length === 0) {
+    tbody.innerHTML = `<tr class="empty"><td colspan="6">No atoms match &ldquo;${escapeHtml(searchTerm)}&rdquo;.</td></tr>`;
+    return;
+  }
+
+  // Sort: atoms without an initial instruction date float to the top so the next thing
+  // to teach is always at the top of the list (unscheduled in insertion order to preserve
+  // the curriculum sequence the teacher pasted). Scheduled atoms follow, sorted by
+  // initial_instruction_date (oldest first).
+  const sortedAtoms = visibleAtoms
+    .map((a, idx) => ({ a, idx }))
+    .sort((x, y) => {
+      const xHas = !!x.a.initial_instruction_date;
+      const yHas = !!y.a.initial_instruction_date;
+      if (xHas !== yHas) return xHas ? 1 : -1;
+      if (xHas && yHas) return x.a.initial_instruction_date.localeCompare(y.a.initial_instruction_date);
+      return x.idx - y.idx;
+    })
+    .map(x => x.a);
+
+  for (const atom of sortedAtoms) {
+    const retrievals = atomRetrievals(atom.id);
+    const next = nextSuggestedDate(atom);
+    const tr = document.createElement("tr");
+
+    // Initial Instruction: editable dropdown until the atom has ANY non-miss event recorded
+    // (includes pre-reteach attempts), then locked — changing it would orphan history.
+    const hasRecordedRetrievals = atomRetrievals(atom.id).some(r => r.outcome !== "miss" && r.outcome !== "skip");
+    const initSelect = hasRecordedRetrievals
+      ? `<div style="display:flex; align-items:center; gap:6px;">
+           <span style="padding: 5px 0; font-size: 13px; color: var(--text);">${formatDateNice(atom.initial_instruction_date)}</span>
+           <span style="font-size: 12px; color: var(--text-muted);" title="Locked">&#128274;</span>
+           <span class="help-icon" data-help="Locked because this atom already has recorded retrievals since this date. Changing it would orphan that history. To restart the atom from a new date, use the Re-teach button on Today's Lesson.">?</span>
+         </div>`
+      : `<select class="inline-select ${!atom.initial_instruction_date ? 'not-set' : ''}" data-atom-id="${atom.id}" data-field="initial">${dateOptionsFor(atom.initial_instruction_date)}</select>`;
+
+    // Long-term retrieval dropdown — safe to change at any time (doesn't orphan history).
+    const retrieveSelect = `<select class="inline-select" data-atom-id="${atom.id}" data-field="retrieve">
+      <option value="Y" ${atom.retrieve !== "N" ? 'selected' : ''}>Yes</option>
+      <option value="N" ${atom.retrieve === "N" ? 'selected' : ''}>No</option>
+    </select>`;
+
+    tr.innerHTML = `
+      <td>
+        <a href="#" class="atom-name-link" data-id="${atom.id}" style="color:var(--text); font-weight:600; text-decoration:none; border-bottom: 1px dotted var(--border-strong);">${escapeHtml(atom.name)}</a>
+      </td>
+      <td>${retrieveSelect}</td>
+      <td>${initSelect}</td>
+      <td>${retrievals.length}</td>
+      <td>${formatDateNice(next)}</td>
+      <td style="text-align:right;">
+        <button class="icon-btn" data-action="detail" data-id="${atom.id}" title="View / edit this atom's example prompt, response and concept notes">Detail</button>
+        <button class="icon-btn" data-action="history" data-id="${atom.id}">History</button>
+        <button class="icon-btn" data-action="rename" data-id="${atom.id}" title="Edit this atom's name">Rename</button>
+        <button class="icon-btn" data-action="edit" data-id="${atom.id}">Edit</button>
+        <button class="icon-btn" data-action="delete" data-id="${atom.id}">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+  // Inline dropdown change handlers
+  tbody.querySelectorAll("select.inline-select").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const id = sel.dataset.atomId;
+      const field = sel.dataset.field;
+      const atom = ctx().atoms.find(a => a.id === id);
+      if (!atom) return;
+      if (field === "type") {
+        atom.type = sel.value;
+      } else if (field === "initial") {
+        atom.initial_instruction_date = sel.value || null;
+      } else if (field === "retrieve") {
+        atom.retrieve = (sel.value === "N") ? "N" : "Y";
+      }
+      saveState();
+      renderAll();
+    });
+  });
+  tbody.querySelectorAll("button[data-action='delete']").forEach(b => {
+    b.addEventListener("click", () => {
+      const id = b.dataset.id;
+      const c = ctx();
+      const atom = c.atoms.find(a => a.id === id);
+      if (!confirm(`Delete "${atom.name}" and all its retrieval history?`)) return;
+      c.atoms = c.atoms.filter(a => a.id !== id);
+      c.retrievals = c.retrievals.filter(r => r.atom_id !== id);
+      saveState();
+      renderAll();
+    });
+  });
+  tbody.querySelectorAll("button[data-action='rename']").forEach(b => {
+    b.addEventListener("click", () => renameAtomDialog(b.dataset.id));
+  });
+  tbody.querySelectorAll("button[data-action='edit']").forEach(b => {
+    b.addEventListener("click", () => editAtomDialog(b.dataset.id));
+  });
+  tbody.querySelectorAll("button[data-action='history']").forEach(b => {
+    b.addEventListener("click", () => openAtomHistory(b.dataset.id));
+  });
+  tbody.querySelectorAll("button[data-action='detail']").forEach(b => {
+    b.addEventListener("click", () => openGoldenModal(b.dataset.id));
+  });
+  tbody.querySelectorAll("a.atom-name-link").forEach(a => {
+    a.addEventListener("click", (e) => { e.preventDefault(); openAtomHistory(a.dataset.id); });
+  });
+}
+
+function renderTypeBadge(type) {
+  const slug = type.toLowerCase();
+  const cls = VALID_TYPES.map(t => t.toLowerCase()).includes(slug) ? `type-${slug}` : "";
+  return `<span class="badge ${cls}">${escapeHtml(type)}</span>`;
+}
+
+function renameAtomDialog(id, reopenHistory = false) {
+  const atom = ctx().atoms.find(a => a.id === id);
+  if (!atom) return false;
+  const name = prompt("Atom name:", atom.name);
+  if (name === null) return false;
+  const trimmed = name.trim();
+  if (!trimmed) {
+    alert("Atom name is required.");
+    return false;
+  }
+  if (trimmed === atom.name) {
+    if (reopenHistory) openAtomHistory(atom.id);
+    return true;
+  }
+  atom.name = trimmed;
+  saveState();
+  renderAll();
+  if (reopenHistory) openAtomHistory(atom.id);
+  return true;
+}
+
+function editAtomDialog(id) {
+  const atom = ctx().atoms.find(a => a.id === id);
+  if (!atom) return;
+  const hasRecordedRetrievals = atomRetrievals(atom.id).some(r => r.outcome !== "miss" && r.outcome !== "skip");
+  const name = prompt("Atom name:", atom.name);
+  if (name === null) return;
+  const typeHelp = "Type — one of: " + VALID_TYPES.join(", ");
+  const type = prompt(typeHelp, atom.type || "");
+  if (type === null) return;
+  let initial = null;
+  let updateInitial = false;
+  if (hasRecordedRetrievals) {
+    alert("Initial instruction date is locked because this atom has recorded retrievals. To restart from a new date, use Re-teach on Today's Lesson.");
+  } else {
+    initial = prompt("Initial instruction date (YYYY-MM-DD), or blank to clear:", atom.initial_instruction_date || "");
+    if (initial === null) return;
+    updateInitial = true;
+  }
+  const retrieve = prompt("Long-term retrieval? Y/N", atom.retrieve || "Y");
+  if (retrieve === null) return;
+  atom.name = name.trim() || atom.name;
+  atom.type = (type || "").trim();
+  if (updateInitial) {
+    if (initial === "") atom.initial_instruction_date = null;
+    else if (/^\d{4}-\d{2}-\d{2}$/.test(initial.trim())) atom.initial_instruction_date = initial.trim();
+  }
+  atom.retrieve = retrieve.trim().toUpperCase() === "N" ? "N" : "Y";
+  saveState();
+  renderAll();
+}
+
+document.getElementById("atom-add").addEventListener("click", () => {
+  const name = document.getElementById("atom-name").value.trim();
+  const type = document.getElementById("atom-type").value;
+  const initial = document.getElementById("atom-initial").value;
+  const retrieve = document.getElementById("atom-retrieve").value;
+  if (!name) { alert("Atom name is required."); return; }
+  if (!initial) { alert("Initial instruction date is required."); return; }
+  ctx().atoms.push({
+    id: newId(), name, type, retrieve, initial_instruction_date: initial, notes: ""
+  });
+  saveState();
+  document.getElementById("atom-name").value = "";
+  document.getElementById("atom-type").value = "";
+  renderAll();
+});
+
+document.getElementById("atom-bulk-add").addEventListener("click", () => {
+  const text = document.getElementById("atom-bulk").value;
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  if (lines.length === 0) { alert("Paste some atom names first."); return; }
+  for (const line of lines) {
+    ctx().atoms.push({
+      id: newId(), name: line, type: "", retrieve: "Y", initial_instruction_date: null, notes: ""
+    });
+  }
+  saveState();
+  document.getElementById("atom-bulk").value = "";
+  renderAll();
+});
+
+// ----- Render: Lesson Dates screen -----
+function renderDates() {
+  const list = document.getElementById("dates-list");
+  list.innerHTML = "";
+  const dates = sortedLessonDates();
+  document.getElementById("dates-count").textContent = dates.length;
+  if (dates.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="width:100%;">No lesson dates yet for this class. The quickest way: open <strong>Generate a recurring pattern</strong> above, pick your days of the week and a date range, and click Generate.</div>';
+    return;
+  }
+  for (const d of dates) {
+    const pill = document.createElement("span");
+    pill.className = "pill";
+    pill.innerHTML = `${formatDateNice(d)} <button title="Remove" data-date="${d}">&times;</button>`;
+    list.appendChild(pill);
+  }
+  list.querySelectorAll("button[data-date]").forEach(b => {
+    b.addEventListener("click", () => {
+      const c = ctx();
+      c.lesson_dates = c.lesson_dates.filter(d => d !== b.dataset.date);
+      saveState();
+      renderAll();
+    });
+  });
+}
+
+document.getElementById("date-add-one").addEventListener("click", () => {
+  const d = document.getElementById("date-single").value;
+  if (!d) return;
+  const c = ctx();
+  if (!c.lesson_dates.includes(d)) {
+    c.lesson_dates.push(d);
+    saveState();
+  }
+  document.getElementById("date-single").value = "";
+  renderAll();
+});
+
+// Toggle between weekly and fortnightly pattern UIs
+document.getElementById("date-pattern").addEventListener("change", (e) => {
+  const isFortnightly = e.target.value === "fortnightly";
+  document.getElementById("pattern-weekly").style.display = isFortnightly ? "none" : "";
+  document.getElementById("pattern-fortnightly").style.display = isFortnightly ? "" : "none";
+});
+
+document.getElementById("date-generate").addEventListener("click", () => {
+  const from = document.getElementById("date-from").value;
+  const to = document.getElementById("date-to").value;
+  const pattern = document.getElementById("date-pattern").value;
+  if (!from || !to) { alert("Pick a From and To date."); return; }
+  if (from > to) { alert("From date must be on or before To date."); return; }
+
+  let dateMatches; // function(Date) -> bool
+  if (pattern === "weekly") {
+    const dows = Array.from(document.querySelectorAll(".dow:checked")).map(c => parseInt(c.value, 10));
+    if (dows.length === 0) { alert("Pick at least one day of week."); return; }
+    dateMatches = (d) => dows.includes(d.getDay());
+  } else {
+    const weekAStart = document.getElementById("weekA-start").value;
+    if (!weekAStart) { alert("Pick a date that Week A starts on."); return; }
+    const dowsA = Array.from(document.querySelectorAll(".dow-a:checked")).map(c => parseInt(c.value, 10));
+    const dowsB = Array.from(document.querySelectorAll(".dow-b:checked")).map(c => parseInt(c.value, 10));
+    if (dowsA.length === 0 && dowsB.length === 0) { alert("Pick at least one day across Week A or Week B."); return; }
+    const anchor = fromISO(weekAStart);
+    // Snap anchor back to the Monday of its week so the cycle uses Mon-Sun weeks
+    const anchorDow = anchor.getDay();
+    const daysBackToMon = (anchorDow + 6) % 7; // Sun=6, Mon=0, Tue=1...
+    const cycleStart = new Date(anchor); cycleStart.setDate(cycleStart.getDate() - daysBackToMon);
+    dateMatches = (d) => {
+      const diffDays = Math.floor((d - cycleStart) / 86400000);
+      const weekIndex = Math.floor(diffDays / 7);
+      const isWeekA = (((weekIndex % 2) + 2) % 2) === 0;
+      const dow = d.getDay();
+      return isWeekA ? dowsA.includes(dow) : dowsB.includes(dow);
+    };
+  }
+
+  let cur = fromISO(from);
+  const end = fromISO(to);
+  let added = 0;
+  const c = ctx();
+  while (cur <= end) {
+    if (dateMatches(cur)) {
+      const iso = toISO(cur);
+      if (!c.lesson_dates.includes(iso)) {
+        c.lesson_dates.push(iso);
+        added++;
+      }
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  saveState();
+  renderAll();
+  alert(`Added ${added} new lesson date${added === 1 ? "" : "s"} to ${c.name}.`);
+});
+
+// ----- Atom detail popup (example prompt/response + concept notes, synced from the Curriculum Writer) -----
+function atomHasGolden(atom) {
+  return !!((atom.prompt && atom.prompt.trim()) || (atom.response && atom.response.trim()) || (atom.concept_notes && atom.concept_notes.trim()));
+}
+// One unified modal: the conceptual atomisation (example prompt/response/concept notes)
+// AND the teacher's running notes log, in a single view — so you can plan AND deliver
+// a topic from one place. Plus inline editing of the detail so atoms added inside the
+// LE (e.g. after a lesson) can have their detail written here, not only via the Writer.
+function openGoldenModal(atomId) {
+  const atom = ctx().atoms.find(a => a.id === atomId);
+  if (!atom) return;
+  renderGoldenModalView(atom);
+  document.getElementById("golden-modal").classList.add("open");
+}
+function renderGoldenModalView(atom) {
+  document.getElementById("golden-modal-sub").textContent = atom.name || "";
+  const block = (label, text, bg, border) => `
+    <div style="background:${bg}; border:1px solid ${border}; border-radius:12px; padding:11px 13px; margin-bottom:10px;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; color:var(--text-muted); margin-bottom:4px;">${label}</div>
+      <div style="white-space:pre-wrap; color:var(--text); line-height:1.5;">${text ? escapeHtml(text) : '<span style="color:var(--text-muted); font-style:italic;">— not set —</span>'}</div>
+    </div>`;
+
+  document.getElementById("golden-modal-body").innerHTML =
+    block("Example prompt", atom.prompt, "#f7f5ef", "var(--border)") +
+    block("Example response", atom.response, "#f7f5ef", "var(--border)") +
+    block("Concept notes", atom.concept_notes, "#fff7cc", "#e3c200") +
+    `<div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+       <button class="btn ghost" id="golden-edit-btn" style="font-size:13px;">&#9998; Edit detail</button>
+     </div>`;
+  document.getElementById("golden-edit-btn").addEventListener("click", () => renderGoldenModalEdit(atom));
+}
+function renderGoldenModalEdit(atom) {
+  const field = (label, id, val, bg) => `
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; color:var(--text-muted); margin-bottom:4px;">${label}</div>
+      <textarea id="${id}" style="width:100%; min-height:70px; padding:8px 10px; border:1px solid var(--border-strong); border-radius:8px; font-family:inherit; font-size:13px; line-height:1.5; background:${bg}; color:var(--text); resize:vertical; box-sizing:border-box;">${val ? escapeHtml(val) : ""}</textarea>
+    </div>`;
+  document.getElementById("golden-modal-body").innerHTML =
+    `<div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Edit this atom&apos;s detail &mdash; its example prompt, response and concept notes. Use it to add detail for atoms you create here.</div>` +
+    field("Example prompt", "golden-edit-prompt", atom.prompt, "#fff") +
+    field("Example response", "golden-edit-response", atom.response, "#fff") +
+    field("Concept notes", "golden-edit-concept", atom.concept_notes, "#fff7cc") +
+    `<div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+       <button class="btn" id="golden-save-btn" style="font-size:13px;">Save detail</button>
+       <button class="btn ghost" id="golden-canceledit-btn" style="font-size:13px;">Cancel</button>
+     </div>`;
+  document.getElementById("golden-save-btn").addEventListener("click", () => {
+    atom.prompt = document.getElementById("golden-edit-prompt").value;
+    atom.response = document.getElementById("golden-edit-response").value;
+    atom.concept_notes = document.getElementById("golden-edit-concept").value;
+    saveState();
+    renderGoldenModalView(atom);
+    renderAll(); // refresh row indicators so "Atom detail" now shows if detail was just added
+  });
+  document.getElementById("golden-canceledit-btn").addEventListener("click", () => renderGoldenModalView(atom));
+}
+function closeGoldenModal() {
+  document.getElementById("golden-modal").classList.remove("open");
+}
+
+// ----- Render: Today's Lesson -----
+function renderToday() {
+  const select = document.getElementById("today-date");
+  const dates = sortedLessonDates();
+  const previous = select.value;
+  select.innerHTML = "";
+  if (dates.length === 0) {
+    select.innerHTML = '<option>&mdash;</option>';
+  } else {
+    const today = todayISO();
+    let defaultDate = dates.find(d => d >= today) || dates[dates.length - 1];
+    for (const d of dates) {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = formatDateNice(d);
+      select.appendChild(opt);
+    }
+    select.value = previous && dates.includes(previous) ? previous : defaultDate;
+  }
+  renderTodayContent();
+}
+
+document.getElementById("today-date").addEventListener("change", renderTodayContent);
+
+function renderTodayContent() {
+  const container = document.getElementById("today-content");
+  const date = document.getElementById("today-date").value;
+  container.innerHTML = "";
+  const c = ctx();
+  if (c.lesson_dates.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>No lesson dates yet</h3><div>You need to tell the engine when <strong>${escapeHtml(c.name)}</strong> meets before it can schedule retrievals.</div><div class="cta-row"><a data-goto="dates">Set up lesson dates &rarr;</a></div></div>`;
+    container.querySelector('a[data-goto="dates"]').addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="dates"]').click(); });
+    return;
+  }
+  if (c.atoms.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>No atoms yet</h3><div>Atoms are the smallest things you teach &mdash; add some to start tracking retrievals for <strong>${escapeHtml(c.name)}</strong>.</div><div class="cta-row"><a data-goto="coverage">Add atoms &rarr;</a></div></div>`;
+    container.querySelector('a[data-goto="atoms"]').addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="atoms"]').click(); });
+    return;
+  }
+
+  const sched = todaysSchedule(date);
+
+  const overdueCount = sched.retrievals.filter(e => e.overdue).length;
+  if (overdueCount > 0) {
+    const help = document.createElement("div");
+    help.className = "helper warn";
+    help.innerHTML = `<strong>${overdueCount} overdue:</strong> these were scheduled for an earlier lesson and rolled forward to this one.`;
+    container.appendChild(help);
+  }
+
+  const totalItems = sched.retrievals.length + sched.initial_instructions.length;
+  if (totalItems === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.innerHTML = `<h3>Nothing scheduled</h3><div>No atoms are due for instruction or retrieval on ${formatDateNice(date)}.</div>`;
+    container.appendChild(empty);
+    return;
+  }
+
+  appendSectionHeader(container, "Retrieval", sched.retrievals.length,
+    "Atoms to retrieve today. Ordered most vulnerable first (fewest retrievals so far).", "retrieval");
+  for (const entry of sched.retrievals) {
+    container.appendChild(renderRetrievalRow(entry, date));
+  }
+
+  appendSectionHeader(container, "Initial Instruction", sched.initial_instructions.length,
+    "Atoms first taught on this date.", "instruction");
+  for (const atom of sched.initial_instructions) {
+    container.appendChild(renderInstructionRow(atom, date));
+  }
+
+  // "Add next atom" — set the next not-yet-introduced atom's initial-instruction date to this lesson.
+  {
+    const nextAtom = ctx().atoms.find(a => !a.initial_instruction_date);
+    const addRow = document.createElement("div");
+    addRow.style.cssText = "margin-top: 12px;";
+    if (nextAtom) {
+      addRow.innerHTML = `<button class="btn ghost" id="add-next-instruction-btn" title="Introduce the next atom from your library on this date">+ Add next atom &mdash; ${escapeHtml(nextAtom.name)}</button>`;
+      container.appendChild(addRow);
+      document.getElementById("add-next-instruction-btn").addEventListener("click", () => {
+        nextAtom.initial_instruction_date = date;
+        saveState();
+        renderTodayContent();
+      });
+    } else if (ctx().atoms.length > 0) {
+      addRow.innerHTML = `<div style="font-size:12px; color:var(--text-muted); font-style:italic;">All atoms in this class already have an initial-instruction date.</div>`;
+      container.appendChild(addRow);
+    }
+  }
+}
+
+function appendSectionHeader(container, title, count, subtitle, sectionId) {
+  const wrap = document.createElement("div");
+  if (sectionId) wrap.dataset.section = sectionId;
+  wrap.style.cssText = "margin: 28px 0 10px; padding: 10px 0 8px 14px; border-left: 4px solid var(--primary); background: linear-gradient(90deg, var(--accent-bg), transparent 70%);";
+  wrap.innerHTML = `
+    <div style="display:flex; align-items:baseline; gap:10px;">
+      <h3 style="font-size:15px; font-weight:700; margin:0; color:var(--primary); text-transform:uppercase; letter-spacing:0.04em;">${escapeHtml(title)}</h3>
+      <span style="font-size:13px; color:var(--text-muted); font-weight:500;">${count}</span>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">${escapeHtml(subtitle)}</div>`;
+  container.appendChild(wrap);
+  if (count === 0) {
+    const none = document.createElement("div");
+    none.style.cssText = "padding: 14px 0 6px; color: var(--text-muted); font-size: 13px; font-style: italic;";
+    none.textContent = "Nothing in this section.";
+    container.appendChild(none);
+  }
+}
+
+function renderInstructionRow(atom, date) {
+  const row = document.createElement("div");
+  row.className = "retrieval-row";
+  const metaParts = [];
+  if (atom.retrieve === "N") metaParts.push('<span style="color:var(--text-muted); font-style:italic;" title="Long-term retrieval off: checked once after instruction, then not scheduled again">No long-term</span>');
+  // (Notes indicator removed 2026-06-08 — notes now live in the Atom detail modal, so the separate "N notes" button was redundant.)
+  // Golden-thread indicator (yellow) — show on initial-instruction atoms too when synced data exists.
+  if (atomHasGolden(atom)) {
+    metaParts.push(`<a class="golden-indicator" data-atom-id="${atom.id}" title="See this atom's example prompt, response & concept notes — example prompt/response + what to vary" style="color:#9a7b00; cursor:pointer; text-decoration:none; border-bottom:1px dotted #d4af00; font-weight:600;">&#10022; Atom detail</a>`);
+  }
+  const metaHtml = metaParts.length > 0
+    ? `<div class="meta">${metaParts.join(" &middot; ")}</div>`
+    : "";
+  row.innerHTML = `
+    <div class="retrieval-info">
+      <div class="name">${escapeHtml(atom.name)}</div>
+      ${metaHtml}
+    </div>
+    <div class="retrieval-actions">
+    </div>`;
+  row.querySelectorAll(".notes-indicator").forEach(a => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAtomHistory(a.dataset.atomId);
+    });
+  });
+  row.querySelectorAll(".golden-indicator").forEach(a => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      openGoldenModal(a.dataset.atomId);
+    });
+  });
+  return row;
+}
+
+function renderRetrievalRow(entry, date) {
+  const atom = entry.atom;
+  const row = document.createElement("div");
+  row.className = "retrieval-row";
+  if (entry.overdue) row.classList.add("overdue");
+
+  // Meta line: retrieval position, gap, long-term retrieval marker, notes indicator.
+  // Outcome is shown via selected button state — no redundant badge.
+  const metaParts = [];
+  if (entry.recorded_outcome === "ad_hoc") {
+    metaParts.push('<span style="color:var(--text-muted); font-weight:500;">unscheduled &mdash; schedule unchanged</span>');
+  } else {
+    metaParts.push(`${ordinal(entry.retrieval_number)} retrieval`);
+  }
+  if (entry.planned_gap !== undefined && !entry.is_first) {
+    metaParts.push(`${entry.planned_gap}d gap`);
+  }
+  if (entry.recorded_outcome === "miss") metaParts.push('<span style="color:var(--text-muted); font-weight:500;">Missed &mdash; pushed forward</span>');
+  if (entry.recorded_outcome === "skip") metaParts.push('<span style="color:var(--text-muted); font-weight:500;">Skipped &mdash; schedule unchanged</span>');
+  if (atom.retrieve === "N") metaParts.push('<span style="color:var(--text-muted); font-style:italic;" title="Long-term retrieval off: checked once after instruction, then not scheduled again">No long-term</span>');
+  // (Notes indicator removed 2026-06-08 — notes now live in the Atom detail modal, so the separate "N notes" button was redundant.)
+  // Golden-thread indicator (yellow) — only if the atom carries golden-thread/parameter data synced from the Curriculum Writer.
+  if (atomHasGolden(atom)) {
+    metaParts.push(`<a class="golden-indicator" data-atom-id="${atom.id}" title="See this atom's example prompt, response & concept notes — what to vary today" style="color:#9a7b00; cursor:pointer; text-decoration:none; border-bottom:1px dotted #d4af00; font-weight:600;">&#10022; Atom detail</a>`);
+  }
+
+  const selected = entry.recorded_outcome;
+  row.innerHTML = `
+    <div class="retrieval-info">
+      <div class="name">${escapeHtml(atom.name)}</div>
+      <div class="meta">${metaParts.join(" &middot; ")}</div>
+    </div>
+    <div class="retrieval-actions">
+      <button class="btn ghost ad-hoc ${selected === "ad_hoc" ? "selected" : ""}" data-outcome="ad_hoc" title="Unscheduled retrieval — does not affect the scheduler" aria-label="unscheduled">unscheduled</button>
+      <button class="pass ${selected === "pass" ? "selected" : ""}" data-outcome="pass" title="Pass" aria-label="Pass">✓</button>
+      <button class="struggle ${selected === "struggle" ? "selected" : ""}" data-outcome="struggle" title="Struggled" aria-label="Struggled">~</button>
+      <button class="reteach ${selected === "reteach" ? "selected" : ""}" data-outcome="reteach" title="Re-teach" aria-label="Re-teach">✕</button>
+      <button class="miss ${selected === "miss" ? "selected" : ""}" data-outcome="miss" title="Record that this planned retrieval was not carried out and push it to the next available lesson">Missed</button>
+    </div>`;
+  row.querySelectorAll(".retrieval-actions button[data-outcome]").forEach(b => {
+    b.addEventListener("click", () => {
+      const outcome = b.dataset.outcome;
+      if (selected === outcome) clearOutcome(atom.id, date);
+      else recordOutcome(atom.id, date, outcome);
+      renderAll();
+    });
+  });
+  row.querySelectorAll(".notes-indicator").forEach(a => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAtomHistory(a.dataset.atomId);
+    });
+  });
+  row.querySelectorAll(".golden-indicator").forEach(a => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      openGoldenModal(a.dataset.atomId);
+    });
+  });
+  return row;
+}
+
+// ----- Render: Settings -----
+// Keep unsaved edits for the same class while the UI re-renders or the user
+// switches tabs. Changing class still loads that class's persisted settings.
+let settingsDraftDirty = false;
+let settingsDraftClassId = null;
+
+function renderSettings() {
+  const c = ctx();
+  const s = c.settings;
+  const preserveDraft = settingsDraftDirty && settingsDraftClassId === c.id;
+  if (!preserveDraft) {
+    document.getElementById("set-seed").value = s.seed_interval;
+    document.getElementById("set-mult").value = s.multiplier;
+    document.getElementById("set-cap").value = s.interval_cap;
+    settingsDraftDirty = false;
+    settingsDraftClassId = c.id;
+  }
+  updateLadderDisplay();
+  renderSnapshots();
+  renderInterestSignals();
+}
+
+function renderInterestSignals() {
+  const el = document.getElementById("interest-signals");
+  if (!el) return;
+  const sig = loadWorksheetSignals();
+  const clickCount = sig.clicks.length;
+  const emailCount = sig.emails.length;
+  if (clickCount === 0 && emailCount === 0) {
+    el.innerHTML = '<div style="font-size:13px; color:var(--text-muted); font-style:italic;">No clicks or email captures yet.</div>';
+    return;
+  }
+  let html = `<div style="display:flex; gap: 24px; margin-bottom: 12px;">
+    <div><div style="font-size: 26px; font-weight: 600; color: var(--primary);">${clickCount}</div><div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Worksheet clicks</div></div>
+    <div><div style="font-size: 26px; font-weight: 600; color: var(--primary);">${emailCount}</div><div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Email signups</div></div>
+  </div>`;
+  if (emailCount > 0) {
+    html += '<details><summary style="font-size: 13px;">Show emails</summary><div style="font-size: 13px; margin-top: 6px;">';
+    for (const e of sig.emails.slice().reverse()) {
+      html += `<div style="padding: 4px 0; border-bottom: 1px solid var(--border);">${escapeHtml(e.email)} <span style="color:var(--text-muted); font-size:11px;">&middot; ${escapeHtml(e.class_name)} &middot; ${formatSnapTime(e.ts)}</span></div>`;
+    }
+    html += '</div></details>';
+  }
+  if (clickCount > 0) {
+    html += '<details style="margin-top: 8px;"><summary style="font-size: 13px;">Show recent clicks</summary><div style="font-size: 13px; margin-top: 6px;">';
+    for (const c of sig.clicks.slice(-20).reverse()) {
+      html += `<div style="padding: 4px 0; border-bottom: 1px solid var(--border); color:var(--text-muted); font-size:12px;">${formatSnapTime(c.ts)} &middot; ${escapeHtml(c.class_name)} &middot; lesson ${c.lesson_date} &middot; ${c.atom_count} atoms</div>`;
+    }
+    html += '</div></details>';
+  }
+  el.innerHTML = html;
+}
+
+function renderSnapshots() {
+  const el = document.getElementById("snapshots-list");
+  if (!el) return;
+  const snaps = loadSnapshots();
+  if (snaps.length === 0) {
+    el.innerHTML = '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">No snapshots yet. Snapshots are saved automatically as you use the app.</div>';
+    return;
+  }
+  const rows = snaps.map(s => {
+    let summary = "";
+    try {
+      const parsed = JSON.parse(s.data);
+      const totalAtoms = (parsed.classes || []).reduce((n, c) => n + (c.atoms || []).length, 0);
+      const totalRetrievals = (parsed.classes || []).reduce((n, c) => n + (c.retrievals || []).length, 0);
+      summary = `${parsed.classes ? parsed.classes.length : 0} classes &middot; ${totalAtoms} atoms &middot; ${totalRetrievals} retrievals`;
+    } catch (e) { summary = "snapshot"; }
+    return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
+      <div>
+        <div style="font-weight:500;">${formatSnapTime(s.ts)}</div>
+        <div style="color:var(--text-muted); font-size:12px;">${summary}</div>
+      </div>
+      <button class="btn ghost" data-restore-ts="${s.ts}" style="padding:4px 10px; font-size:12px;">Restore</button>
+    </div>`;
+  }).join("");
+  el.innerHTML = rows;
+  el.querySelectorAll("button[data-restore-ts]").forEach(b => {
+    b.addEventListener("click", () => restoreSnapshot(parseInt(b.dataset.restoreTs, 10)));
+  });
+}
+
+function updateLadderDisplay() {
+  const seed = Math.max(1, parseFloat(document.getElementById("set-seed").value) || 1);
+  const mult = Math.max(1.1, parseFloat(document.getElementById("set-mult").value) || 2);
+  const cap = Math.max(1, parseFloat(document.getElementById("set-cap").value) || 60);
+  const ladder = [];
+  for (let i = 0; i < 12; i++) {
+    const raw = seed * Math.pow(mult, i);
+    ladder.push(Math.min(Math.max(1, Math.round(raw)), cap));
+  }
+  document.getElementById("ladder-display").textContent = "Projected gaps if every interval is achieved exactly (days): " + ladder.join(", ");
+}
+
+document.getElementById("set-save").addEventListener("click", () => {
+  const seed = Math.max(1, parseInt(document.getElementById("set-seed").value, 10) || 1);
+  const mult = Math.max(1.1, parseFloat(document.getElementById("set-mult").value) || 2);
+  const cap = Math.max(1, parseInt(document.getElementById("set-cap").value, 10) || 60);
+  ctx().settings = { seed_interval: seed, multiplier: mult, interval_cap: cap };
+  settingsDraftDirty = false;
+  settingsDraftClassId = ctx().id;
+  saveState();
+  renderAll();
+  alert(`Settings saved for ${ctx().name}.`);
+});
+
+["set-seed", "set-mult", "set-cap"].forEach(id => {
+  document.getElementById(id).addEventListener("input", () => {
+    settingsDraftDirty = true;
+    settingsDraftClassId = ctx().id;
+    updateLadderDisplay();
+  });
+});
+
+// ----- Data management -----
+function updateLastBackupStatus() {
+  const el = document.getElementById("last-backup-status");
+  if (!el) return;
+  const timestamp = localStorage.getItem("learning-engine-last-backup");
+  if (!timestamp) {
+    el.textContent = "Last backup: Never";
+    return;
+  }
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    el.textContent = "Last backup: Unknown";
+    return;
+  }
+  el.textContent = `Last backup: ${formatTimestampUK(timestamp)}`;
+}
+
+function saveCoverageTextFile() {
+  const c = ctx();
+  if (!c) return;
+  const rows = c.atoms
+    .filter(atom => !!atom.initial_instruction_date)
+    .map(atom => {
+      const name = String(atom.name || "").replace(/[\t\r\n]+/g, " ").trim();
+      return `${name}\t${formatDateNice(atom.initial_instruction_date)}`;
+    });
+
+  const className = String(c.name || "").replace(/[\t\r\n]+/g, " ").trim();
+  const text = `${className}\n\n` + c.atoms
+    .filter(atom => !!atom.initial_instruction_date)
+    .map(atom => {
+      const name = String(atom.name || "").replace(/[\t\r\n]+/g, " ").trim();
+      return `${formatDateNice(atom.initial_instruction_date)}: ${name}`;
+    })
+    .join("\n") + "\n";
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const safeClassName = String(c.name || "class")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "") || "class";
+  a.download = `coverage-${safeClassName}-${todayISO()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+document.getElementById("coverage-export-txt").addEventListener("click", saveCoverageTextFile);
+
+function saveBackupFile() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `retrieval-tracker-${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  localStorage.setItem("learning-engine-last-backup", new Date().toISOString());
+  markBackupClean();
+  updateLastBackupStatus();
+}
+
+document.getElementById("data-export").addEventListener("click", saveBackupFile);
+document.getElementById("top-data-export").addEventListener("click", saveBackupFile);
+document.getElementById("top-data-import").addEventListener("click", () => {
+  document.getElementById("data-import").click();
+});
+updateLastBackupStatus();
+initialiseBackupBaseline();
+
+document.getElementById("data-import-btn").addEventListener("click", () => {
+  document.getElementById("data-import").click();
+});
+document.getElementById("data-import").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!confirm("Replace all current data with the imported file?")) return;
+      let newState;
+      if (parsed.classes && Array.isArray(parsed.classes)) {
+        newState = parsed;
+      } else if (parsed.atoms) {
+        const cls = defaultClass("Imported");
+        cls.atoms = parsed.atoms || [];
+        cls.lesson_dates = parsed.lesson_dates || [];
+        cls.retrievals = parsed.retrievals || [];
+        cls.settings = { ...defaultSettings(), ...(parsed.settings || {}) };
+        newState = { classes: [cls], active_class_id: cls.id };
+      } else {
+        throw new Error("Unrecognised file structure.");
+      }
+      state = newState;
+      settingsDraftDirty = false;
+      settingsDraftClassId = null;
+      saveState();
+      markBackupClean();
+      renderAll();
+    } catch (err) {
+      alert("Couldn't read that file: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ---- Non-destructive sync of atoms from the Curriculum Writer ----
+// Matches incoming atoms to existing ones by their Writer id (stable_id preferred,
+// else the positional unit_NNN id) stored on each atom as `writer_id`. Existing atoms
+// keep their LE id (so retrieval history, which keys off atom_id, is untouched),
+// their initial_instruction_date, retrieve flag and notes; only content fields update.
+// Unmatched atoms are appended. Nothing is deleted.
+document.getElementById("writer-sync-btn").addEventListener("click", () => {
+  document.getElementById("writer-sync").click();
+});
+document.getElementById("writer-sync").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const incoming = parsed.atoms;
+      if (!Array.isArray(incoming)) throw new Error("No 'atoms' array found — is this an atoms export file?");
+      const c = ctx();
+      if (!c) throw new Error("No active class selected.");
+      const unitName = (parsed.unit && parsed.unit.name) ? parsed.unit.name : "this unit";
+      if (!confirm(`Merge ${incoming.length} atom(s) from "${unitName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history — only their content is updated, and new atoms are added.`)) { e.target.value = ""; return; }
+      const byWriterId = new Map();
+      c.atoms.forEach(a => { if (a.writer_id) byWriterId.set(a.writer_id, a); });
+      let updated = 0, added = 0;
+      for (const inc of incoming) {
+        const wid = inc.stable_id || inc.id || null;
+        const content = {
+          name: inc.name || "",
+          type: inc.type || "",
+          retrieve: (inc.retrieve === "N") ? "N" : "Y",   // long-term-retrieval flag — Writer is source of truth
+          prompt: inc.prompt || "",
+          response: inc.response || "",
+          concept_notes: inc.notes || "",   // Writer's prose notes — SEPARATE from the teacher's running `notes` log
+          writer_unit: (parsed.unit && parsed.unit.id) || ""
+        };
+        const existing = wid ? byWriterId.get(wid) : null;
+        if (existing) {
+          // Update content ONLY — preserve id, initial_instruction_date, retrieve, notes, and (by extension) retrievals.
+          Object.assign(existing, content);
+          updated++;
+        } else {
+          c.atoms.push({
+            id: newId(),
+            writer_id: wid,
+            retrieve: "Y",
+            initial_instruction_date: null,
+            notes: "",
+            ...content
+          });
+          added++;
+        }
+      }
+      saveState();
+      renderAll();
+      alert(`Synced from "${unitName}".\n\nUpdated ${updated} existing atom(s) — retrieval history preserved.\nAdded ${added} new atom(s).\n\nSet initial instruction dates for the new atoms in the library below as you teach them.`);
+    } catch (err) {
+      alert("Couldn't sync that file: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+// ---- Selective export: THIS class only (atoms + retrieval history) ----
+// Portable file. Importable with full history by "Import a class into this one",
+// and (content only) by the existing "Import atoms" merge, since it carries `atoms` + `unit`.
+document.getElementById("class-export").addEventListener("click", () => {
+  const c = ctx();
+  if (!c) { alert("No active class selected."); return; }
+  const payload = {
+    format: "le-class-export-v1",
+    exported_at: new Date().toISOString(),
+    unit: { name: c.name },              // lets the content-only "Import atoms" path show a name
+    class_name: c.name,
+    profile: c.profile || {},
+    lesson_dates: (c.lesson_dates || []).slice(),
+    atoms: (c.atoms || []).map(a => ({
+      id: a.id,
+      writer_id: a.writer_id || null,
+      name: a.name || "",
+      type: a.type || "",
+      retrieve: a.retrieve || "Y",
+      prompt: a.prompt || "",
+      response: a.response || "",
+      concept_notes: a.concept_notes || "",
+      initial_instruction_date: a.initial_instruction_date || null,
+      notes: a.notes || ""
+    })),
+    retrievals: (c.retrievals || []).map(r => ({ atom_id: r.atom_id, lesson_date: r.lesson_date, outcome: r.outcome, ...(r.additional ? { additional: true } : {}) }))
+  };
+  const safeName = (c.name || "class").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "class";
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `le-class-${safeName}-${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---- Import a class export INTO the current class (non-destructive, carries history) ----
+// Match existing atoms by writer_id then id: existing keep their history (content refreshed);
+// NEW atoms are added WITH their initial-instruction date, retrieve flag, notes and retrieval
+// records. Never creates a class, never wipes. Going-forward scheduling uses YOUR lesson
+// calendar; the imported retrieval history is preserved for strength/history.
+document.getElementById("class-merge-btn").addEventListener("click", () => {
+  document.getElementById("class-merge").click();
+});
+document.getElementById("class-merge").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (parsed.classes && Array.isArray(parsed.classes)) throw new Error("That looks like a full backup. Use \"Restore from backup\" instead.");
+      const incoming = parsed.atoms;
+      if (!Array.isArray(incoming)) throw new Error("No 'atoms' array found — is this a class export, selected-atoms, or Curriculum Writer file?");
+      const c = ctx();
+      if (!c) throw new Error("No active class selected.");
+      const srcName = parsed.class_name || parsed.source_class || (parsed.unit && parsed.unit.name) || "another class";
+      // File types: le-class-export-v1 (atoms + history), le-atoms-export-v1 (content only),
+      // or a Curriculum Writer atoms file (content; concept notes live in `notes`, ids in `stable_id`).
+      const isLE = parsed.format === "le-class-export-v1" || parsed.format === "le-atoms-export-v1";
+      if (!confirm(`Import "${srcName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history (content is refreshed); new atoms are added. No classes are created, nothing is wiped.`)) { e.target.value = ""; return; }
+      const byWriterId = new Map();
+      const byId = new Map();
+      c.atoms.forEach(a => { if (a.writer_id) byWriterId.set(a.writer_id, a); byId.set(a.id, a); });
+      const idMap = {};   // incoming atom id -> new local id (NEW atoms only)
+      let updated = 0, added = 0;
+      for (const inc of incoming) {
+        const wid = isLE ? (inc.writer_id || null) : (inc.stable_id || inc.id || null);
+        const content = {
+          name: inc.name || "",
+          type: inc.type || "",
+          prompt: inc.prompt || "",
+          response: inc.response || "",
+          concept_notes: isLE ? (inc.concept_notes || "") : (inc.notes || "")   // Writer files keep concept notes in `notes`
+        };
+        if (!isLE) content.writer_unit = (parsed.unit && parsed.unit.id) || "";
+        const existing = (wid && byWriterId.get(wid)) || byId.get(inc.id) || null;
+        if (existing) {
+          Object.assign(existing, content);   // refresh content; preserve id, history, dates, notes, retrieve
+          if (!ATOM_STATUSES.includes(existing.status)) existing.status = "scheduled";
+          updated++;
+        } else {
+          const newLocalId = newId();
+          idMap[inc.id] = newLocalId;
+          const atom = {
+            id: newLocalId,
+            writer_id: wid,
+            retrieve: (inc.retrieve === "N") ? "N" : "Y",
+            initial_instruction_date: inc.initial_instruction_date || null,
+            status: ATOM_STATUSES.includes(inc.status) ? inc.status : "scheduled",
+            notes: isLE ? (inc.notes || "") : "",   // Writer files: `notes` is concept notes (mapped above), not a teacher log
+            ...content
+          };
+          if (!ATOM_STATUSES.includes(atom.status)) atom.status = "scheduled";
+          c.atoms.push(atom);
+          if (wid) byWriterId.set(wid, atom);
+          byId.set(newLocalId, atom);
+          added++;
+        }
+      }
+      // Carry retrieval history for NEW atoms only (existing atoms keep their own — no dupes).
+      let historyRows = 0;
+      const incomingRetrievals = Array.isArray(parsed.retrievals) ? parsed.retrievals : [];
+      for (const r of incomingRetrievals) {
+        const localId = idMap[r.atom_id];
+        if (!localId) continue;
+        if (!c.retrievals.some(x => x.atom_id === localId && x.lesson_date === r.lesson_date)) {
+          c.retrievals.push({ atom_id: localId, lesson_date: r.lesson_date, outcome: r.outcome, ...(r.additional ? { additional: true } : {}) });
+          historyRows++;
+        }
+      }
+      saveState();
+      renderAll();
+      alert(`Imported "${srcName}" into "${c.name}".\n\nUpdated ${updated} existing atom(s) — history preserved.\nAdded ${added} new atom(s), carrying ${historyRows} retrieval record(s).`);
+    } catch (err) {
+      alert("Couldn't import that file: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+// ---- Export SELECTED atoms (content only — for sharing curriculum with a team) ----
+// Produces an le-atoms-export-v1 file. No retrieval history; importable by "Import into this class".
+let _atomsExportIds = new Set();
+function renderAtomsExportList() {
+  const c = ctx();
+  const list = document.getElementById("atoms-export-list");
+  list.innerHTML = "";
+  (c.atoms || []).forEach(a => {
+    const row = document.createElement("label");
+    row.style.cssText = "display:flex; gap:8px; align-items:flex-start; padding:6px 4px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = _atomsExportIds.has(a.id);
+    cb.style.marginTop = "2px";
+    cb.addEventListener("change", () => {
+      if (cb.checked) _atomsExportIds.add(a.id); else _atomsExportIds.delete(a.id);
+      updateAtomsExportCount();
+    });
+    const txt = document.createElement("span");
+    txt.innerHTML = `<strong>${escapeHtml(a.name || "(unnamed)")}</strong>${a.type ? ` <span style="color:var(--text-muted)">· ${escapeHtml(a.type)}</span>` : ""}`;
+    row.appendChild(cb);
+    row.appendChild(txt);
+    list.appendChild(row);
+  });
+  updateAtomsExportCount();
+}
+function updateAtomsExportCount() {
+  const el = document.getElementById("atoms-export-count");
+  if (el) el.textContent = `${_atomsExportIds.size} selected`;
+}
+function closeAtomsExportModal() { document.getElementById("atoms-export-modal").classList.remove("open"); }
+function openAtomPicker(mode) {
+  const c = ctx();
+  if (!c) { alert("No active class selected."); return; }
+  if (!c.atoms || c.atoms.length === 0) { alert("This class has no atoms yet."); return; }
+  _atomsExportIds = new Set(c.atoms.map(a => a.id));   // default: all selected
+  const del = mode === "delete";
+  document.getElementById("atoms-picker-title").textContent = del ? "Delete atoms" : "Export atoms";
+  document.getElementById("atoms-picker-sub").textContent = del
+    ? "Tick the atoms to delete. A snapshot is saved first, so you can roll it back."
+    : "Tick the atoms and choose what to include, then export.";
+  document.getElementById("atoms-export-includes").style.display = del ? "none" : "";
+  document.getElementById("atoms-export-go").style.display = del ? "none" : "";
+  document.getElementById("atoms-delete-go").style.display = del ? "" : "none";
+  renderAtomsExportList();
+  document.getElementById("atoms-export-modal").classList.add("open");
+}
+document.getElementById("atoms-export-btn").addEventListener("click", () => openAtomPicker("export"));
+document.getElementById("atoms-delete-btn").addEventListener("click", () => openAtomPicker("delete"));
+document.getElementById("atoms-export-close").addEventListener("click", closeAtomsExportModal);
+document.getElementById("atoms-export-cancel").addEventListener("click", closeAtomsExportModal);
+document.getElementById("atoms-export-modal").addEventListener("click", (e) => { if (e.target.id === "atoms-export-modal") closeAtomsExportModal(); });
+document.getElementById("atoms-export-all").addEventListener("click", () => { _atomsExportIds = new Set((ctx().atoms || []).map(a => a.id)); renderAtomsExportList(); });
+document.getElementById("atoms-export-none").addEventListener("click", () => { _atomsExportIds = new Set(); renderAtomsExportList(); });
+document.getElementById("atoms-export-go").addEventListener("click", () => {
+  const c = ctx();
+  if (!c) return;
+  const chosen = (c.atoms || []).filter(a => _atomsExportIds.has(a.id));
+  if (chosen.length === 0) { alert("Select at least one atom to export."); return; }
+  const incConcept = document.getElementById("exp-inc-concept").checked;
+  const incExamples = document.getElementById("exp-inc-examples").checked;
+  const incHistory = document.getElementById("exp-inc-history").checked;
+  const incInstruction = document.getElementById("exp-inc-instruction").checked;
+  const incNotes = document.getElementById("exp-inc-notes").checked;
+  const atoms = chosen.map(a => {
+    const o = { id: a.id, writer_id: a.writer_id || null, name: a.name || "", type: a.type || "", retrieve: a.retrieve || "Y" };
+    if (incExamples) { o.prompt = a.prompt || ""; o.response = a.response || ""; }
+    if (incConcept) o.concept_notes = a.concept_notes || "";
+    if (incInstruction) o.initial_instruction_date = a.initial_instruction_date || null;
+    if (incNotes) o.notes = a.notes || "";
+    return o;
+  });
+  const payload = {
+    format: incHistory ? "le-class-export-v1" : "le-atoms-export-v1",
+    exported_at: new Date().toISOString(),
+    unit: { name: c.name },
+    source_class: c.name,
+    class_name: c.name,
+    atoms
+  };
+  if (incHistory) {
+    const ids = new Set(chosen.map(a => a.id));
+    payload.retrievals = (c.retrievals || []).filter(r => ids.has(r.atom_id)).map(r => ({ atom_id: r.atom_id, lesson_date: r.lesson_date, outcome: r.outcome }));
+  }
+  const safeName = (c.name || "atoms").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "atoms";
+  const kind = incHistory ? "class" : "atoms";
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `le-${kind}-${safeName}-${chosen.length}-${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeAtomsExportModal();
+});
+
+// ---- Delete SELECTED atoms (from the same picker) — snapshot first, reversible ----
+document.getElementById("atoms-delete-go").addEventListener("click", () => {
+  const c = ctx();
+  if (!c) return;
+  const ids = new Set([..._atomsExportIds].filter(id => (c.atoms || []).some(a => a.id === id)));
+  if (ids.size === 0) { alert("Select at least one atom to delete."); return; }
+  if (!confirm(`Delete ${ids.size} selected atom(s) from "${c.name}"?\n\nTheir retrieval history is removed too. A snapshot is saved first, so you can roll it back from "Recent snapshots".`)) return;
+  snapshotState();
+  c.atoms = (c.atoms || []).filter(a => !ids.has(a.id));
+  c.retrievals = (c.retrievals || []).filter(r => !ids.has(r.atom_id));
+  saveState();
+  renderAll();
+  closeAtomsExportModal();
+});
+
+document.getElementById("data-clear").addEventListener("click", () => {
+  const typed = prompt('This will permanently delete ALL classes, atoms, lesson dates and retrievals.\n\nYour last 20 snapshots will still be available in "Recent snapshots" if you change your mind.\n\nType DELETE (in capitals) to confirm:');
+  if (typed === null) return;
+  if (typed.trim() !== "DELETE") {
+    alert('Cancelled. You need to type DELETE exactly to confirm.');
+    return;
+  }
+  state = defaultState();
+  saveState();
+  renderAll();
+});
+
+// Backfill: for the current class, reconstruct the genuine historical schedule
+// from each atom's original instruction date, ignoring any retrospective bootstrap,
+// and mark each past unactioned scheduled retrieval as Pass. This turns an inferred
+// onboarding baseline into real historical retrieval records without inventing dates.
+// Existing recorded outcomes are never overwritten. A snapshot is auto-saved first.
+document.getElementById("data-backfill").addEventListener("click", () => {
+  const c = ctx();
+  if (!c) return;
+  if (c.atoms.length === 0) { alert("No atoms in this class to backfill."); return; }
+  if (c.lesson_dates.length === 0) { alert("This class has no lesson dates yet. Set up the lesson calendar first — the engine can only place retrievals on dates that exist."); return; }
+  const todayIso = todayISO();
+  const skippedAtoms = c.atoms.filter(atom => isSkipActive(atom, todayIso));
+  const skipNote = skippedAtoms.length > 0
+    ? `\n\n${skippedAtoms.length} atom${skippedAtoms.length === 1 ? " has" : "s have"} an active 1-week skip. Those atoms will be left unchanged by Backfill.`
+    : "";
+  const ok = confirm(`Backfill past retrievals for "${c.name}"?\n\nFor every atom, the engine will reconstruct the past retrieval pattern from its original instruction date and lesson calendar, and add records where no retrieval is already recorded. Make sure the lesson calendar includes the historical lesson dates covering the period you want reconstructed. Existing retrievals are left untouched.${skipNote}\n\nA snapshot is saved automatically so you can roll back.`);
+  if (!ok) return;
+  // Trigger a snapshot of the pre-backfill state explicitly.
+  snapshotState();
+  let filled = 0;
+  let skipped = 0;
+  for (const atom of c.atoms) {
+    if (isSkipActive(atom, todayIso)) {
+      skipped++;
+      continue;
+    }
+    let safety = 500; // hard cap to prevent any pathological loop
+    while (safety-- > 0) {
+      const next = nextSuggestedDate(atom, { ignoreBootstrap: true });
+      if (!next || next > todayIso) break;
+      // Defensive: don't overwrite anything that's already there.
+      const existing = c.retrievals.find(r => r.atom_id === atom.id && r.lesson_date === next);
+      if (existing) {
+        // There is already a recorded outcome at this date. Do not add a duplicate.
+        // The scheduler has already incorporated this event, so if this date is still
+        // returned here there is no safe forward step to make without changing state.
+        break;
+      }
+      c.retrievals.push({ atom_id: atom.id, lesson_date: next, outcome: "pass" });
+      // Once genuine history exists, any inferred baseline is no longer needed.
+      atom.retrospective_bootstrap = null;
+      filled++;
+    }
+  }
+  saveState();
+  renderAll();
+  const skippedMessage = skipped > 0 ? ` ${skipped} atom${skipped === 1 ? " was" : "s were"} skipped because an active 1-week skip is in effect.` : "";
+  alert(`Backfilled ${filled} retrieval${filled === 1 ? "" : "s"} for "${c.name}".${skippedMessage} A snapshot of the previous state was saved.`);
+});
+
+document.getElementById("data-seed").addEventListener("click", () => {
+  if (state.classes.some(c => c.atoms.length > 0) && !confirm("Replace current data with sample data?")) return;
+  state = makeSampleState();
+  saveState();
+  renderAll();
+  document.querySelector('nav.tabs button[data-screen="today"]').click();
+});
+
+function makeSampleState() {
+  const today = new Date();
+  function lessonDates(dows) {
+    const out = [];
+    const start = new Date(today); start.setDate(start.getDate() - 14);
+    const end = new Date(today); end.setDate(end.getDate() + 42);
+    let cur = new Date(start);
+    while (cur <= end) {
+      if (dows.includes(cur.getDay())) out.push(toISO(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return out;
+  }
+  const c1 = defaultClass("8X3 Maths");
+  c1.lesson_dates = lessonDates([1, 3, 5]); // Mon/Wed/Fri
+  const todayIsoSample = toISO(today);
+  // Anchor sample data to "today" so it always opens cleanly: today populates Initial
+  // Instruction; the previous lesson populates Retrieval as 1st retrievals.
+  const todayLesson = c1.lesson_dates.find(d => d >= todayIsoSample) || c1.lesson_dates[c1.lesson_dates.length - 1];
+  const todayIdx = c1.lesson_dates.indexOf(todayLesson);
+  const prevLesson = todayIdx > 0 ? c1.lesson_dates[todayIdx - 1] : todayLesson;
+  // An "older" atom seeded a few lessons back so the Schedule tab has some history to look at.
+  const olderLesson = todayIdx >= 5 ? c1.lesson_dates[todayIdx - 5] : c1.lesson_dates[0];
+
+  c1.atoms = [
+    // Two atoms introduced today — populate Initial Instruction.
+    { id: newId(), name: "Compare two ratios to determine which gives the larger share", type: "", retrieve: "Y", initial_instruction_date: todayLesson, notes: "" },
+    { id: newId(), name: "Convert a ratio a:b into the fraction a/(a+b)", type: "", retrieve: "Y", initial_instruction_date: todayLesson, notes: "" },
+    // Two atoms introduced last lesson — populate Retrieval (1st retrievals due today).
+    { id: newId(), name: "Identify a ratio expressed in word form", type: "", retrieve: "Y", initial_instruction_date: prevLesson, notes: "" },
+    { id: newId(), name: "Find the total parts of a ratio", type: "", retrieve: "Y", initial_instruction_date: prevLesson, notes: "" },
+    // Older atom with passes recorded — shows in Schedule but next retrieval is future, so Today's Lesson stays clean.
+    // Marked as long-term retrieval off (No): checked once, then not scheduled again.
+    { id: newId(), name: "Equivalent ratios share the same simplest form", type: "", retrieve: "N", initial_instruction_date: olderLesson, notes: "" }
+  ];
+  c1.retrievals = [];
+  if (todayIdx >= 5) {
+    const olderId = c1.atoms[4].id;
+    c1.retrievals.push({ atom_id: olderId, lesson_date: c1.lesson_dates[todayIdx - 4], outcome: "pass" });
+    c1.retrievals.push({ atom_id: olderId, lesson_date: c1.lesson_dates[todayIdx - 2], outcome: "pass" });
+  }
+
+  // Second class — minimal, just to demo multi-class.
+  const c2 = defaultClass("9Y1 Maths");
+  c2.lesson_dates = lessonDates([2, 4]); // Tue/Thu
+  const c2Today = c2.lesson_dates.find(d => d >= todayIsoSample) || c2.lesson_dates[c2.lesson_dates.length - 1];
+  c2.atoms = [
+    { id: newId(), name: "Pythagoras' theorem: a^2 + b^2 = c^2", type: "", retrieve: "Y", initial_instruction_date: c2Today, status: "scheduled", notes: "" },
+    { id: newId(), name: "Identify the hypotenuse in a right-angled triangle", type: "", retrieve: "Y", initial_instruction_date: c2Today, status: "scheduled", notes: "" }
+  ];
+
+  return { classes: [c1, c2], active_class_id: c1.id };
+}
+
+function escapeHtml(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function ordinal(n) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function renderAll() {
+  renderClassSwitcher();
+  renderAtoms();
+  renderDates();
+  renderToday();
+  renderCoverage();
+  renderSchedule();
+  renderNotes();
+  renderClasses();
+  renderSettings();
+}
+
+// ----- Init defaults for date pickers -----
+document.getElementById("atom-initial").value = todayISO();
+document.getElementById("date-single").value = todayISO();
+
+document.getElementById("coverage-filter").addEventListener("change", renderCoverage);
+document.getElementById("coverage-planning-horizon").addEventListener("change", renderCoverage);
+
+// Class notes are deliberately plain text and save shortly after typing stops.
+let classNotesSaveTimer = null;
+document.getElementById("class-notes").addEventListener("input", (e) => {
+  const c = ctx();
+  c.notes = e.target.value;
+  clearTimeout(classNotesSaveTimer);
+  classNotesSaveTimer = setTimeout(() => saveState({ snapshot: false }), 300);
+});
+
+// Atom library search — re-render atoms on every keystroke.
+document.getElementById("atom-search").addEventListener("input", renderAtoms);
+document.getElementById("date-from").value = todayISO();
+document.getElementById("weekA-start").value = todayISO();
+{
+  const t = new Date();
+  t.setDate(t.getDate() + 60);
+  document.getElementById("date-to").value = toISO(t);
+}
+renderAll();
+
+// Refresh date-dependent indicators when returning to the tab.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") renderAll();
+});
+
+// ----- Interest signals panel: hidden by default, shown only with ?signals=1
+// or once localStorage key 'le-show-signals' is set (visiting once sticks). -----
+(function setupSignalsPanelVisibility() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("signals") === "1") {
+    localStorage.setItem("le-show-signals", "1");
+  } else if (params.get("signals") === "0") {
+    localStorage.removeItem("le-show-signals");
+  }
+  if (localStorage.getItem("le-show-signals") === "1") {
+    const card = document.getElementById("interest-signals-card");
+    if (card) card.style.display = "";
+  }
+})();
+
+// ----- Annotation overlay: inline boxes that explain the current view -----
+const annotationDefs = {
+  today: [
+    {
+      anchor: () => document.querySelector('#today-content [data-section="retrieval"]'),
+      placement: "before",
+      text: "These are atoms due for retrieval today. Most vulnerable first — the ones the class has done least."
+    },
+    {
+      anchor: () => document.querySelector('#today-content .retrieval-row .retrieval-actions'),
+      placement: "after-parent",
+      text: "Tap one of these on each atom. Pass stretches the next interval; Struggled holds it; Missed records that the planned retrieval was not carried out and pushes it to the next lesson; Re-teach resets. If you choose not to follow a recommendation, simply leave it unrecorded."
+    },
+    {
+      anchor: () => document.querySelector('#today-content [data-section="instruction"]'),
+      placement: "before",
+      text: "Atoms first taught today. After this lesson they'll join the retrieval schedule."
+    },
+    {
+      anchor: () => document.querySelector('#today-content'),
+      placement: "append",
+      text: "Try the Schedule tab next — click it at the top to see every atom across every lesson date."
+    }
+  ],
+  schedule: [
+    {
+      anchor: () => document.querySelector('#screen-schedule .schedule-wrap'),
+      placement: "before",
+      text: "Every atom across every lesson date. Coloured cells are recorded outcomes; muted ones are projected forward assuming each retrieval passes. Click any atom name on the left to see its full history."
+    },
+    {
+      anchor: () => document.querySelector('#screen-schedule .schedule-legend'),
+      placement: "after",
+      text: "Quick key for what each cell means."
+    }
+  ],
+  atoms: [
+    {
+      anchor: () => document.getElementById("atom-bulk")?.closest(".card"),
+      placement: "before",
+      text: "Paste atom names in bulk here, one per line. Set the initial instruction date per atom in the library below as you teach them. There's also an 'Add a single atom' panel underneath if you want all fields up front."
+    },
+    {
+      anchor: () => document.getElementById("atoms-tbody")?.closest(".card"),
+      placement: "before",
+      text: "Your atom library. Each row has inline dropdowns for the Long-term flag and Initial instruction date. Once an atom has retrievals recorded, the date locks to protect the schedule."
+    }
+  ],
+  dates: [
+    {
+      anchor: () => document.getElementById("dates-list")?.closest(".card") || document.querySelector("#screen-dates .card"),
+      placement: "before",
+      text: "Tell the engine when this class meets. Add dates one at a time or use the recurring pattern generator — weekly or fortnightly. Retrievals snap to these dates."
+    }
+  ],
+  classes: [
+    {
+      anchor: () => document.querySelector("#screen-classes .card"),
+      placement: "before",
+      text: "Each class is fully independent — its own atoms, lesson dates, retrievals and spacing settings."
+    }
+  ],
+  settings: [
+    {
+      anchor: () => document.getElementById("set-seed")?.closest(".card"),
+      placement: "before",
+      text: "Per-class spacing settings. Seed interval is the target gap for the first retrieval; multiplier stretches each subsequent successful gap; the cap is the longest a gap can ever grow."
+    },
+    {
+      anchor: () => document.getElementById("data-export")?.closest(".card"),
+      placement: "before",
+      text: "Save & restore. Back up to a file, restore from a snapshot, or load sample data. Snapshots auto-save on every change so you can roll back if something goes wrong."
+    }
+  ]
+};
+
+let annotationActive = false;
+
+function showAnnotations() {
+  annotationActive = true;
+  renderAnnotations();
+}
+
+function hideAnnotations() {
+  annotationActive = false;
+  document.querySelectorAll(".annotation-box, .annotation-done").forEach(el => el.remove());
+}
+
+function renderAnnotations() {
+  // Always clean up first so re-renders don't stack
+  document.querySelectorAll(".annotation-box, .annotation-done").forEach(el => el.remove());
+  if (!annotationActive) return;
+
+  const activeBtn = document.querySelector("nav.tabs button.active");
+  if (!activeBtn) return;
+  const screen = activeBtn.dataset.screen;
+  const defs = annotationDefs[screen];
+  if (!defs || defs.length === 0) return;
+
+  defs.forEach((def, i) => {
+    const anchor = def.anchor();
+    if (!anchor) return;
+    const box = document.createElement("div");
+    box.className = "annotation-box";
+    box.innerHTML = `<div class="number">${i + 1}</div><div class="text">${escapeHtml(def.text)}</div>`;
+    if (def.placement === "before") {
+      anchor.parentNode.insertBefore(box, anchor);
+    } else if (def.placement === "after") {
+      anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    } else if (def.placement === "after-parent") {
+      const parent = anchor.parentNode;
+      parent.parentNode.insertBefore(box, parent.nextSibling);
+    } else if (def.placement === "append") {
+      anchor.appendChild(box);
+    }
+  });
+
+  // Done button (fixed in viewport corner)
+  const done = document.createElement("button");
+  done.className = "annotation-done";
+  done.textContent = "Got it";
+  done.addEventListener("click", hideAnnotations);
+  document.body.appendChild(done);
+}
+
+// ----- Welcome modal: show once on first run -----
+const WELCOME_SEEN_KEY = "learning-engine-welcome-seen-v2";
+function closeWelcome() {
+  document.getElementById("welcome-modal").classList.remove("open");
+  localStorage.setItem(WELCOME_SEEN_KEY, "1");
+}
+function maybeShowWelcome() {
+  // Onboarding is disabled in the final UI.
+  return;
+}
+function showWelcome() {
+  document.getElementById("welcome-modal").classList.add("open");
+}
+document.getElementById("welcome-close").addEventListener("click", closeWelcome);
+document.getElementById("welcome-start").addEventListener("click", closeWelcome);
+document.getElementById("welcome-sample").addEventListener("click", () => {
+  closeWelcome();
+  // Load sample data for demonstration.
+  document.getElementById("data-seed").click();
+  setTimeout(() => {
+    document.querySelector('nav.tabs button[data-screen="today"]').click();
+    setTimeout(showAnnotations, 100);
+  }, 100);
+});
+document.getElementById("welcome-modal").addEventListener("click", (e) => {
+  if (e.target.id === "welcome-modal") closeWelcome();
+});
+maybeShowWelcome();
+
+</script>
+</body>
+</html>
