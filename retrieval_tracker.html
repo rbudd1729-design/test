@@ -2266,8 +2266,9 @@ function fullScheduleForAtom(atom, maxProjections = 10) {
     // If no lesson inside the acceptable window exists, roll forward to the first lesson
     // after the target (never to an earlier lesson). No such lesson ends the projection.
     let candidate = eligible.length > 0 ? eligible[eligible.length - 1] : dates.find(d => d > target);
-    // An active Defer places the pending retrieval exactly as nextSuggestedDate does.
-    if (isFirstProjection && deferActive) {
+    // An active Defer can only hold the pending retrieval back to the deferred lesson; it
+    // never brings it earlier than the underlying scheduled lesson.
+    if (isFirstProjection && deferActive && candidate && candidate < atom.deferUntil) {
       candidate = dates.find(d => d >= atom.deferUntil && d > sched.last_date);
     }
     if (!candidate) break;
@@ -2443,11 +2444,11 @@ function closeRecordRetrieval() {
   document.getElementById("record-retrieval-modal").classList.remove("open");
 }
 
-// Defer is only offered for an atom that is due or overdue today (and not already deferred).
+// Defer is a visibility rule, not a scheduling operation, so it is offered for any scheduled
+// atom that has a scheduled retrieval, whether or not it is due yet, and again while deferred.
 function canDefer(atom) {
-  if (!atom || atomStatus(atom) !== "scheduled" || isDeferActive(atom)) return false;
-  const next = nextSuggestedDate(atom);
-  return !!next && next <= todayISO();
+  if (!atom || atomStatus(atom) !== "scheduled") return false;
+  return !!nextSuggestedDate(atom);
 }
 
 // The first class lesson on or after today + the given number of weeks, or null.
@@ -3189,7 +3190,7 @@ function openAtomHistory(atomId) {
       ${futureLessons.map(d => `<option value="${d}">${formatDateNice(d)}</option>`).join("")}
     </select>`);
     lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;">Defer</div>`);
-    lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:-8px;">Due now. Defer hides it until the chosen lesson; its history and schedule are unchanged.</div>`);
+    lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:-8px;">Defer keeps it from being shown as due until the chosen lesson; its history and schedule are unchanged.</div>`);
     lines.push(`<div class="history-status-actions">${deferActions.join('')}</div>`);
   }
 
