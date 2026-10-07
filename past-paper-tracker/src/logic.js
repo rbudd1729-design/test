@@ -478,6 +478,13 @@
     return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { currentWeek: s.settings.currentWeek - 1 }) }));
   }
 
+  /** Sets the current week directly (raw input allowed). */
+  function setCurrentWeek(s, value) {
+    const wk = parsePositiveInt(value);
+    if (wk === null) return fail('Week must be a positive whole number.');
+    return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { currentWeek: wk }) }));
+  }
+
   /** 'all' or a week number (raw input allowed). View-only setting. */
   function setWeekFilter(s, value) {
     let wf = 'all';
@@ -717,7 +724,7 @@
     checkUsage, createUsage, editUsage, deleteUsage, setUnusable,
     createClass, renameClass, deleteClass, selectClass,
     addPaper, renamePaper, setQuestionCount, paperDeletionBlockers, deletePaper, setPaperActive, movePaper, checklist,
-    startNextAcademicYear, incrementWeek, decrementWeek, setWeekFilter,
+    startNextAcademicYear, incrementWeek, decrementWeek, setCurrentWeek, setWeekFilter,
     buildGrid, validateData, exportFilename, exportBackup, lastExportedText, validateBackup, applyImport,
   };
 });

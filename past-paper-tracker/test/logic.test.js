@@ -471,6 +471,18 @@ test('increment and decrement week', () => {
   assert.match(atOne.error, /first week/);
 });
 
+test('set current week directly, validated', () => {
+  const f = setup();
+  const r = must(L.setCurrentWeek(f.s, ' 12 '));
+  assert.equal(r.state.settings.currentWeek, 12);
+  assert.equal(r.state.usages, f.s.usages);
+  for (const bad of ['0', '-1', '2.5', '', 'x']) {
+    const e = L.setCurrentWeek(f.s, bad);
+    assert.equal(e.ok, false, bad);
+    assert.match(e.error, /positive whole number/);
+  }
+});
+
 // ---------- grid & week filter ----------
 
 test('grid: active papers only, class order, ragged rows are null', () => {

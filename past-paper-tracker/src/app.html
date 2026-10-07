@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Past-Paper Tracker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%235294bf%22/%3E%3Cpath d=%22M8 8h7v7H8zM17 8h7v7h-7zM8 17h7v7H8zM17 17h7v7h-7z%22 fill=%22%23fff%22 opacity=%22.9%22/%3E%3C/svg%3E">
+<!-- Built file: edit src/app.html, src/logic.js, src/sample.js or src/app.js, then run `npm run build`. -->
+<style>
+  :root {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --border: #2d2d2d;
+    --border-strong: #424242;
+    --text: #f0f0f0;
+    --text-muted: #a0a0a0;
+    --primary: #5294bf;
+    --primary-hover: #6ca7cc;
+    --pass: #4caf50;
+    --pass-bg: #1b3322;
+    --reteach: #f44336;
+    --reteach-bg: #331111;
+    --accent-bg: #1e293b;
+
+    /* grid cells */
+    --cell-green-bg: #1b3322;
+    --cell-green-border: #2a4d33;
+    --cell-red-bg: #3d1515;
+    --cell-red-border: #5c2020;
+    --cell-red-text: #f28b82;
+    --cell-grey-bg: #3a3a3a;
+    --cell-grey-stripe: #444;
+    --cell-w: 66px;
+    --cell-h: 26px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ---------- top area ---------- */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px 10px;
+    flex-shrink: 0;
+  }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  header h1 {
+    margin: 0 8px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 8px;
+    min-height: 36px;
+  }
+  .group .lbl { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .group .val { font-weight: 500; white-space: nowrap; }
+  .group .sep { width: 1px; align-self: stretch; background: var(--border); margin: 2px 2px; }
+  .muted-text { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .spacer { flex: 1; }
+
+  input[type="text"], select {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+    color-scheme: dark;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, select:focus { border-color: var(--primary); }
+  input.invalid { border-color: var(--reteach) !important; }
+  .group select { background: var(--bg); border-color: transparent; padding: 2px 4px; font-weight: 500; cursor: pointer; }
+  .group select:focus { border-color: var(--primary); }
+  #weekIn { width: 48px; text-align: center; padding: 2px 4px; background: var(--bg); }
+
+  button { font-family: inherit; }
+  button.btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  button.btn:hover { background: var(--primary-hover); }
+  button.btn.ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-strong); }
+  button.btn.ghost:hover { background: var(--bg); color: var(--text); }
+  button.btn.danger { background: transparent; color: var(--reteach); border: 1px solid var(--border-strong); }
+  button.btn.danger:hover { background: var(--reteach-bg); border-color: var(--reteach); }
+  button.btn.small { padding: 2px 8px; font-size: 12px; }
+  button.link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  button.link:hover:not(:disabled) { background: var(--surface); color: var(--primary-hover); }
+  button.link.danger { color: var(--text-muted); }
+  button.link.danger:hover:not(:disabled) { color: var(--reteach); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.step {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 1px 7px;
+    cursor: pointer;
+  }
+  button.step:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+  .field-err { color: var(--reteach); font-size: 12px; white-space: nowrap; }
+
+  /* active-paper checklist */
+  .papers-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; }
+  .papers-row > .lbl, .papers-row > .link, .papers-row > .legend { padding-top: 2px; }
+  /* compact: at most ~2 rows, scrolls internally when a course has many papers */
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; max-height: 52px; overflow-y: auto; flex: 0 1 auto; min-width: 0; }
+  .papers-row .lbl { color: var(--text-muted); font-size: 12px; margin-right: 2px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 9px 1px 6px;
+    border-radius: 12px;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .chip:hover { color: var(--text); }
+  .chip.on { background: var(--accent-bg); border-color: #2c4a66; color: var(--primary); }
+  .chip input { margin: 0; accent-color: var(--primary); cursor: pointer; }
+  .legend { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+  .legend .sw { display: inline-block; width: 14px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 1px solid transparent; }
+
+  /* ---------- grid ---------- */
+  #gridWrap { flex: 1; overflow: auto; position: relative; }
+  .empty-msg { color: var(--text-muted); padding: 40px 28px; font-style: italic; }
+  table.grid { border-collapse: separate; border-spacing: 3px; font-size: 12px; }
+  table.grid th {
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 500;
+    position: sticky;
+  }
+  table.grid thead th { top: 0; z-index: 2; padding: 6px 2px 4px; vertical-align: bottom; border-bottom: 1px solid var(--border); }
+  table.grid thead th.corner { left: 0; z-index: 3; }
+  table.grid tbody th { left: 0; z-index: 1; padding: 0 8px 0 10px; text-align: right; font-variant-numeric: tabular-nums; }
+  .ph { width: var(--cell-w); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .ph .pname { color: var(--text); font-size: 12px; font-weight: 500; max-width: var(--cell-w); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ph .pctl { display: flex; gap: 0; opacity: 0.45; transition: opacity 0.1s; }
+  table.grid thead th:hover .pctl, .ph .pctl:focus-within { opacity: 1; }
+  .pctl button {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 13px; line-height: 1; padding: 1px 5px; border-radius: 3px;
+  }
+  .pctl button:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+
+  td.c {
+    width: var(--cell-w);
+    min-width: var(--cell-w);
+    height: var(--cell-h);
+    border-radius: 4px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 0 2px;
+  }
+  td.c:hover { filter: brightness(1.35); }
+  td.c.available { background: var(--cell-green-bg); border-color: var(--cell-green-border); }
+  td.c.used { background: var(--cell-red-bg); border-color: var(--cell-red-border); color: var(--cell-red-text); font-weight: 500; }
+  td.c.unusable {
+    background: repeating-linear-gradient(135deg, var(--cell-grey-bg) 0 5px, var(--cell-grey-stripe) 5px 10px);
+    border-color: #4d4d4d;
+  }
+  td.c.none { cursor: default; background: none; }
+  td.c.none:hover { filter: none; }
+  /* week filter: muted keeps the hue but almost fades out; highlight gets an accent ring */
+  td.c.muted { opacity: 0.18; }
+  td.c.muted:hover { opacity: 0.45; filter: none; }
+  td.c.hl { outline: 2px solid var(--primary); outline-offset: -1px; color: #fff; font-weight: 700; font-size: 13px; }
+  td.c.open { outline: 2px solid var(--text); outline-offset: -1px; opacity: 1; }
+
+  /* ---------- cell popup & column menu ---------- */
+  .pop {
+    position: fixed;
+    z-index: 20;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.55);
+    padding: 10px 12px 10px;
+    min-width: 260px;
+    max-width: 380px;
+  }
+  .pop[hidden] { display: none; }
+  .pop .ctx { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; padding-right: 4px; }
+  .pop .ctx b { color: var(--text); font-weight: 600; }
+  .pop .sec { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin: 8px 0 4px; }
+  .pop form { margin: 0; }
+  .pop .rec { display: flex; align-items: center; gap: 8px; }
+  .pop .rec label { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .pop .rec input { width: 70px; }
+  .pop .err { color: var(--reteach); font-size: 12px; margin-top: 6px; white-space: pre-wrap; }
+  .pop .err:empty { display: none; }
+  .pop .hint { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+  .pop .foot { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 6px; display: flex; justify-content: flex-end; }
+  .hist { list-style: none; margin: 0; padding: 0; }
+  .hist li { display: flex; align-items: center; gap: 4px; padding: 2px 0; font-variant-numeric: tabular-nums; }
+  .hist li .h { flex: 1; }
+  .hist form { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .hist form input { padding: 2px 6px; font-size: 13px; }
+  .hist form .y { width: 72px; } .hist form .w, .hist form .p { width: 46px; }
+  .pop .note { color: var(--text-muted); font-size: 13px; margin: 2px 0 8px; }
+
+  .menu { padding: 4px; min-width: 190px; }
+  .menu button { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--text); padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .menu button:hover { background: var(--bg); }
+  .menu button.danger { color: var(--reteach); }
+
+  /* ---------- dialogs ---------- */
+  dialog {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 18px 20px 16px;
+    width: min(440px, calc(100vw - 32px));
+    box-shadow: 0 16px 40px rgba(0,0,0,.6);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.55); }
+  dialog h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+  dialog .msg { color: var(--text-muted); font-size: 13px; margin: 0 0 12px; white-space: pre-wrap; }
+  dialog .fld { margin-bottom: 10px; }
+  dialog .fld label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 3px; }
+  dialog .fld input, dialog .fld select { width: 100%; }
+  dialog .err { color: var(--reteach); font-size: 12px; margin: 4px 0 8px; white-space: pre-wrap; max-height: 200px; overflow: auto; }
+  dialog .err:empty { display: none; }
+  dialog .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="toolbar">
+    <h1>Past-Paper Tracker</h1>
+
+    <div class="group">
+      <span class="lbl">Class</span>
+      <select id="classSel" aria-label="Class"></select>
+      <span class="muted-text" id="classCourse"></span>
+      <span class="sep"></span>
+      <button class="link" id="classNew">New</button>
+      <button class="link" id="classRename">Rename</button>
+      <button class="link danger" id="classDelete">Delete</button>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Year</span>
+      <span class="val" id="yearVal"></span>
+      <button class="link" id="yearNext">Start next academic year</button>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Week</span>
+      <button class="step" id="weekDown" title="Previous week">&minus;1</button>
+      <input type="text" id="weekIn" inputmode="numeric" autocomplete="off" aria-label="Current week">
+      <button class="step" id="weekUp" title="Next week">+1</button>
+      <span class="field-err" id="weekErr"></span>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Show</span>
+      <select id="filterSel" aria-label="Week filter"></select>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Backup</span>
+      <button class="link" id="exportBtn" disabled title="Comes in Stage 3">Export</button>
+      <button class="link" id="importBtn" disabled title="Comes in Stage 3">Import</button>
+      <span class="muted-text" id="lastExported"></span>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="group">
+      <span class="lbl">Test data</span>
+      <button class="link" id="loadSample">Load sample data</button>
+      <button class="link" id="loadStress">Load stress data</button>
+    </div>
+  </div>
+
+  <div class="papers-row" id="papersRow"></div>
+</header>
+
+<div id="gridWrap"></div>
+
+<div class="pop" id="popup" hidden role="dialog" aria-modal="false"></div>
+<div class="pop menu" id="menu" hidden role="menu"></div>
+
+<dialog id="dlg">
+  <form method="dialog" id="dlgForm" novalidate>
+    <h2 id="dlgTitle"></h2>
+    <p class="msg" id="dlgMsg"></p>
+    <div id="dlgFields"></div>
+    <div class="err" id="dlgErr"></div>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="dlgCancel">Cancel</button>
+      <button type="submit" class="btn" id="dlgOk">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/*__LOGIC__*/
+</script>
+<script>
+/*__SAMPLE__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+</body>
+</html>

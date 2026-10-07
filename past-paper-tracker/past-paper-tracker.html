@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Past-Paper Tracker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%235294bf%22/%3E%3Cpath d=%22M8 8h7v7H8zM17 8h7v7h-7zM8 17h7v7H8zM17 17h7v7h-7z%22 fill=%22%23fff%22 opacity=%22.9%22/%3E%3C/svg%3E">
+<!-- Built file: edit src/app.html, src/logic.js, src/sample.js or src/app.js, then run `npm run build`. -->
+<style>
+  :root {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --border: #2d2d2d;
+    --border-strong: #424242;
+    --text: #f0f0f0;
+    --text-muted: #a0a0a0;
+    --primary: #5294bf;
+    --primary-hover: #6ca7cc;
+    --pass: #4caf50;
+    --pass-bg: #1b3322;
+    --reteach: #f44336;
+    --reteach-bg: #331111;
+    --accent-bg: #1e293b;
+
+    /* grid cells */
+    --cell-green-bg: #1b3322;
+    --cell-green-border: #2a4d33;
+    --cell-red-bg: #3d1515;
+    --cell-red-border: #5c2020;
+    --cell-red-text: #f28b82;
+    --cell-grey-bg: #3a3a3a;
+    --cell-grey-stripe: #444;
+    --cell-w: 66px;
+    --cell-h: 26px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ---------- top area ---------- */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px 10px;
+    flex-shrink: 0;
+  }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  header h1 {
+    margin: 0 8px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 8px;
+    min-height: 36px;
+  }
+  .group .lbl { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .group .val { font-weight: 500; white-space: nowrap; }
+  .group .sep { width: 1px; align-self: stretch; background: var(--border); margin: 2px 2px; }
+  .muted-text { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .spacer { flex: 1; }
+
+  input[type="text"], select {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+    color-scheme: dark;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, select:focus { border-color: var(--primary); }
+  input.invalid { border-color: var(--reteach) !important; }
+  .group select { background: var(--bg); border-color: transparent; padding: 2px 4px; font-weight: 500; cursor: pointer; }
+  .group select:focus { border-color: var(--primary); }
+  #weekIn { width: 48px; text-align: center; padding: 2px 4px; background: var(--bg); }
+
+  button { font-family: inherit; }
+  button.btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  button.btn:hover { background: var(--primary-hover); }
+  button.btn.ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-strong); }
+  button.btn.ghost:hover { background: var(--bg); color: var(--text); }
+  button.btn.danger { background: transparent; color: var(--reteach); border: 1px solid var(--border-strong); }
+  button.btn.danger:hover { background: var(--reteach-bg); border-color: var(--reteach); }
+  button.btn.small { padding: 2px 8px; font-size: 12px; }
+  button.link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  button.link:hover:not(:disabled) { background: var(--surface); color: var(--primary-hover); }
+  button.link.danger { color: var(--text-muted); }
+  button.link.danger:hover:not(:disabled) { color: var(--reteach); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.step {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 1px 7px;
+    cursor: pointer;
+  }
+  button.step:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+  .field-err { color: var(--reteach); font-size: 12px; white-space: nowrap; }
+
+  /* active-paper checklist */
+  .papers-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; }
+  .papers-row > .lbl, .papers-row > .link, .papers-row > .legend { padding-top: 2px; }
+  /* compact: at most ~2 rows, scrolls internally when a course has many papers */
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; max-height: 52px; overflow-y: auto; flex: 0 1 auto; min-width: 0; }
+  .papers-row .lbl { color: var(--text-muted); font-size: 12px; margin-right: 2px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 9px 1px 6px;
+    border-radius: 12px;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .chip:hover { color: var(--text); }
+  .chip.on { background: var(--accent-bg); border-color: #2c4a66; color: var(--primary); }
+  .chip input { margin: 0; accent-color: var(--primary); cursor: pointer; }
+  .legend { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+  .legend .sw { display: inline-block; width: 14px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 1px solid transparent; }
+
+  /* ---------- grid ---------- */
+  #gridWrap { flex: 1; overflow: auto; position: relative; }
+  .empty-msg { color: var(--text-muted); padding: 40px 28px; font-style: italic; }
+  table.grid { border-collapse: separate; border-spacing: 3px; font-size: 12px; }
+  table.grid th {
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 500;
+    position: sticky;
+  }
+  table.grid thead th { top: 0; z-index: 2; padding: 6px 2px 4px; vertical-align: bottom; border-bottom: 1px solid var(--border); }
+  table.grid thead th.corner { left: 0; z-index: 3; }
+  table.grid tbody th { left: 0; z-index: 1; padding: 0 8px 0 10px; text-align: right; font-variant-numeric: tabular-nums; }
+  .ph { width: var(--cell-w); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .ph .pname { color: var(--text); font-size: 12px; font-weight: 500; max-width: var(--cell-w); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ph .pctl { display: flex; gap: 0; opacity: 0.45; transition: opacity 0.1s; }
+  table.grid thead th:hover .pctl, .ph .pctl:focus-within { opacity: 1; }
+  .pctl button {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 13px; line-height: 1; padding: 1px 5px; border-radius: 3px;
+  }
+  .pctl button:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+
+  td.c {
+    width: var(--cell-w);
+    min-width: var(--cell-w);
+    height: var(--cell-h);
+    border-radius: 4px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 0 2px;
+  }
+  td.c:hover { filter: brightness(1.35); }
+  td.c.available { background: var(--cell-green-bg); border-color: var(--cell-green-border); }
+  td.c.used { background: var(--cell-red-bg); border-color: var(--cell-red-border); color: var(--cell-red-text); font-weight: 500; }
+  td.c.unusable {
+    background: repeating-linear-gradient(135deg, var(--cell-grey-bg) 0 5px, var(--cell-grey-stripe) 5px 10px);
+    border-color: #4d4d4d;
+  }
+  td.c.none { cursor: default; background: none; }
+  td.c.none:hover { filter: none; }
+  /* week filter: muted keeps the hue but almost fades out; highlight gets an accent ring */
+  td.c.muted { opacity: 0.18; }
+  td.c.muted:hover { opacity: 0.45; filter: none; }
+  td.c.hl { outline: 2px solid var(--primary); outline-offset: -1px; color: #fff; font-weight: 700; font-size: 13px; }
+  td.c.open { outline: 2px solid var(--text); outline-offset: -1px; opacity: 1; }
+
+  /* ---------- cell popup & column menu ---------- */
+  .pop {
+    position: fixed;
+    z-index: 20;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.55);
+    padding: 10px 12px 10px;
+    min-width: 260px;
+    max-width: 380px;
+  }
+  .pop[hidden] { display: none; }
+  .pop .ctx { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; padding-right: 4px; }
+  .pop .ctx b { color: var(--text); font-weight: 600; }
+  .pop .sec { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin: 8px 0 4px; }
+  .pop form { margin: 0; }
+  .pop .rec { display: flex; align-items: center; gap: 8px; }
+  .pop .rec label { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .pop .rec input { width: 70px; }
+  .pop .err { color: var(--reteach); font-size: 12px; margin-top: 6px; white-space: pre-wrap; }
+  .pop .err:empty { display: none; }
+  .pop .hint { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+  .pop .foot { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 6px; display: flex; justify-content: flex-end; }
+  .hist { list-style: none; margin: 0; padding: 0; }
+  .hist li { display: flex; align-items: center; gap: 4px; padding: 2px 0; font-variant-numeric: tabular-nums; }
+  .hist li .h { flex: 1; }
+  .hist form { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .hist form input { padding: 2px 6px; font-size: 13px; }
+  .hist form .y { width: 72px; } .hist form .w, .hist form .p { width: 46px; }
+  .pop .note { color: var(--text-muted); font-size: 13px; margin: 2px 0 8px; }
+
+  .menu { padding: 4px; min-width: 190px; }
+  .menu button { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--text); padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .menu button:hover { background: var(--bg); }
+  .menu button.danger { color: var(--reteach); }
+
+  /* ---------- dialogs ---------- */
+  dialog {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 18px 20px 16px;
+    width: min(440px, calc(100vw - 32px));
+    box-shadow: 0 16px 40px rgba(0,0,0,.6);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.55); }
+  dialog h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+  dialog .msg { color: var(--text-muted); font-size: 13px; margin: 0 0 12px; white-space: pre-wrap; }
+  dialog .fld { margin-bottom: 10px; }
+  dialog .fld label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 3px; }
+  dialog .fld input, dialog .fld select { width: 100%; }
+  dialog .err { color: var(--reteach); font-size: 12px; margin: 4px 0 8px; white-space: pre-wrap; max-height: 200px; overflow: auto; }
+  dialog .err:empty { display: none; }
+  dialog .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="toolbar">
+    <h1>Past-Paper Tracker</h1>
+
+    <div class="group">
+      <span class="lbl">Class</span>
+      <select id="classSel" aria-label="Class"></select>
+      <span class="muted-text" id="classCourse"></span>
+      <span class="sep"></span>
+      <button class="link" id="classNew">New</button>
+      <button class="link" id="classRename">Rename</button>
+      <button class="link danger" id="classDelete">Delete</button>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Year</span>
+      <span class="val" id="yearVal"></span>
+      <button class="link" id="yearNext">Start next academic year</button>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Week</span>
+      <button class="step" id="weekDown" title="Previous week">&minus;1</button>
+      <input type="text" id="weekIn" inputmode="numeric" autocomplete="off" aria-label="Current week">
+      <button class="step" id="weekUp" title="Next week">+1</button>
+      <span class="field-err" id="weekErr"></span>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Show</span>
+      <select id="filterSel" aria-label="Week filter"></select>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Backup</span>
+      <button class="link" id="exportBtn" disabled title="Comes in Stage 3">Export</button>
+      <button class="link" id="importBtn" disabled title="Comes in Stage 3">Import</button>
+      <span class="muted-text" id="lastExported"></span>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="group">
+      <span class="lbl">Test data</span>
+      <button class="link" id="loadSample">Load sample data</button>
+      <button class="link" id="loadStress">Load stress data</button>
+    </div>
+  </div>
+
+  <div class="papers-row" id="papersRow"></div>
+</header>
+
+<div id="gridWrap"></div>
+
+<div class="pop" id="popup" hidden role="dialog" aria-modal="false"></div>
+<div class="pop menu" id="menu" hidden role="menu"></div>
+
+<dialog id="dlg">
+  <form method="dialog" id="dlgForm" novalidate>
+    <h2 id="dlgTitle"></h2>
+    <p class="msg" id="dlgMsg"></p>
+    <div id="dlgFields"></div>
+    <div class="err" id="dlgErr"></div>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="dlgCancel">Cancel</button>
+      <button type="submit" class="btn" id="dlgOk">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/*
+ * Past-Paper Tracker — pure data logic.
+ *
+ * Every operation takes the current state (never mutated) and returns either
+ *   { ok: true, state, ...extra }   or   { ok: false, error, ...extra }.
+ * IDs and timestamps come from an injected env: { id(): string, now(): ISO string }.
+ * Derived state (cell colours, labels, grid) is computed here and never stored.
+ *
+ * Loads as a CommonJS module (tests) or as the global `PPT` (inlined in the app).
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.PPT = api;
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const SCHEMA_VERSION = 1;
+  const APP_VERSION = '1.0.0';
+  const COURSE_NAMES = ['Maths', 'Further Maths'];
+  const EN_DASH = '–';
+  const COLLECTIONS = ['courses', 'papers', 'questions', 'classes', 'classPapers', 'usages'];
+
+  // ---------- small helpers ----------
+
+  const ok = (state, extra) => Object.assign({ ok: true, state }, extra);
+  const fail = (error, extra) => Object.assign({ ok: false, error }, extra);
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+
+  const isPosInt = (n) => Number.isInteger(n) && n > 0;
+  const isNonEmptyString = (s) => typeof s === 'string' && s.trim() !== '';
+  const isIsoDate = (s) => typeof s === 'string' && s !== '' && !Number.isNaN(Date.parse(s));
+  const nameKey = (s) => String(s).trim().toLowerCase();
+
+  /** Strict positive integer from a number or a string of digits ("07" → 7). Otherwise null. */
+  function parsePositiveInt(input) {
+    if (typeof input === 'number') return isPosInt(input) ? input : null;
+    if (typeof input !== 'string') return null;
+    const s = input.trim();
+    if (!/^[0-9]+$/.test(s)) return null;
+    const n = Number(s);
+    return isPosInt(n) ? n : null;
+  }
+
+  // ---------- academic year ----------
+
+  const YEAR_RE = /^(\d{4})–(\d{2})$/;
+
+  /** Canonical form is "2026–27" (en dash) and the second part must follow the first. */
+  function isValidAcademicYear(ay) {
+    if (typeof ay !== 'string') return false;
+    const m = YEAR_RE.exec(ay);
+    return !!m && (Number(m[1]) + 1) % 100 === Number(m[2]);
+  }
+
+  /** User input: accepts a hyphen or en/em dash; returns the canonical form or null. */
+  function parseAcademicYear(input) {
+    if (typeof input !== 'string') return null;
+    const s = input.trim().replace(/[-‐-―−]/, EN_DASH);
+    return isValidAcademicYear(s) ? s : null;
+  }
+
+  function formatAcademicYear(startYear) {
+    return `${startYear}${EN_DASH}${String((startYear + 1) % 100).padStart(2, '0')}`;
+  }
+
+  const academicYearStart = (ay) => Number(ay.slice(0, 4));
+  const nextAcademicYear = (ay) => formatAcademicYear(academicYearStart(ay) + 1);
+
+  /** September to August: Oct 2026 → "2026–27", Mar 2027 → "2026–27". */
+  function inferAcademicYear(date) {
+    const y = date.getFullYear();
+    return formatAcademicYear(date.getMonth() >= 8 ? y : y - 1);
+  }
+
+  // ---------- initial state & lookups ----------
+
+  function createInitialState(env, date) {
+    return {
+      courses: COURSE_NAMES.map((name) => ({ id: env.id(), name })),
+      papers: [],
+      questions: [],
+      classes: [],
+      classPapers: [],
+      usages: [],
+      settings: {
+        academicYear: inferAcademicYear(date),
+        currentWeek: 1,
+        selectedClassId: null,
+        weekFilter: 'all',
+        lastExportedAt: null,
+      },
+    };
+  }
+
+  const getCourse = (s, id) => s.courses.find((c) => c.id === id) || null;
+  const getClass = (s, id) => s.classes.find((c) => c.id === id) || null;
+  const getPaper = (s, id) => s.papers.find((p) => p.id === id) || null;
+  const getQuestion = (s, id) => s.questions.find((q) => q.id === id) || null;
+  const getUsage = (s, id) => s.usages.find((u) => u.id === id) || null;
+  const questionsOfPaper = (s, paperId) =>
+    s.questions.filter((q) => q.paperId === paperId).sort((a, b) => a.number - b.number);
+
+  function questionTitle(s, q) {
+    const p = getPaper(s, q.paperId);
+    return `${p ? p.name : '?'} Q${q.number}`;
+  }
+
+  // ---------- usage ordering & labels ----------
+
+  /** Most recent first: academic year, then week, then creation time. */
+  function compareUsageRecency(a, b) {
+    return (
+      academicYearStart(b.academicYear) - academicYearStart(a.academicYear) ||
+      b.week - a.week ||
+      String(b.createdAt).localeCompare(String(a.createdAt))
+    );
+  }
+
+  const usageLabel = (u) => `${u.week}.${u.packQuestion}`;
+  const historyLabel = (u) => `${u.academicYear} · ${usageLabel(u)}`;
+
+  function usageHistory(s, classId, questionId) {
+    return s.usages
+      .filter((u) => u.classId === classId && u.questionId === questionId)
+      .sort(compareUsageRecency);
+  }
+
+  // ---------- cell state ----------
+
+  /**
+   * status: 'unusable' (dark grey) > 'used' (red) > 'available' (green).
+   * label: most recent use ("7.4"), with "×n" when used more than once; only for 'used'.
+   */
+  function cellState(s, classId, questionId) {
+    const q = getQuestion(s, questionId);
+    if (!q) return null;
+    const history = usageHistory(s, classId, questionId);
+    const status = q.unusable ? 'unusable' : history.length ? 'used' : 'available';
+    let label = '';
+    if (status === 'used') {
+      label = usageLabel(history[0]) + (history.length > 1 ? ` ×${history.length}` : '');
+    }
+    return { status, label, count: history.length, latest: history[0] || null };
+  }
+
+  // ---------- usage constraints ----------
+
+  /**
+   * Checks one candidate usage against the state (ignoring the record `excludeId`).
+   * Returns an error string or null.
+   */
+  function checkUsage(s, cand, excludeId) {
+    const cls = getClass(s, cand.classId);
+    if (!cls) return 'Class not found.';
+    const q = getQuestion(s, cand.questionId);
+    if (!q) return 'Question not found.';
+    const paper = getPaper(s, q.paperId);
+    if (!paper || paper.courseId !== cls.courseId) return 'Question does not belong to this class’s course.';
+    if (!isValidAcademicYear(cand.academicYear)) return 'Academic year must look like 2026–27.';
+    if (!isPosInt(cand.week)) return 'Week must be a positive whole number.';
+    if (!isPosInt(cand.packQuestion)) return 'Pack question must be a positive whole number.';
+    for (const u of s.usages) {
+      if (u.id === excludeId) continue;
+      if (u.classId !== cand.classId || u.academicYear !== cand.academicYear || u.week !== cand.week) continue;
+      if (u.questionId === cand.questionId) {
+        return `${questionTitle(s, q)} is already used in Week ${u.week} (${u.academicYear}) as ${usageLabel(u)}.`;
+      }
+      if (u.packQuestion === cand.packQuestion) {
+        const other = getQuestion(s, u.questionId);
+        return `Pack question ${usageLabel(u)} is already assigned to ${other ? questionTitle(s, other) : 'another question'}.`;
+      }
+    }
+    return null;
+  }
+
+  /** Records a use for the current academic year and week. packQuestion may be raw input. */
+  function createUsage(s, { classId, questionId, packQuestion }, env) {
+    const q = getQuestion(s, questionId);
+    if (q && q.unusable) return fail('This question is marked unusable. Restore it first.');
+    const pq = parsePositiveInt(packQuestion);
+    if (pq === null) return fail('Pack question must be a positive whole number.');
+    const cand = {
+      classId,
+      questionId,
+      academicYear: s.settings.academicYear,
+      week: s.settings.currentWeek,
+      packQuestion: pq,
+    };
+    const err = checkUsage(s, cand);
+    if (err) return fail(err);
+    const now = env.now();
+    const usage = Object.assign({ id: env.id() }, cand, { createdAt: now, updatedAt: now });
+    return ok(Object.assign({}, s, { usages: s.usages.concat([usage]) }), { usage });
+  }
+
+  /** Edits academic year, week and pack question (each may be raw input). */
+  function editUsage(s, usageId, { academicYear, week, packQuestion }, env) {
+    const u = getUsage(s, usageId);
+    if (!u) return fail('Usage not found.');
+    const ay = parseAcademicYear(academicYear);
+    if (!ay) return fail('Academic year must look like 2026–27.');
+    const wk = parsePositiveInt(week);
+    if (wk === null) return fail('Week must be a positive whole number.');
+    const pq = parsePositiveInt(packQuestion);
+    if (pq === null) return fail('Pack question must be a positive whole number.');
+    const updated = Object.assign({}, u, { academicYear: ay, week: wk, packQuestion: pq });
+    const err = checkUsage(s, updated, usageId);
+    if (err) return fail(err);
+    updated.updatedAt = env.now();
+    return ok(Object.assign({}, s, { usages: s.usages.map((x) => (x.id === usageId ? updated : x)) }), { usage: updated });
+  }
+
+  function deleteUsage(s, usageId) {
+    if (!getUsage(s, usageId)) return fail('Usage not found.');
+    return ok(Object.assign({}, s, { usages: s.usages.filter((u) => u.id !== usageId) }));
+  }
+
+  // ---------- unusable ----------
+
+  function setUnusable(s, questionId, unusable) {
+    if (!getQuestion(s, questionId)) return fail('Question not found.');
+    return ok(Object.assign({}, s, {
+      questions: s.questions.map((q) => (q.id === questionId ? Object.assign({}, q, { unusable: !!unusable }) : q)),
+    }));
+  }
+
+  // ---------- classes ----------
+
+  function classNameError(s, name, exceptId) {
+    if (!isNonEmptyString(name)) return 'Class name is required.';
+    if (s.classes.some((c) => c.id !== exceptId && nameKey(c.name) === nameKey(name))) {
+      return `A class called “${name.trim()}” already exists.`;
+    }
+    return null;
+  }
+
+  /** New class: no history, every course paper inactive, in the course's default (creation) order. */
+  function createClass(s, { name, courseId }, env) {
+    const err = classNameError(s, name);
+    if (err) return fail(err);
+    if (!getCourse(s, courseId)) return fail('Course not found.');
+    const cls = { id: env.id(), name: name.trim(), courseId };
+    const rows = s.papers
+      .filter((p) => p.courseId === courseId)
+      .map((p, i) => ({ classId: cls.id, paperId: p.id, active: false, position: i }));
+    return ok(Object.assign({}, s, {
+      classes: s.classes.concat([cls]),
+      classPapers: s.classPapers.concat(rows),
+    }), { cls });
+  }
+
+  function renameClass(s, classId, name) {
+    if (!getClass(s, classId)) return fail('Class not found.');
+    const err = classNameError(s, name, classId);
+    if (err) return fail(err);
+    return ok(Object.assign({}, s, {
+      classes: s.classes.map((c) => (c.id === classId ? Object.assign({}, c, { name: name.trim() }) : c)),
+    }));
+  }
+
+  /** Removes the class, its usages and its paper settings. Shared papers/questions untouched. */
+  function deleteClass(s, classId) {
+    if (!getClass(s, classId)) return fail('Class not found.');
+    const classes = s.classes.filter((c) => c.id !== classId);
+    const settings = Object.assign({}, s.settings);
+    if (settings.selectedClassId === classId) settings.selectedClassId = classes.length ? classes[0].id : null;
+    return ok(Object.assign({}, s, {
+      classes,
+      classPapers: s.classPapers.filter((r) => r.classId !== classId),
+      usages: s.usages.filter((u) => u.classId !== classId),
+      settings,
+    }));
+  }
+
+  function selectClass(s, classId) {
+    if (classId !== null && !getClass(s, classId)) return fail('Class not found.');
+    return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { selectedClassId: classId }) }));
+  }
+
+  // ---------- papers ----------
+
+  function paperNameError(s, courseId, name, exceptId) {
+    if (!isNonEmptyString(name)) return 'Paper name is required.';
+    if (s.papers.some((p) => p.id !== exceptId && p.courseId === courseId && nameKey(p.name) === nameKey(name))) {
+      return `A paper called “${name.trim()}” already exists for this course.`;
+    }
+    return null;
+  }
+
+  const makeQuestions = (env, paperId, from, to) => {
+    const out = [];
+    for (let n = from; n <= to; n++) out.push({ id: env.id(), paperId, number: n, unusable: false });
+    return out;
+  };
+
+  /**
+   * Adds a paper with Q1..Qn, appended to every course class's order;
+   * active only for `fromClassId` (if given).
+   */
+  function addPaper(s, { courseId, name, questionCount, fromClassId }, env) {
+    if (!getCourse(s, courseId)) return fail('Course not found.');
+    const err = paperNameError(s, courseId, name);
+    if (err) return fail(err);
+    const count = parsePositiveInt(questionCount);
+    if (count === null) return fail('Question count must be a positive whole number.');
+    if (fromClassId != null) {
+      const from = getClass(s, fromClassId);
+      if (!from) return fail('Class not found.');
+      if (from.courseId !== courseId) return fail('That class is on a different course.');
+    }
+    const paper = { id: env.id(), courseId, name: name.trim(), questionCount: count };
+    const rows = s.classes
+      .filter((c) => c.courseId === courseId)
+      .map((c) => ({
+        classId: c.id,
+        paperId: paper.id,
+        active: c.id === fromClassId,
+        position: s.classPapers.filter((r) => r.classId === c.id).length,
+      }));
+    return ok(Object.assign({}, s, {
+      papers: s.papers.concat([paper]),
+      questions: s.questions.concat(makeQuestions(env, paper.id, 1, count)),
+      classPapers: s.classPapers.concat(rows),
+    }), { paper });
+  }
+
+  function renamePaper(s, paperId, name) {
+    const paper = getPaper(s, paperId);
+    if (!paper) return fail('Paper not found.');
+    const err = paperNameError(s, paper.courseId, name, paperId);
+    if (err) return fail(err);
+    return ok(Object.assign({}, s, {
+      papers: s.papers.map((p) => (p.id === paperId ? Object.assign({}, p, { name: name.trim() }) : p)),
+    }));
+  }
+
+  /**
+   * Reasons the given questions cannot be removed: usage in any class, or unusable.
+   * Each blocker has a `message`, e.g. "Y12 Maths: 2024 P2 Q19, used 7.4".
+   */
+  function questionBlockers(s, questions) {
+    const out = [];
+    for (const q of questions) {
+      const title = questionTitle(s, q);
+      for (const cls of s.classes) {
+        const hist = usageHistory(s, cls.id, q.id);
+        if (hist.length) {
+          out.push({
+            kind: 'usage', questionId: q.id, classId: cls.id,
+            message: `${cls.name}: ${title}, used ${hist.map(usageLabel).join(', ')}`,
+          });
+        }
+      }
+      if (q.unusable) out.push({ kind: 'unusable', questionId: q.id, message: `${title}, marked unusable` });
+    }
+    return out;
+  }
+
+  function setQuestionCount(s, paperId, questionCount, env) {
+    const paper = getPaper(s, paperId);
+    if (!paper) return fail('Paper not found.');
+    const count = parsePositiveInt(questionCount);
+    if (count === null) return fail('Question count must be a positive whole number.');
+    if (count === paper.questionCount) return ok(s);
+    let questions;
+    if (count > paper.questionCount) {
+      questions = s.questions.concat(makeQuestions(env, paperId, paper.questionCount + 1, count));
+    } else {
+      const removed = questionsOfPaper(s, paperId).filter((q) => q.number > count);
+      const blockers = questionBlockers(s, removed);
+      if (blockers.length) {
+        return fail(`Cannot reduce ${paper.name} to ${count} questions:\n` + blockers.map((b) => b.message).join('\n'), { blockers });
+      }
+      const ids = new Set(removed.map((q) => q.id));
+      questions = s.questions.filter((q) => !ids.has(q.id));
+    }
+    return ok(Object.assign({}, s, {
+      papers: s.papers.map((p) => (p.id === paperId ? Object.assign({}, p, { questionCount: count }) : p)),
+      questions,
+    }));
+  }
+
+  /** Renumbers each class's positions to 0..n-1, keeping relative order. */
+  function compactPositions(rows) {
+    const byClass = new Map();
+    for (const r of rows) {
+      if (!byClass.has(r.classId)) byClass.set(r.classId, []);
+      byClass.get(r.classId).push(r);
+    }
+    const pos = new Map();
+    for (const list of byClass.values()) {
+      list.slice().sort((a, b) => a.position - b.position).forEach((r, i) => pos.set(r, i));
+    }
+    return rows.map((r) => (pos.get(r) === r.position ? r : Object.assign({}, r, { position: pos.get(r) })));
+  }
+
+  /** Deletion check without deleting (so the UI can block before asking to confirm). */
+  function paperDeletionBlockers(s, paperId) {
+    return questionBlockers(s, questionsOfPaper(s, paperId));
+  }
+
+  function deletePaper(s, paperId) {
+    const paper = getPaper(s, paperId);
+    if (!paper) return fail('Paper not found.');
+    const blockers = paperDeletionBlockers(s, paperId);
+    if (blockers.length) {
+      return fail(`Cannot delete ${paper.name} because it has recorded data (untick it instead):\n` +
+        blockers.map((b) => b.message).join('\n'), { blockers });
+    }
+    return ok(Object.assign({}, s, {
+      papers: s.papers.filter((p) => p.id !== paperId),
+      questions: s.questions.filter((q) => q.paperId !== paperId),
+      classPapers: compactPositions(s.classPapers.filter((r) => r.paperId !== paperId)),
+    }));
+  }
+
+  function classPaperRows(s, classId) {
+    return s.classPapers.filter((r) => r.classId === classId).sort((a, b) => a.position - b.position);
+  }
+
+  function setPaperActive(s, classId, paperId, active) {
+    if (!s.classPapers.some((r) => r.classId === classId && r.paperId === paperId)) {
+      return fail('Paper not available for this class.');
+    }
+    return ok(Object.assign({}, s, {
+      classPapers: s.classPapers.map((r) =>
+        r.classId === classId && r.paperId === paperId ? Object.assign({}, r, { active: !!active }) : r),
+    }));
+  }
+
+  /**
+   * Moves a paper one step left (-1) or right (+1) for one class. It swaps places with the
+   * nearest *active* paper in that direction, so the move is always visible in the grid.
+   */
+  function movePaper(s, classId, paperId, direction) {
+    const rows = classPaperRows(s, classId);
+    const i = rows.findIndex((r) => r.paperId === paperId);
+    if (i < 0) return fail('Paper not available for this class.');
+    let j = i + direction;
+    while (j >= 0 && j < rows.length && !rows[j].active) j += direction;
+    if (j < 0 || j >= rows.length) return fail(direction < 0 ? 'Already first.' : 'Already last.');
+    const a = rows[i], b = rows[j];
+    return ok(Object.assign({}, s, {
+      classPapers: s.classPapers.map((r) => {
+        if (r === a) return Object.assign({}, r, { position: b.position });
+        if (r === b) return Object.assign({}, r, { position: a.position });
+        return r;
+      }),
+    }));
+  }
+
+  /** Active-paper checklist in the class's order. */
+  function checklist(s, classId) {
+    return classPaperRows(s, classId).map((r) => ({ paper: getPaper(s, r.paperId), active: r.active, position: r.position }));
+  }
+
+  // ---------- academic year / week / filter ----------
+
+  /** New academic year: week → 1, filter → All weeks. No class or usage data changes. */
+  function startNextAcademicYear(s) {
+    return ok(Object.assign({}, s, {
+      settings: Object.assign({}, s.settings, {
+        academicYear: nextAcademicYear(s.settings.academicYear),
+        currentWeek: 1,
+        weekFilter: 'all',
+      }),
+    }));
+  }
+
+  function incrementWeek(s) {
+    return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { currentWeek: s.settings.currentWeek + 1 }) }));
+  }
+
+  /** −1 week, for correcting an accidental +1. Week 1 is the minimum. */
+  function decrementWeek(s) {
+    if (s.settings.currentWeek <= 1) return fail('Week 1 is the first week.');
+    return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { currentWeek: s.settings.currentWeek - 1 }) }));
+  }
+
+  /** Sets the current week directly (raw input allowed). */
+  function setCurrentWeek(s, value) {
+    const wk = parsePositiveInt(value);
+    if (wk === null) return fail('Week must be a positive whole number.');
+    return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { currentWeek: wk }) }));
+  }
+
+  /** 'all' or a week number (raw input allowed). View-only setting. */
+  function setWeekFilter(s, value) {
+    let wf = 'all';
+    if (value !== 'all') {
+      wf = parsePositiveInt(value);
+      if (wf === null) return fail('Week must be a positive whole number.');
+    }
+    return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { weekFilter: wf }) }));
+  }
+
+  // ---------- grid ----------
+
+  /**
+   * Grid for a class: one column per active paper (class order), `rowCount` rows.
+   * columns[c].cells[r] is null beyond the paper's length (blank, not clickable). Otherwise
+   * it has the cell state plus week-filter flags: `highlight` + `filterLabel` (pack question)
+   * when used in the filtered week of the current academic year, `muted` otherwise.
+   */
+  function buildGrid(s, classId) {
+    const wf = s.settings.weekFilter;
+    const ay = s.settings.academicYear;
+    const inWeek = new Map();
+    if (wf !== 'all') {
+      for (const u of s.usages) {
+        if (u.classId === classId && u.academicYear === ay && u.week === wf) inWeek.set(u.questionId, u);
+      }
+    }
+    const columns = classPaperRows(s, classId)
+      .filter((r) => r.active)
+      .map((r) => {
+        const paper = getPaper(s, r.paperId);
+        const cells = questionsOfPaper(s, paper.id).map((q) => {
+          const cell = Object.assign({ question: q }, cellState(s, classId, q.id));
+          const hit = inWeek.get(q.id);
+          cell.highlight = !!hit;
+          cell.muted = wf !== 'all' && !hit;
+          cell.filterLabel = hit ? String(hit.packQuestion) : '';
+          return cell;
+        });
+        return { paper, cells };
+      });
+    const rowCount = columns.reduce((m, c) => Math.max(m, c.paper.questionCount), 0);
+    for (const col of columns) while (col.cells.length < rowCount) col.cells.push(null);
+    return { columns, rowCount };
+  }
+
+  // ---------- data validation (used by import; also a state invariant check) ----------
+
+  function validateData(d) {
+    const errors = [];
+    const err = (m) => errors.push(m);
+    if (!d || typeof d !== 'object') return ['Missing data.'];
+    for (const k of COLLECTIONS) if (!Array.isArray(d[k])) err(`"${k}" must be a list.`);
+    if (!d.settings || typeof d.settings !== 'object') err('"settings" is missing.');
+    if (errors.length) return errors;
+
+    const indexById = (list, label) => {
+      const m = new Map();
+      list.forEach((x, i) => {
+        if (!x || typeof x !== 'object' || !isNonEmptyString(x.id)) err(`${label} #${i + 1} has no valid id.`);
+        else if (m.has(x.id)) err(`Duplicate ${label} id ${x.id}.`);
+        else m.set(x.id, x);
+      });
+      return m;
+    };
+
+    const courses = indexById(d.courses, 'course');
+    const names = d.courses.map((c) => c && c.name).sort();
+    if (d.courses.length !== 2 || JSON.stringify(names) !== JSON.stringify(COURSE_NAMES.slice().sort())) {
+      err('There must be exactly two courses: Maths and Further Maths.');
+    }
+
+    const papers = indexById(d.papers, 'paper');
+    const paperNames = new Set();
+    for (const p of papers.values()) {
+      if (!courses.has(p.courseId)) err(`Paper ${p.id} refers to a missing course.`);
+      if (!isNonEmptyString(p.name)) err(`Paper ${p.id} has no name.`);
+      else {
+        const key = p.courseId + '\u0000' + nameKey(p.name);
+        if (paperNames.has(key)) err(`Duplicate paper name "${p.name}" in a course.`);
+        paperNames.add(key);
+      }
+      if (!isPosInt(p.questionCount)) err(`Paper "${p.name}" has an invalid question count.`);
+    }
+
+    const questions = indexById(d.questions, 'question');
+    const numbersByPaper = new Map();
+    for (const q of questions.values()) {
+      if (!papers.has(q.paperId)) { err(`Question ${q.id} refers to a missing paper.`); continue; }
+      if (!isPosInt(q.number)) err(`Question ${q.id} has an invalid number.`);
+      if (typeof q.unusable !== 'boolean') err(`Question ${q.id} has an invalid unusable flag.`);
+      if (!numbersByPaper.has(q.paperId)) numbersByPaper.set(q.paperId, []);
+      numbersByPaper.get(q.paperId).push(q.number);
+    }
+    for (const p of papers.values()) {
+      const nums = (numbersByPaper.get(p.id) || []).slice().sort((a, b) => a - b);
+      const contiguous = nums.length === p.questionCount && nums.every((n, i) => n === i + 1);
+      if (!contiguous) err(`Paper "${p.name}" must have questions numbered 1 to ${p.questionCount}.`);
+    }
+
+    const classes = indexById(d.classes, 'class');
+    const classNames = new Set();
+    for (const c of classes.values()) {
+      if (!courses.has(c.courseId)) err(`Class ${c.id} refers to a missing course.`);
+      if (!isNonEmptyString(c.name)) err(`Class ${c.id} has no name.`);
+      else {
+        if (classNames.has(nameKey(c.name))) err(`Duplicate class name "${c.name}".`);
+        classNames.add(nameKey(c.name));
+      }
+    }
+
+    const cpSeen = new Map();
+    d.classPapers.forEach((r, i) => {
+      if (!r || typeof r !== 'object') { err(`Class-paper entry #${i + 1} is invalid.`); return; }
+      const c = classes.get(r.classId), p = papers.get(r.paperId);
+      if (!c) { err(`Class-paper entry #${i + 1} refers to a missing class.`); return; }
+      if (!p) { err(`Class-paper entry #${i + 1} refers to a missing paper.`); return; }
+      if (p.courseId !== c.courseId) err(`Class "${c.name}" lists paper "${p.name}" from another course.`);
+      if (typeof r.active !== 'boolean') err(`Class-paper entry #${i + 1} has an invalid active flag.`);
+      if (!Number.isInteger(r.position) || r.position < 0) err(`Class-paper entry #${i + 1} has an invalid position.`);
+      if (!cpSeen.has(c.id)) cpSeen.set(c.id, new Map());
+      if (cpSeen.get(c.id).has(p.id)) err(`Class "${c.name}" lists paper "${p.name}" twice.`);
+      cpSeen.get(c.id).set(p.id, r);
+    });
+    for (const c of classes.values()) {
+      const rows = cpSeen.get(c.id) || new Map();
+      const coursePapers = [...papers.values()].filter((p) => p.courseId === c.courseId);
+      for (const p of coursePapers) if (!rows.has(p.id)) err(`Class "${c.name}" has no setting for paper "${p.name}".`);
+      const positions = [...rows.values()].map((r) => r.position).sort((a, b) => a - b);
+      if (!positions.every((n, i) => n === i)) err(`Class "${c.name}" has an invalid paper order.`);
+    }
+
+    indexById(d.usages, 'usage');
+    const slotQ = new Set(), slotPQ = new Set();
+    d.usages.forEach((u, i) => {
+      if (!u || typeof u !== 'object') return;
+      const label = `Usage #${i + 1}`;
+      const c = classes.get(u.classId), q = questions.get(u.questionId);
+      if (!c) { err(`${label} refers to a missing class.`); return; }
+      if (!q) { err(`${label} refers to a missing question.`); return; }
+      const p = papers.get(q.paperId);
+      if (p && p.courseId !== c.courseId) err(`${label} links a question to a class on another course.`);
+      if (!isValidAcademicYear(u.academicYear)) err(`${label} has an invalid academic year.`);
+      if (!isPosInt(u.week)) err(`${label} has an invalid week.`);
+      if (!isPosInt(u.packQuestion)) err(`${label} has an invalid pack question.`);
+      if (!isIsoDate(u.createdAt) || !isIsoDate(u.updatedAt)) err(`${label} has invalid timestamps.`);
+      const slot = `${u.classId}\u0000${u.academicYear}\u0000${u.week}`;
+      const kq = slot + '\u0000' + u.questionId, kp = slot + '\u0000' + u.packQuestion;
+      if (slotQ.has(kq)) err(`${label}: question used twice in ${c.name} week ${u.week} (${u.academicYear}).`);
+      if (slotPQ.has(kp)) err(`${label}: pack question ${u.week}.${u.packQuestion} assigned twice in ${c.name}.`);
+      slotQ.add(kq); slotPQ.add(kp);
+    });
+
+    const st = d.settings;
+    if (!isValidAcademicYear(st.academicYear)) err('Settings: invalid academic year.');
+    if (!isPosInt(st.currentWeek)) err('Settings: invalid current week.');
+    if (st.selectedClassId !== null && !classes.has(st.selectedClassId)) err('Settings: selected class is missing.');
+    if (st.weekFilter !== 'all' && !isPosInt(st.weekFilter)) err('Settings: invalid week filter.');
+    if (st.lastExportedAt !== null && !isIsoDate(st.lastExportedAt)) err('Settings: invalid last-exported date.');
+    return errors;
+  }
+
+  // ---------- backup / restore ----------
+
+  function localDateStamp(date) {
+    const p = (n) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+  }
+
+  const exportFilename = (date) => `past-paper-tracker-backup-${localDateStamp(date)}.json`;
+
+  /** Records the export time and builds the backup from the updated state. */
+  function exportBackup(s, date) {
+    const exportedAt = date.toISOString();
+    const state = Object.assign({}, s, { settings: Object.assign({}, s.settings, { lastExportedAt: exportedAt }) });
+    const backup = { schemaVersion: SCHEMA_VERSION, exportedAt, appVersion: APP_VERSION, data: clone(state) };
+    return ok(state, { backup, filename: exportFilename(date), json: JSON.stringify(backup, null, 2) });
+  }
+
+  /** "never", "today", "1 day ago", "N days ago". */
+  function lastExportedText(lastExportedAt, now) {
+    if (!lastExportedAt) return 'never';
+    const days = Math.floor((now.getTime() - Date.parse(lastExportedAt)) / 86400000);
+    if (days <= 0) return 'today';
+    return days === 1 ? '1 day ago' : `${days} days ago`;
+  }
+
+  function summarise(d) {
+    return {
+      classes: d.classes.length,
+      papers: d.papers.length,
+      questions: d.questions.length,
+      unusableQuestions: d.questions.filter((q) => q.unusable).length,
+      usages: d.usages.length,
+    };
+  }
+
+  /**
+   * Validates a backup (JSON text or parsed object). Nothing is changed.
+   * Success: { ok, data, summary } — pass `data` to applyImport after confirmation.
+   */
+  function validateBackup(input) {
+    let b = input;
+    if (typeof input === 'string') {
+      try { b = JSON.parse(input); } catch (e) { return fail('The file is not valid JSON.', { errors: ['The file is not valid JSON.'] }); }
+    }
+    const reject = (errors) => fail('This backup cannot be imported:\n' + errors.join('\n'), { errors });
+    if (!b || typeof b !== 'object' || Array.isArray(b)) return reject(['Not a Past-Paper Tracker backup.']);
+    if (!Number.isInteger(b.schemaVersion) || b.schemaVersion < 1) return reject(['Missing or invalid schema version.']);
+    if (b.schemaVersion > SCHEMA_VERSION) {
+      return reject([`This backup was made by a newer version of the app (schema ${b.schemaVersion}; this app supports ${SCHEMA_VERSION}).`]);
+    }
+    if (!isIsoDate(b.exportedAt)) return reject(['Missing or invalid export date.']);
+    const errors = validateData(b.data);
+    if (errors.length) return reject(errors);
+    const data = clone(b.data);
+    const out = { courses: data.courses, papers: data.papers, questions: data.questions, classes: data.classes,
+      classPapers: data.classPapers, usages: data.usages, settings: {
+        academicYear: data.settings.academicYear, currentWeek: data.settings.currentWeek,
+        selectedClassId: data.settings.selectedClassId, weekFilter: data.settings.weekFilter,
+        lastExportedAt: data.settings.lastExportedAt,
+      } };
+    return { ok: true, data: out, summary: summarise(out) };
+  }
+
+  /** Replaces all data with a validated backup's data. */
+  function applyImport(validated) {
+    if (!validated || !validated.ok) return fail('Backup has not been validated.');
+    return ok(clone(validated.data));
+  }
+
+  return {
+    SCHEMA_VERSION, APP_VERSION, COURSE_NAMES,
+    parsePositiveInt, isValidAcademicYear, parseAcademicYear, formatAcademicYear, nextAcademicYear, inferAcademicYear,
+    createInitialState, getCourse, getClass, getPaper, getQuestion, getUsage, questionsOfPaper,
+    compareUsageRecency, usageLabel, historyLabel, usageHistory, cellState,
+    checkUsage, createUsage, editUsage, deleteUsage, setUnusable,
+    createClass, renameClass, deleteClass, selectClass,
+    addPaper, renamePaper, setQuestionCount, paperDeletionBlockers, deletePaper, setPaperActive, movePaper, checklist,
+    startNextAcademicYear, incrementWeek, decrementWeek, setCurrentWeek, setWeekFilter,
+    buildGrid, validateData, exportFilename, exportBackup, lastExportedText, validateBackup, applyImport,
+  };
+});
+</script>
+<script>
+/*
+ * Past-Paper Tracker — sample and stress data, built through the normal logic
+ * operations so the result is always valid. Loads as a CommonJS module (tests)
+ * or as the global `PPTSample`.
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.PPTSample = api;
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  function run(res) {
+    if (!res.ok) throw new Error(res.error);
+    return res;
+  }
+
+  function courseId(s, name) {
+    return s.courses.find((c) => c.name === name).id;
+  }
+
+  function questionId(L, s, paperId, number) {
+    return L.questionsOfPaper(s, paperId).find((q) => q.number === number).id;
+  }
+
+  /**
+   * Both courses; papers of differing lengths; usages over several weeks (one question
+   * used twice); one unusable question; one inactive paper that has usage.
+   */
+  function buildSampleData(L, env, date) {
+    let s = L.createInitialState(env, date);
+    const maths = courseId(s, 'Maths');
+    const fm = courseId(s, 'Further Maths');
+
+    const addClass = (name, course) => {
+      const r = run(L.createClass(s, { name, courseId: course }, env));
+      s = r.state;
+      return r.cls.id;
+    };
+    const y12 = addClass('Y12 Maths', maths);
+    const y13 = addClass('Y13 Maths', maths);
+    const fm12 = addClass('Y12 Further Maths', fm);
+
+    const addPaper = (course, name, count, fromClassId) => {
+      const r = run(L.addPaper(s, { courseId: course, name, questionCount: count, fromClassId }, env));
+      s = r.state;
+      return r.paper.id;
+    };
+    const m22p1 = addPaper(maths, '2022 P1', 14, y12);
+    const m22p2 = addPaper(maths, '2022 P2', 16, y12);
+    const m23p1 = addPaper(maths, '2023 P1', 15, y12);
+    const m23p2 = addPaper(maths, '2023 P2', 18, y12);
+    const m24p1 = addPaper(maths, '2024 P1', 12, y12);
+    const f23c1 = addPaper(fm, '2023 CP1', 10, fm12);
+    const f23c2 = addPaper(fm, '2023 CP2', 9, fm12);
+    addPaper(fm, '2024 CP1', 11, fm12);
+
+    s = run(L.setPaperActive(s, y13, m22p1, true)).state;
+    s = run(L.setPaperActive(s, y13, m23p2, true)).state;
+
+    // [class, paper, question number, week, pack question]
+    const uses = [
+      [y12, m22p1, 2, 1, 1], [y12, m22p1, 5, 1, 2], [y12, m23p1, 4, 1, 3], [y12, m22p2, 1, 1, 4],
+      [y12, m22p1, 3, 2, 1], [y12, m24p1, 6, 2, 2], [y12, m23p2, 1, 2, 3],
+      [y12, m22p2, 3, 3, 1], [y12, m23p1, 7, 3, 2], [y12, m22p1, 8, 3, 3], [y12, m23p2, 5, 3, 4],
+      [y12, m22p1, 9, 4, 1], [y12, m22p2, 6, 4, 2], [y12, m23p1, 9, 4, 3],
+      [y12, m23p2, 10, 5, 1], [y12, m22p2, 12, 5, 2], [y12, m22p1, 12, 5, 3],
+      [y12, m23p1, 4, 6, 2], [y12, m23p2, 14, 6, 1], [y12, m22p1, 14, 6, 3],
+      [y13, m22p1, 2, 2, 1], [y13, m23p2, 3, 2, 2], [y13, m23p2, 8, 4, 1], [y13, m22p1, 6, 5, 1],
+      [fm12, f23c1, 1, 1, 1], [fm12, f23c1, 4, 2, 1], [fm12, f23c2, 2, 2, 2], [fm12, f23c1, 7, 5, 1],
+    ];
+    for (const [classId, paperId, number, week, pack] of uses) {
+      s = run(L.setCurrentWeek(s, week)).state;
+      s = run(L.createUsage(s, { classId, questionId: questionId(L, s, paperId, number), packQuestion: pack }, env)).state;
+    }
+
+    // 2024 P1 has usage (Week 2) but is unticked for Y12.
+    s = run(L.setPaperActive(s, y12, m24p1, false)).state;
+    s = run(L.setUnusable(s, questionId(L, s, m22p2, 11), true)).state;
+    s = run(L.setCurrentWeek(s, 7)).state;
+    s = run(L.selectClass(s, y12)).state;
+    return s;
+  }
+
+  /** One class with `paperCount` active papers × `questionCount` questions and scattered usage. */
+  function buildStressData(L, env, date, paperCount = 50, questionCount = 20) {
+    let s = L.createInitialState(env, date);
+    const maths = courseId(s, 'Maths');
+    const cls = run(L.createClass(s, { name: 'Stress Maths', courseId: maths }, env));
+    s = cls.state;
+    const classId = cls.cls.id;
+    const paperIds = [];
+    for (let i = 1; i <= paperCount; i++) {
+      const r = run(L.addPaper(s, { courseId: maths, name: `Stress P${String(i).padStart(2, '0')}`, questionCount, fromClassId: classId }, env));
+      s = r.state;
+      paperIds.push(r.paper.id);
+    }
+    let seed = 12345;
+    const rand = (n) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    for (let week = 1; week <= 30; week++) {
+      s = run(L.setCurrentWeek(s, week)).state;
+      for (let pack = 1; pack <= 10; pack++) {
+        const qid = questionId(L, s, paperIds[rand(paperCount)], 1 + rand(questionCount));
+        const r = L.createUsage(s, { classId, questionId: qid, packQuestion: pack }, env);
+        if (r.ok) s = r.state;
+      }
+    }
+    for (let i = 0; i < 20; i++) {
+      s = run(L.setUnusable(s, questionId(L, s, paperIds[rand(paperCount)], 1 + rand(questionCount)), true)).state;
+    }
+    s = run(L.setCurrentWeek(s, 31)).state;
+    s = run(L.selectClass(s, classId)).state;
+    return s;
+  }
+
+  return { buildSampleData, buildStressData };
+});
+</script>
+<script>
+/*
+ * Past-Paper Tracker — UI. All data changes go through PPT (logic.js) via commit().
+ * Stage 2: in-memory only; storage arrives in Stage 3 (commit() is the single write point).
+ */
+(function () {
+  'use strict';
+
+  const L = window.PPT;
+  const Sample = window.PPTSample;
+  const env = {
+    id: () => crypto.randomUUID(),
+    now: () => new Date().toISOString(),
+  };
+
+  let state = L.createInitialState(env, new Date());
+
+  const $ = (id) => document.getElementById(id);
+  const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESC_MAP[c]);
+
+  /** Applies a logic result. Returns the error message, or null on success. */
+  function commit(res) {
+    if (!res.ok) return res.error;
+    state = res.state;
+    render();
+    return null;
+  }
+
+  // ---------- selection helpers ----------
+
+  function sortedClasses() {
+    return state.classes.slice().sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  }
+
+  function currentClass() {
+    return L.getClass(state, state.settings.selectedClassId);
+  }
+
+  /** Keeps a valid class selected whenever classes exist. */
+  function ensureSelection() {
+    if (!currentClass() && state.classes.length) {
+      state = L.selectClass(state, sortedClasses()[0].id).state;
+    }
+  }
+
+  // ---------- render ----------
+
+  function render() {
+    ensureSelection();
+    renderTop();
+    renderPapersRow();
+    renderGrid();
+    if (popup) renderPopup();
+  }
+
+  function renderTop() {
+    const cls = currentClass();
+    const sel = $('classSel');
+    sel.innerHTML = state.classes.length
+      ? sortedClasses().map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')
+      : '<option value="">No classes yet</option>';
+    sel.value = cls ? cls.id : '';
+    sel.disabled = !state.classes.length;
+    $('classCourse').textContent = cls ? L.getCourse(state, cls.courseId).name : '';
+    $('classRename').disabled = !cls;
+    $('classDelete').disabled = !cls;
+
+    $('yearVal').textContent = state.settings.academicYear;
+
+    const weekIn = $('weekIn');
+    if (document.activeElement !== weekIn) {
+      weekIn.value = state.settings.currentWeek;
+      weekIn.classList.remove('invalid');
+      $('weekErr').textContent = '';
+    }
+    $('weekDown').disabled = state.settings.currentWeek <= 1;
+
+    // Week filter: All weeks, plus every week up to the current week or the latest used week.
+    const wf = state.settings.weekFilter;
+    let maxWeek = state.settings.currentWeek;
+    for (const u of state.usages) {
+      if (cls && u.classId === cls.id && u.academicYear === state.settings.academicYear) maxWeek = Math.max(maxWeek, u.week);
+    }
+    if (wf !== 'all') maxWeek = Math.max(maxWeek, wf);
+    let opts = '<option value="all">All weeks</option>';
+    for (let w = 1; w <= maxWeek; w++) opts += `<option value="${w}">Week ${w}</option>`;
+    const fs = $('filterSel');
+    fs.innerHTML = opts;
+    fs.value = String(wf);
+
+    $('lastExported').textContent = 'last exported: ' + L.lastExportedText(state.settings.lastExportedAt, new Date());
+  }
+
+  function renderPapersRow() {
+    const cls = currentClass();
+    const row = $('papersRow');
+    if (!cls) {
+      row.innerHTML = '';
+      return;
+    }
+    const chips = L.checklist(state, cls.id).map((x) =>
+      `<label class="chip${x.active ? ' on' : ''}"><input type="checkbox" data-paper="${esc(x.paper.id)}"${x.active ? ' checked' : ''}>${esc(x.paper.name)}</label>`
+    ).join('');
+    row.innerHTML =
+      `<span class="lbl">Papers</span><div class="chips">${chips}</div><button class="link" id="paperAdd">+ Add paper</button>` +
+      `<span class="legend">` +
+      `<span><span class="sw" style="background:var(--cell-green-bg);border-color:var(--cell-green-border)"></span>Available</span>` +
+      `<span><span class="sw" style="background:var(--cell-red-bg);border-color:var(--cell-red-border)"></span>Used</span>` +
+      `<span><span class="sw" style="background:repeating-linear-gradient(135deg,var(--cell-grey-bg) 0 3px,var(--cell-grey-stripe) 3px 6px);border-color:#4d4d4d"></span>Unusable</span>` +
+      `</span>`;
+  }
+
+  function renderGrid() {
+    const wrap = $('gridWrap');
+    const top = wrap.scrollTop, left = wrap.scrollLeft;
+    const cls = currentClass();
+    if (!cls) {
+      wrap.innerHTML = '<div class="empty-msg">No classes yet. Use <b>New</b> next to Class to create one, or load sample data.</div>';
+      return;
+    }
+    const grid = L.buildGrid(state, cls.id);
+    if (!grid.columns.length) {
+      wrap.innerHTML = '<div class="empty-msg">No active papers for this class. Tick papers above, or use <b>+ Add paper</b>.</div>';
+      return;
+    }
+    const last = grid.columns.length - 1;
+    const head = grid.columns.map((col, i) =>
+      `<th data-paper="${esc(col.paper.id)}"><div class="ph">` +
+      `<span class="pname" title="${esc(col.paper.name)} (${col.paper.questionCount} questions)">${esc(col.paper.name)}</span>` +
+      `<span class="pctl">` +
+      `<button data-act="left" title="Move left"${i === 0 ? ' disabled' : ''}>&#8249;</button>` +
+      `<button data-act="menu" title="Paper options">&#8943;</button>` +
+      `<button data-act="right" title="Move right"${i === last ? ' disabled' : ''}>&#8250;</button>` +
+      `</span></div></th>`
+    ).join('');
+    const openQ = popup ? popup.questionId : null;
+    const rows = [];
+    for (let r = 0; r < grid.rowCount; r++) {
+      let tr = `<tr><th>Q${r + 1}</th>`;
+      for (const col of grid.columns) {
+        const c = col.cells[r];
+        if (!c) { tr += '<td class="c none"></td>'; continue; }
+        let cl = 'c ' + c.status;
+        if (c.muted) cl += ' muted';
+        if (c.highlight) cl += ' hl';
+        if (c.question.id === openQ) cl += ' open';
+        const text = c.highlight ? c.filterLabel : c.label;
+        tr += `<td class="${cl}" data-q="${esc(c.question.id)}">${esc(text)}</td>`;
+      }
+      rows.push(tr + '</tr>');
+    }
+    wrap.innerHTML = `<table class="grid"><thead><tr><th class="corner"></th>${head}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+    wrap.scrollTop = top;
+    wrap.scrollLeft = left;
+  }
+
+  // ---------- cell popup ----------
+
+  /** { questionId, editingId } while open. */
+  let popup = null;
+
+  function openPopup(questionId) {
+    closeMenu();
+    popup = { questionId, editingId: null };
+    markOpenCell();
+    renderPopup();
+  }
+
+  function closePopup() {
+    if (!popup) return;
+    popup = null;
+    $('popup').hidden = true;
+    $('popup').innerHTML = '';
+    markOpenCell();
+  }
+
+  function markOpenCell() {
+    const wrap = $('gridWrap');
+    wrap.querySelectorAll('td.c.open').forEach((td) => td.classList.remove('open'));
+    if (popup) {
+      const td = wrap.querySelector(`td.c[data-q="${CSS.escape(popup.questionId)}"]`);
+      if (td) td.classList.add('open');
+    }
+  }
+
+  function recordForm(label) {
+    return `<form data-form="record" class="rec" autocomplete="off">` +
+      `<label for="pqIn">${label}</label><input type="text" id="pqIn" inputmode="numeric" autocomplete="off">` +
+      `</form><div class="err" data-err="record"></div>`;
+  }
+
+  function renderPopup() {
+    const el = $('popup');
+    const cls = currentClass();
+    const q = popup && L.getQuestion(state, popup.questionId);
+    if (!cls || !q) { closePopup(); return; }
+    const paper = L.getPaper(state, q.paperId);
+    const cell = L.cellState(state, cls.id, q.id);
+    const st = state.settings;
+    const history = L.usageHistory(state, cls.id, q.id);
+
+    let html = `<div class="ctx"><b>${esc(cls.name)}</b> · ${esc(st.academicYear)} · Week ${st.currentWeek} · <b>${esc(paper.name)} Q${q.number}</b></div>`;
+
+    if (cell.status === 'unusable') {
+      html += `<p class="note">Marked unusable for all classes.`;
+      if (history.length) html += ` This class used it: ${history.map((u) => esc(L.historyLabel(u))).join(', ')}.`;
+      html += `</p><div class="foot" style="border:0;margin:0;padding:0"><button class="btn small" data-act="restore">Restore</button></div>`;
+    } else {
+      if (cell.status === 'used') {
+        html += `<div class="sec">History</div><ul class="hist">`;
+        for (const u of history) {
+          if (u.id === popup.editingId) {
+            html += `<li><form data-form="edit" data-u="${esc(u.id)}" autocomplete="off">` +
+              `<input type="text" class="y" name="academicYear" value="${esc(u.academicYear)}" aria-label="Academic year">` +
+              `<span class="muted-text">Wk</span><input type="text" class="w" name="week" inputmode="numeric" value="${u.week}" aria-label="Week">` +
+              `<span class="muted-text">Q</span><input type="text" class="p" name="packQuestion" inputmode="numeric" value="${u.packQuestion}" aria-label="Pack question">` +
+              `<button class="btn small" type="submit">Save</button>` +
+              `<button class="link" type="button" data-act="edit-cancel">Cancel</button>` +
+              `</form></li><li><div class="err" data-err="edit"></div></li>`;
+          } else {
+            html += `<li><span class="h">${esc(L.historyLabel(u))}</span>` +
+              `<button class="link" data-act="edit" data-u="${esc(u.id)}">Edit</button>` +
+              `<button class="link danger" data-act="delete" data-u="${esc(u.id)}">Delete</button></li>`;
+          }
+        }
+        html += `</ul><div class="sec">Record another use</div>`;
+      }
+      html += recordForm('Pack question');
+      html += `<div class="foot"><button class="link danger" data-act="unusable">Mark unusable (all classes)</button></div>`;
+    }
+
+    el.innerHTML = html;
+    el.hidden = false;
+    positionPopup();
+
+    const focusTarget = popup.editingId
+      ? el.querySelector('form[data-form="edit"] input[name="packQuestion"]')
+      : el.querySelector('#pqIn') || el.querySelector('[data-act="restore"]');
+    if (focusTarget) {
+      focusTarget.focus({ preventScroll: true });
+      if (focusTarget.select) focusTarget.select();
+    }
+  }
+
+  /** Places a floating element next to an anchor rect, kept inside the viewport. */
+  function placeNear(el, rect) {
+    const pad = 8;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    let x = rect.right + 6;
+    if (x + w > window.innerWidth - pad) x = rect.left - w - 6;
+    if (x < pad) x = Math.max(pad, Math.min(rect.left, window.innerWidth - w - pad));
+    let y = rect.top - 4;
+    if (y + h > window.innerHeight - pad) y = window.innerHeight - h - pad;
+    if (y < pad) y = pad;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+  }
+
+  function positionPopup() {
+    if (!popup) return;
+    const td = $('gridWrap').querySelector(`td.c[data-q="${CSS.escape(popup.questionId)}"]`);
+    if (td) placeNear($('popup'), td.getBoundingClientRect());
+  }
+
+  function popupError(kind, msg) {
+    const e = $('popup').querySelector(`[data-err="${kind}"]`);
+    if (e) e.textContent = msg || '';
+  }
+
+  $('popup').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const form = ev.target;
+    const cls = currentClass();
+    if (form.dataset.form === 'record') {
+      const input = form.querySelector('input');
+      const res = L.createUsage(state, { classId: cls.id, questionId: popup.questionId, packQuestion: input.value }, env);
+      if (!res.ok) { popupError('record', res.error); input.focus(); return; }
+      closePopup();
+      commit(res);
+    } else if (form.dataset.form === 'edit') {
+      const v = (n) => form.querySelector(`[name="${n}"]`).value;
+      const res = L.editUsage(state, form.dataset.u, { academicYear: v('academicYear'), week: v('week'), packQuestion: v('packQuestion') }, env);
+      if (!res.ok) { popupError('edit', res.error); return; }
+      popup.editingId = null;
+      commit(res);
+    }
+  });
+
+  $('popup').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-act]');
+    if (!b) return;
+    const act = b.dataset.act;
+    if (act === 'edit') { popup.editingId = b.dataset.u; renderPopup(); }
+    else if (act === 'edit-cancel') { popup.editingId = null; renderPopup(); }
+    else if (act === 'delete') { if (popup.editingId === b.dataset.u) popup.editingId = null; commit(L.deleteUsage(state, b.dataset.u)); }
+    else if (act === 'unusable') { const qid = popup.questionId; closePopup(); commit(L.setUnusable(state, qid, true)); }
+    else if (act === 'restore') { const qid = popup.questionId; closePopup(); commit(L.setUnusable(state, qid, false)); }
+  });
+
+  // ---------- grid events ----------
+
+  $('gridWrap').addEventListener('click', (ev) => {
+    const td = ev.target.closest('td.c');
+    if (td && !td.classList.contains('none')) {
+      if (popup && popup.questionId === td.dataset.q) closePopup();
+      else openPopup(td.dataset.q);
+      return;
+    }
+    const btn = ev.target.closest('th[data-paper] button[data-act]');
+    if (!btn) return;
+    const paperId = btn.closest('th').dataset.paper;
+    const cls = currentClass();
+    if (btn.dataset.act === 'left' || btn.dataset.act === 'right') {
+      closePopup();
+      commit(L.movePaper(state, cls.id, paperId, btn.dataset.act === 'left' ? -1 : 1));
+    } else if (btn.dataset.act === 'menu') {
+      openMenu(paperId, btn);
+    }
+  });
+
+  $('gridWrap').addEventListener('scroll', () => {
+    positionPopup();
+    if (menuPaperId) closeMenu();
+  });
+  window.addEventListener('resize', positionPopup);
+
+  // ---------- column menu ----------
+
+  let menuPaperId = null;
+
+  function openMenu(paperId, anchor) {
+    closePopup();
+    if (menuPaperId === paperId) { closeMenu(); return; }
+    menuPaperId = paperId;
+    const m = $('menu');
+    m.innerHTML =
+      '<button data-act="rename">Rename…</button>' +
+      '<button data-act="count">Change question count…</button>' +
+      '<button data-act="deactivate">Untick for this class</button>' +
+      '<button data-act="delete" class="danger">Delete paper…</button>';
+    m.hidden = false;
+    const r = anchor.getBoundingClientRect();
+    placeNear(m, { left: r.left, right: r.left - 6, top: r.bottom + 8, bottom: r.bottom });
+  }
+
+  function closeMenu() {
+    menuPaperId = null;
+    $('menu').hidden = true;
+  }
+
+  $('menu').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-act]');
+    if (!b) return;
+    const paper = L.getPaper(state, menuPaperId);
+    closeMenu();
+    if (!paper) return;
+    if (b.dataset.act === 'rename') renamePaperDialog(paper);
+    else if (b.dataset.act === 'count') countDialog(paper);
+    else if (b.dataset.act === 'deactivate') commit(L.setPaperActive(state, currentClass().id, paper.id, false));
+    else if (b.dataset.act === 'delete') deletePaperDialog(paper);
+  });
+
+  // ---------- global close behaviour ----------
+
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape' || $('dlg').open) return;
+    if (popup) { ev.preventDefault(); closePopup(); }
+    if (menuPaperId) closeMenu();
+  });
+
+  document.addEventListener('mousedown', (ev) => {
+    if ($('dlg').open) return;
+    if (popup && !$('popup').contains(ev.target) && !ev.target.closest('td.c')) closePopup();
+    if (menuPaperId && !$('menu').contains(ev.target) && !ev.target.closest('button[data-act="menu"]')) closeMenu();
+  });
+
+  // ---------- dialogs ----------
+
+  let dlgSubmit = null;
+
+  /**
+   * fields: [{ name, label, value, type: 'text'|'select', options: [{value,label}] }]
+   * onSubmit(values) returns an error message to show (dialog stays open) or null to close.
+   * Pass submit: null for an information-only dialog.
+   */
+  function openDialog({ title, message = '', fields = [], submit = 'OK', danger = false, cancel = 'Cancel', onSubmit }) {
+    closePopup();
+    closeMenu();
+    $('dlgTitle').textContent = title;
+    $('dlgMsg').textContent = message;
+    $('dlgMsg').hidden = !message;
+    $('dlgErr').textContent = '';
+    $('dlgFields').innerHTML = fields.map((f, i) => {
+      const id = `dlgF${i}`;
+      const input = f.type === 'select'
+        ? `<select id="${id}" name="${f.name}">${f.options.map((o) =>
+          `<option value="${esc(o.value)}"${o.value === f.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`
+        : `<input type="text" id="${id}" name="${f.name}" value="${esc(f.value ?? '')}" autocomplete="off"${f.numeric ? ' inputmode="numeric"' : ''}>`;
+      return `<div class="fld"><label for="${id}">${esc(f.label)}</label>${input}</div>`;
+    }).join('');
+    const ok = $('dlgOk');
+    ok.hidden = submit === null;
+    ok.textContent = submit || '';
+    ok.className = danger ? 'btn danger' : 'btn';
+    $('dlgCancel').textContent = submit === null ? 'Close' : cancel;
+    dlgSubmit = onSubmit || null;
+    $('dlg').showModal();
+    const first = $('dlgFields').querySelector('input, select');
+    if (first) { first.focus(); if (first.select) first.select(); }
+    else if (submit !== null) ok.focus();
+    else $('dlgCancel').focus();
+  }
+
+  $('dlgForm').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    if (!dlgSubmit) { $('dlg').close(); return; }
+    const values = {};
+    $('dlgFields').querySelectorAll('[name]').forEach((el) => { values[el.name] = el.value; });
+    const err = dlgSubmit(values);
+    if (err) $('dlgErr').textContent = err;
+    else $('dlg').close();
+  });
+  $('dlgCancel').addEventListener('click', () => $('dlg').close());
+
+  const courseOptions = () => state.courses.map((c) => ({ value: c.id, label: c.name }));
+
+  // ---------- class actions ----------
+
+  $('classSel').addEventListener('change', (ev) => {
+    closePopup();
+    $('gridWrap').scrollTop = 0;
+    $('gridWrap').scrollLeft = 0;
+    commit(L.selectClass(state, ev.target.value));
+  });
+
+  $('classNew').addEventListener('click', () => {
+    openDialog({
+      title: 'New class',
+      fields: [
+        { name: 'name', label: 'Class name', value: '' },
+        { name: 'courseId', label: 'Course (cannot be changed later)', type: 'select', options: courseOptions(), value: state.courses[0].id },
+      ],
+      submit: 'Create class',
+      onSubmit: (v) => {
+        const res = L.createClass(state, { name: v.name, courseId: v.courseId }, env);
+        if (!res.ok) return res.error;
+        commit(L.selectClass(res.state, res.cls.id));
+        return null;
+      },
+    });
+  });
+
+  $('classRename').addEventListener('click', () => {
+    const cls = currentClass();
+    openDialog({
+      title: 'Rename class',
+      message: 'History, active papers and paper order are kept.',
+      fields: [{ name: 'name', label: 'Class name', value: cls.name }],
+      submit: 'Rename',
+      onSubmit: (v) => commit(L.renameClass(state, cls.id, v.name)),
+    });
+  });
+
+  $('classDelete').addEventListener('click', () => {
+    const cls = currentClass();
+    const n = state.usages.filter((u) => u.classId === cls.id).length;
+    openDialog({
+      title: `Delete ${cls.name}?`,
+      message: `This permanently removes the class, its ${n} usage record${n === 1 ? '' : 's'}, its active papers and its paper order.\n\nPapers, questions and unusable flags are shared and are not affected.`,
+      submit: 'Delete class',
+      danger: true,
+      onSubmit: () => commit(L.deleteClass(state, cls.id)),
+    });
+  });
+
+  // ---------- year / week / filter ----------
+
+  $('yearNext').addEventListener('click', () => {
+    const next = L.nextAcademicYear(state.settings.academicYear);
+    openDialog({
+      title: `Start ${next}?`,
+      message: `The academic year becomes ${next}, the current week resets to 1 and the week filter resets to All weeks.\n\nNo class data or usage history changes; used questions stay red.`,
+      submit: `Start ${next}`,
+      onSubmit: () => commit(L.startNextAcademicYear(state)),
+    });
+  });
+
+  $('weekUp').addEventListener('click', () => commit(L.incrementWeek(state)));
+  $('weekDown').addEventListener('click', () => commit(L.decrementWeek(state)));
+
+  function applyWeekInput() {
+    const input = $('weekIn');
+    if (String(state.settings.currentWeek) === input.value.trim()) {
+      input.classList.remove('invalid');
+      $('weekErr').textContent = '';
+      return true;
+    }
+    const res = L.setCurrentWeek(state, input.value);
+    if (!res.ok) {
+      input.classList.add('invalid');
+      $('weekErr').textContent = res.error;
+      return false;
+    }
+    input.classList.remove('invalid');
+    $('weekErr').textContent = '';
+    commit(res);
+    input.value = state.settings.currentWeek;
+    return true;
+  }
+
+  $('weekIn').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      if (applyWeekInput()) $('weekIn').blur();
+    } else if (ev.key === 'Escape') {
+      $('weekIn').value = state.settings.currentWeek;
+      $('weekIn').blur();
+      renderTop();
+    }
+  });
+  // On leaving the field: apply if valid, otherwise keep the typed value and show the error.
+  $('weekIn').addEventListener('blur', applyWeekInput);
+
+  $('filterSel').addEventListener('change', (ev) => commit(L.setWeekFilter(state, ev.target.value)));
+
+  // ---------- papers ----------
+
+  $('papersRow').addEventListener('change', (ev) => {
+    const cb = ev.target.closest('input[data-paper]');
+    if (!cb) return;
+    closePopup();
+    commit(L.setPaperActive(state, currentClass().id, cb.dataset.paper, cb.checked));
+  });
+
+  $('papersRow').addEventListener('click', (ev) => {
+    if (!ev.target.closest('#paperAdd')) return;
+    const cls = currentClass();
+    openDialog({
+      title: 'Add paper',
+      message: `The paper is added to every class on its course, ticked only for ${cls.name}. The question count can be corrected later.`,
+      fields: [
+        { name: 'courseId', label: 'Course', type: 'select', options: courseOptions(), value: cls.courseId },
+        { name: 'name', label: 'Paper name (e.g. 2024 P2)', value: '' },
+        { name: 'questionCount', label: 'Number of questions', value: '', numeric: true },
+      ],
+      submit: 'Add paper',
+      onSubmit: (v) => commit(L.addPaper(state, {
+        courseId: v.courseId,
+        name: v.name,
+        questionCount: v.questionCount,
+        fromClassId: v.courseId === cls.courseId ? cls.id : null,
+      }, env)),
+    });
+  });
+
+  function renamePaperDialog(paper) {
+    openDialog({
+      title: 'Rename paper',
+      message: 'The new name applies to every class on this course. History is kept.',
+      fields: [{ name: 'name', label: 'Paper name', value: paper.name }],
+      submit: 'Rename',
+      onSubmit: (v) => commit(L.renamePaper(state, paper.id, v.name)),
+    });
+  }
+
+  function countDialog(paper) {
+    openDialog({
+      title: `Question count for ${paper.name}`,
+      message: 'Increasing adds questions. Reducing is only allowed if none of the removed questions has been used by any class or marked unusable.',
+      fields: [{ name: 'count', label: 'Number of questions', value: String(paper.questionCount), numeric: true }],
+      submit: 'Save',
+      onSubmit: (v) => commit(L.setQuestionCount(state, paper.id, v.count, env)),
+    });
+  }
+
+  function deletePaperDialog(paper) {
+    const blockers = L.paperDeletionBlockers(state, paper.id);
+    if (blockers.length) {
+      openDialog({
+        title: `${paper.name} cannot be deleted`,
+        message: 'It has recorded data. You can untick it instead, which hides it without deleting anything.\n\n' +
+          blockers.map((b) => b.message).join('\n'),
+        submit: null,
+      });
+      return;
+    }
+    openDialog({
+      title: `Delete ${paper.name}?`,
+      message: `This removes the paper and its ${paper.questionCount} questions for every class on the course.`,
+      submit: 'Delete paper',
+      danger: true,
+      onSubmit: () => commit(L.deletePaper(state, paper.id)),
+    });
+  }
+
+  // ---------- test data ----------
+
+  function loadTestData(label, build) {
+    const replace = () => {
+      closePopup();
+      state = build();
+      $('gridWrap').scrollTop = 0;
+      $('gridWrap').scrollLeft = 0;
+      render();
+    };
+    if (!state.classes.length && !state.papers.length) { replace(); return; }
+    openDialog({
+      title: `Load ${label}?`,
+      message: 'This replaces all current data (in memory only in this build).',
+      submit: `Load ${label}`,
+      onSubmit: () => { replace(); return null; },
+    });
+  }
+
+  $('loadSample').addEventListener('click', () =>
+    loadTestData('sample data', () => Sample.buildSampleData(L, env, new Date())));
+  $('loadStress').addEventListener('click', () =>
+    loadTestData('stress data', () => Sample.buildStressData(L, env, new Date())));
+
+  render();
+})();
+</script>
+</body>
+</html>

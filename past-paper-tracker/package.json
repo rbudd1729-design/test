@@ -2,6 +2,7 @@
   "name": "past-paper-tracker",
   "private": true,
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "build": "node build.js",
+    "test": "node build.js --check && node --test test/*.test.js"
   }
 }
