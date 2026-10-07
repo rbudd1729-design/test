@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Retrieval Tracker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%235294bf%22/%3E%3Cpath d=%22M9 7v18M9 7h8.5a5.5 5.5 0 0 1 0 11H9m8 0 6 7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #121212;
@@ -733,6 +734,14 @@
     background: #26384a;
     border-color: var(--primary);
   }
+  /* Tutee session actions use the same sizing as the main session button. */
+  .sessions-action-btn {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.5;
+  }
   #coverage-export-txt {
     padding: 7px 12px;
     font-size: 13px;
@@ -915,14 +924,10 @@
   .session-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .session-date { font-weight: 700; color: var(--text); }
   .session-actions { margin-left: auto; display: flex; gap: 6px; }
-  .session-topics { margin: 8px 0 0; padding-left: 20px; color: var(--text); }
-  .session-topics li { margin: 2px 0; }
   .session-notes { margin-top: 8px; white-space: pre-wrap; color: var(--text-muted); font-size: 13px; }
   .session-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
   .paid-toggle { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); border-radius: 999px; padding: 2px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
   .paid-toggle.unpaid { color: var(--text); border-color: var(--text); font-weight: 700; }
-  .session-topic-row { display: flex; gap: 6px; margin-bottom: 6px; }
-  .session-topic-row input { flex: 1 1 auto; }
   .session-paid-choice[aria-pressed="true"] { border-color: var(--text); color: var(--text); font-weight: 700; }
   .modal-backdrop {
     position: fixed;
@@ -1123,7 +1128,10 @@ Share a quantity in a given ratio
   <section id="screen-coverage" class="screen active">
     <div class="card tutee-only" id="sessions-card">
       <div class="row" style="justify-content: space-between; align-items: center; gap:12px; flex-wrap:wrap;">
-        <button class="coverage-add-atoms-btn" id="session-add" type="button">+ Add session</button>
+        <div class="row" style="gap:8px;">
+          <button class="coverage-add-atoms-btn sessions-action-btn" id="session-add" type="button">+ Add session</button>
+          <button class="btn ghost sessions-action-btn" id="sessions-export-txt" type="button" title="Export this tutee's sessions as a text file">Export .txt</button>
+        </div>
         <div class="sessions-summary" id="sessions-summary" aria-live="polite"></div>
       </div>
       <div id="sessions-list" style="margin-top: 14px;"></div>
@@ -1200,7 +1208,7 @@ Share a quantity in a given ratio
 
     <div class="card">
       <h2>Your classes and tutees</h2>
-      <div class="subtitle"><span id="classes-count">0</span> of 10.</div>
+      <div class="subtitle"><span id="classes-count">0</span> class/tutee records.</div>
       <table>
         <thead>
           <tr>
@@ -1544,11 +1552,6 @@ Share a quantity in a given ratio
         <input type="date" id="session-date" class="record-retrieval-date">
       </div>
       <div>
-        <label>Topics covered</label>
-        <div id="session-topics"></div>
-        <button type="button" class="btn ghost" id="session-add-topic">+ Add topic</button>
-      </div>
-      <div>
         <label for="session-notes">Notes</label>
         <textarea id="session-notes" rows="4" style="width:100%; resize:vertical;"></textarea>
       </div>
@@ -1608,7 +1611,6 @@ Share a quantity in a given ratio
 // =====================================================
 
 const STORAGE_KEY = "learning-engine-state-v1";
-const MAX_CLASSES = 10;
 const VALID_TYPES = ["Categorical", "Comparative", "Transformation", "Fact", "Routine"];
 
 function defaultSettings() {
@@ -1640,7 +1642,7 @@ function defaultClass(name) {
   };
 }
 // A private tuition student. Tutees have no atoms, lesson dates, retrievals or spacing
-// settings: only a chronological record of sessions (date, topics, notes, paid).
+// settings: only a chronological record of sessions (date, notes, paid).
 function defaultTutee(name) {
   return { id: newId("t"), type: "tutee", name, sessions: [], notes: "" };
 }
@@ -1655,8 +1657,16 @@ function normaliseTutee(t) {
   t.sessions = Array.isArray(t.sessions) ? t.sessions : [];
   for (const sess of t.sessions) {
     if (!sess.id) sess.id = newId("s");
-    sess.topics = Array.isArray(sess.topics) ? sess.topics.map(String) : [];
-    if (typeof sess.notes !== "string") sess.notes = "";
+    const notes = typeof sess.notes === "string" ? sess.notes : "";
+    const legacyTopics = Array.isArray(sess.topics)
+      ? sess.topics.map(String).map(x => x.trim()).filter(Boolean)
+      : [];
+    // Fold topics from the previous tuition model into the session notes, then remove
+    // the redundant field so current sessions remain date + notes + paid.
+    sess.notes = legacyTopics.length
+      ? (notes ? `${legacyTopics.join("\n")}\n\n${notes}` : legacyTopics.join("\n"))
+      : notes;
+    delete sess.topics;
     sess.paid = sess.paid === true;
   }
   if (typeof t.notes !== "string") t.notes = "";
@@ -2490,7 +2500,6 @@ function switchClass(class_id) {
 }
 
 function createClass(name, type = "class") {
-  if (state.classes.length >= MAX_CLASSES) { alert(`Limit is ${MAX_CLASSES} classes and tutees.`); return null; }
   if (!name || !name.trim()) { alert("A name is required."); return null; }
   // The type is fixed at creation; there is no conversion between Class and Tutee.
   const cls = type === "tutee" ? defaultTutee(name.trim()) : defaultClass(name.trim());
@@ -2626,7 +2635,6 @@ function renderClasses() {
     b.addEventListener("click", () => deleteClass(b.dataset.id));
   });
 
-  document.getElementById("new-class-add").disabled = state.classes.length >= MAX_CLASSES;
 }
 
 document.getElementById("new-class-add").addEventListener("click", () => {
@@ -2639,8 +2647,8 @@ document.getElementById("new-class-add").addEventListener("click", () => {
 });
 
 // ----- Tuition: sessions for a Tutee -----
-// A session records what happened: date, topics covered, notes and whether it has been
-// paid for. Nothing here is scheduled, retrieved or counted towards the school workflow.
+// A session records what happened: date, notes and whether it has been paid for.
+// Nothing here is scheduled, retrieved or counted towards the school workflow.
 function sortedSessions(t) {
   return (t.sessions || [])
     .map((sess, i) => ({ sess, i }))
@@ -2675,7 +2683,6 @@ function renderSessions() {
           <button type="button" class="icon-btn" data-session-delete="${sess.id}">Delete</button>
         </div>
       </div>
-      ${(sess.topics || []).length ? `<ul class="session-topics">${sess.topics.map(topic => `<li>${escapeHtml(topic)}</li>`).join("")}</ul>` : ""}
       ${sess.notes ? `<div class="session-notes">${escapeHtml(sess.notes)}</div>` : ""}
     </div>`).join("");
   list.querySelectorAll("[data-session-paid]").forEach(b => b.addEventListener("click", () => toggleSessionPaid(b.dataset.sessionPaid)));
@@ -2708,26 +2715,6 @@ function deleteSession(id) {
 
 let sessionEditId = null;
 
-function addSessionTopicRow(value = "", focus = false) {
-  const wrap = document.getElementById("session-topics");
-  const row = document.createElement("div");
-  row.className = "session-topic-row";
-  row.innerHTML = `<input type="text" class="session-topic" placeholder="e.g. Completing the square" aria-label="Topic">
-    <button type="button" class="icon-btn" aria-label="Remove topic" title="Remove topic">&times;</button>`;
-  const input = row.querySelector("input");
-  input.value = value;
-  // Enter adds the next topic, so several can be typed quickly.
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); addSessionTopicRow("", true); }
-  });
-  row.querySelector("button").addEventListener("click", () => {
-    row.remove();
-    if (!wrap.querySelector(".session-topic")) addSessionTopicRow();
-  });
-  wrap.appendChild(row);
-  if (focus) input.focus();
-}
-
 function setSessionPaidChoice(paid) {
   document.querySelectorAll("#session-modal .session-paid-choice").forEach(b => {
     b.setAttribute("aria-pressed", String((b.dataset.paid === "true") === paid));
@@ -2745,9 +2732,6 @@ function openSessionEditor(id = null) {
   const dateInput = document.getElementById("session-date");
   dateInput.value = sess ? sess.date : todayISO();
   dateInput.max = todayISO();
-  document.getElementById("session-topics").innerHTML = "";
-  const topics = sess && sess.topics.length ? sess.topics : [""];
-  topics.forEach(topic => addSessionTopicRow(topic));
   document.getElementById("session-notes").value = sess ? sess.notes : "";
   // New sessions start Unpaid so that payment is marked explicitly.
   setSessionPaidChoice(sess ? sess.paid : false);
@@ -2766,26 +2750,54 @@ function saveSessionEditor() {
   const date = document.getElementById("session-date").value;
   if (!date) { alert("Please choose the session date."); return; }
   if (date > todayISO()) { alert("The session date cannot be in the future."); return; }
-  const topics = [...document.querySelectorAll("#session-topics .session-topic")]
-    .map(input => input.value.trim())
-    .filter(Boolean);
   const notes = document.getElementById("session-notes").value;
   const paid = document.querySelector('#session-modal .session-paid-choice[data-paid="true"]').getAttribute("aria-pressed") === "true";
   if (sessionEditId) {
     const sess = findSession(sessionEditId);
     if (!sess) { closeSessionEditor(); return; }
-    Object.assign(sess, { date, topics, notes, paid });
+    Object.assign(sess, { date, notes, paid });
   } else {
     t.sessions = t.sessions || [];
-    t.sessions.push({ id: newId("s"), date, topics, notes, paid });
+    t.sessions.push({ id: newId("s"), date, notes, paid });
   }
   saveState();
   closeSessionEditor();
   renderAll();
 }
 
+function saveSessionsTextFile() {
+  if (!isTutee()) return;
+  const t = ctx();
+  if (!t) return;
+  const sessions = sortedSessions(t);
+  const lines = [String(t.name || "Tutee").trim(), "", `Sessions: ${sessions.length}`, ""];
+  if (sessions.length === 0) {
+    lines.push("No sessions recorded.");
+  } else {
+    for (const sess of sessions) {
+      lines.push(`${formatDateNice(sess.date)} | ${sess.paid ? "Paid" : "Unpaid"}`);
+      if (sess.notes && sess.notes.trim()) lines.push(sess.notes.trim());
+      lines.push("");
+    }
+  }
+  const text = lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const safeName = String(t.name || "tutee")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "") || "tutee";
+  a.download = `tuition-${safeName}-${todayISO()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+document.getElementById("sessions-export-txt").addEventListener("click", saveSessionsTextFile);
+
 document.getElementById("session-add").addEventListener("click", () => openSessionEditor());
-document.getElementById("session-add-topic").addEventListener("click", () => addSessionTopicRow("", true));
 document.getElementById("session-save").addEventListener("click", saveSessionEditor);
 document.getElementById("session-cancel").addEventListener("click", closeSessionEditor);
 document.getElementById("session-close").addEventListener("click", closeSessionEditor);
