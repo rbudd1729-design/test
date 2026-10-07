@@ -472,6 +472,12 @@
     return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { currentWeek: s.settings.currentWeek + 1 }) }));
   }
 
+  /** −1 week, for correcting an accidental +1. Week 1 is the minimum. */
+  function decrementWeek(s) {
+    if (s.settings.currentWeek <= 1) return fail('Week 1 is the first week.');
+    return ok(Object.assign({}, s, { settings: Object.assign({}, s.settings, { currentWeek: s.settings.currentWeek - 1 }) }));
+  }
+
   /** 'all' or a week number (raw input allowed). View-only setting. */
   function setWeekFilter(s, value) {
     let wf = 'all';
@@ -711,7 +717,7 @@
     checkUsage, createUsage, editUsage, deleteUsage, setUnusable,
     createClass, renameClass, deleteClass, selectClass,
     addPaper, renamePaper, setQuestionCount, paperDeletionBlockers, deletePaper, setPaperActive, movePaper, checklist,
-    startNextAcademicYear, incrementWeek, setWeekFilter,
+    startNextAcademicYear, incrementWeek, decrementWeek, setWeekFilter,
     buildGrid, validateData, exportFilename, exportBackup, lastExportedText, validateBackup, applyImport,
   };
 });

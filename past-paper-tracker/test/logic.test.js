@@ -456,11 +456,19 @@ test('start next academic year: year+1, week 1, filter reset, no data change', (
   for (const k of ['courses', 'papers', 'questions', 'classes', 'classPapers', 'usages']) assert.equal(r.state[k], s[k]);
 });
 
-test('increment week', () => {
+test('increment and decrement week', () => {
   const f = setup();
   const r = must(L.incrementWeek(f.s));
   assert.equal(r.state.settings.currentWeek, 2);
-  assert.equal(must(L.incrementWeek(r.state)).state.settings.currentWeek, 3);
+  const r3 = must(L.incrementWeek(r.state));
+  assert.equal(r3.state.settings.currentWeek, 3);
+  const back = must(L.decrementWeek(r3.state));
+  assert.equal(back.state.settings.currentWeek, 2);
+  for (const k of ['usages', 'classPapers', 'questions']) assert.equal(back.state[k], r3.state[k], 'no data change');
+  assert.equal(back.state.settings.weekFilter, r3.state.settings.weekFilter);
+  const atOne = L.decrementWeek(f.s);
+  assert.equal(atOne.ok, false);
+  assert.match(atOne.error, /first week/);
 });
 
 // ---------- grid & week filter ----------
