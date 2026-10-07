@@ -799,7 +799,7 @@
   .coverage-table td { text-align: right; color: var(--text); }
   .coverage-table td.atom-name {
     max-width: 360px;
-    font-weight: 600;
+    font-weight: 400;
   }
   .coverage-table td.atom-name > .atom-name-inner {
     display: flex;
@@ -827,10 +827,46 @@
   .coverage-table td.atom-name a.scheduler-due { color: var(--text); font-weight: 700; }
   .coverage-table td.atom-name a.scheduler-due:hover { color: var(--primary); }
   .coverage-table tr.due-row td { background: var(--border); }
-  .coverage-table tr.due-row td:first-child { box-shadow: inset 3px 0 0 var(--text); }
+  .coverage-table tr.due-row td.atom-name { box-shadow: inset 3px 0 0 var(--text); }
   .coverage-table td.count { width: 42px; }
   .coverage-table td.days { width: 72px; }
   .coverage-table td.action { width: 38px; padding-left: 2px; padding-right: 2px; }
+  .coverage-table th.coverage-plan,
+  .coverage-table td.coverage-plan {
+    width: 30px;
+    padding-left: 4px;
+    padding-right: 4px;
+    text-align: center !important;
+  }
+  .coverage-plan-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    vertical-align: middle;
+    cursor: pointer;
+    background: var(--border-strong);
+    border: 1px solid #555;
+    border-radius: 3px;
+    display: inline-grid;
+    place-content: center;
+  }
+  .coverage-plan-checkbox:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  .coverage-plan-checkbox:checked::after {
+    content: "✓";
+    color: #fff;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+  }
+  .coverage-plan-checkbox:focus-visible {
+    outline: 2px solid var(--primary-hover);
+    outline-offset: 2px;
+  }
   .coverage-rename {
     padding: 2px 5px;
     font-size: 11px;
@@ -880,7 +916,16 @@
   .record-retrieval-outcomes button.ad-hoc { background: var(--unscheduled); }
   .record-retrieval-outcomes button:hover { filter: brightness(1.15); }
   .record-retrieval-outcomes button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-  .coverage-table td.date { min-width: 64px; }
+  /* Keep the three scheduling date columns visually uniform. */
+  .coverage-table th.coverage-sort[data-sort-key="taught"],
+  .coverage-table th.coverage-sort[data-sort-key="last"],
+  .coverage-table th.coverage-sort[data-sort-key="next"],
+  .coverage-table td.date {
+    width: 82px;
+    min-width: 82px;
+  }
+  .coverage-table th[data-sort-key="next"],
+  .coverage-table td.next-retrieval { min-width: 70px; }
   .coverage-table tr:last-child td { border-bottom: none; }
   .coverage-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
   .coverage-summary {
@@ -894,6 +939,44 @@
   .coverage-summary strong { color: var(--text); font-size: 12px; }
   .history-status-actions { display:flex; gap:8px; flex-wrap:wrap; margin: 16px 0 18px; }
   .history-status-note { font-size:12px; color:var(--text-muted); margin: 2px 0 16px; }
+.history-longterm {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .history-longterm-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    flex: 0 0 auto;
+    cursor: pointer;
+    background: var(--border-strong);
+    border: 1px solid #555;
+    border-radius: 3px;
+    display: inline-grid;
+    place-content: center;
+  }
+  .history-longterm-checkbox:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  .history-longterm-checkbox:checked::after {
+    content: "✓";
+    color: #fff;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+  }
+  .history-longterm-checkbox:focus-visible {
+    outline: 2px solid var(--primary-hover);
+    outline-offset: 2px;
+  }
   @media (max-width: 700px) {
     .coverage-table td.atom-name { max-width: 240px; }
   }
@@ -1084,13 +1167,6 @@ Share a quantity in a given ratio
             <label for="atom-initial">Initial instruction</label>
             <input type="date" id="atom-initial">
           </div>
-          <div style="flex: 0 1 140px;">
-            <label for="atom-retrieve">Long-term retrieval? <span class="help-icon" data-help="Yes = atom enters the long-term spaced retrieval schedule after its first retrieval. No = the atom gets one initial check after instruction, then is no longer scheduled.d again.">?</span></label>
-            <select id="atom-retrieve">
-              <option value="Y" selected>Yes</option>
-              <option value="N">No</option>
-            </select>
-          </div>
           <button class="btn" id="atom-add">Add atom</button>
         </div>
       </details>
@@ -1109,7 +1185,6 @@ Share a quantity in a given ratio
         <thead>
           <tr>
             <th>Name</th>
-            <th>Long-term retrieval <span class="help-icon" data-help="Yes = atom enters the spaced retrieval schedule after its first retrieval. No = atom gets one initial check after instruction, then is no longer scheduled.">?</span></th>
             <th>Initial instruction</th>
             <th>Retrievals</th>
             <th>Next suggested</th>
@@ -1636,6 +1711,7 @@ function defaultClass(name) {
     atoms: [],
     lesson_dates: [],
     retrievals: [],
+    planned_retrievals: {},
     settings: defaultSettings(),
     profile: defaultProfile(),
     notes: ""
@@ -1692,6 +1768,9 @@ function loadState() {
         c.atoms = c.atoms || [];
         c.lesson_dates = c.lesson_dates || [];
         c.retrievals = c.retrievals || [];
+        c.planned_retrievals = (c.planned_retrievals && typeof c.planned_retrievals === "object" && !Array.isArray(c.planned_retrievals))
+          ? c.planned_retrievals
+          : {};
         c.settings = { ...defaultSettings(), ...(c.settings || {}) };
         c.profile = { ...defaultProfile(), ...(c.profile || {}) };
         if (typeof c.notes !== "string") c.notes = "";
@@ -1711,6 +1790,7 @@ function loadState() {
     cls.atoms = parsed.atoms || [];
     cls.lesson_dates = parsed.lesson_dates || [];
     cls.retrievals = parsed.retrievals || [];
+    cls.planned_retrievals = {};
     cls.settings = { ...defaultSettings(), ...(parsed.settings || {}) };
     cls.notes = typeof parsed.notes === "string" ? parsed.notes : "";
     for (const atom of cls.atoms) {
@@ -2402,6 +2482,13 @@ function recordRetrieval(atom_id, lesson_date, outcome) {
   c.retrievals = c.retrievals.filter(r => !(r.atom_id === atom_id && r.lesson_date === lesson_date));
   c.retrievals.push({ atom_id, lesson_date, outcome });
   const recordedAtom = c.atoms.find(a => a.id === atom_id);
+  // A recorded retrieval completes the planning action for that lesson. Unscheduled retrievals
+  // also clear an explicit plan because the planned check has now been fulfilled.
+  if (c.planned_retrievals && Array.isArray(c.planned_retrievals[lesson_date])) {
+    const remainingPlanned = c.planned_retrievals[lesson_date].filter(id => id !== atom_id);
+    if (remainingPlanned.length) c.planned_retrievals[lesson_date] = remainingPlanned;
+    else delete c.planned_retrievals[lesson_date];
+  }
   // An unscheduled retrieval is outside the spacing programme, so it must not cancel an active Defer.
   if (outcome !== "ad_hoc" && recordedAtom && recordedAtom.deferUntil) delete recordedAtom.deferUntil;
   // The original first-taught date is preserved. The current scheduling anchor is
@@ -2823,6 +2910,7 @@ function coverageSortValue(item, key) {
     case "atom": return item.atom.name || "";
     case "taught": return item.taught || null;
     case "last": return item.last || null;
+    case "next": return item.next || null;
     case "days": return item.daysSinceLast;
     case "total": return item.total;
     default: return null;
@@ -2841,6 +2929,35 @@ function compareCoverageItems(a, b, key, dir = 1) {
   if (typeof av === "number" && typeof bv === "number") return ((av - bv) || (a.idx - b.idx)) * dir;
   const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
   return (cmp || (a.idx - b.idx)) * dir;
+}
+
+function isRetrievalPlanned(atomId, lessonDate, cls = ctx()) {
+  if (!cls || isTutee() || !atomId || !lessonDate) return false;
+  const planned = cls.planned_retrievals && cls.planned_retrievals[lessonDate];
+  return Array.isArray(planned) && planned.includes(atomId);
+}
+
+function setRetrievalPlanned(atomId, lessonDate, planned) {
+  if (isTutee()) return;
+  const c = ctx();
+  if (!lessonDate || !atomId) return;
+  if (!c.planned_retrievals || typeof c.planned_retrievals !== "object" || Array.isArray(c.planned_retrievals)) {
+    c.planned_retrievals = {};
+  }
+
+  const current = Array.isArray(c.planned_retrievals[lessonDate])
+    ? c.planned_retrievals[lessonDate].filter(id => c.atoms.some(a => a.id === id))
+    : [];
+
+  const next = planned
+    ? Array.from(new Set([...current, atomId]))
+    : current.filter(id => id !== atomId);
+
+  if (next.length) c.planned_retrievals[lessonDate] = next;
+  else delete c.planned_retrievals[lessonDate];
+
+  saveState();
+  renderCoverage();
 }
 
 // ----- Render: Coverage overview -----
@@ -2883,11 +3000,13 @@ function renderCoverage() {
       : null;
     const total = realEvents.length;
     const status = atomStatus(atom);
+    const next = status === "scheduled" ? nextSuggestedDate(atom) : null;
     return {
       atom, idx,
       status,
       taught: status === "historic" ? "Historic" : (atom.initial_instruction_date || null),
       last,
+      next,
       daysSinceLast,
       total
     };
@@ -2926,22 +3045,26 @@ function renderCoverage() {
   const sortTh = (key, label, extra = "") =>
     `<th class="coverage-sort" data-sort-key="${key}"${extra}>${label} <span class="coverage-sort-indicator" aria-hidden="true">${coverageSortIndicator(key)}</span></th>`;
 
+  const showPlanning = planningHorizon === "next-lesson" && !!nextLesson;
   const rows = [];
   rows.push(`<table class="coverage-table"><thead><tr>
+    <th class="coverage-plan" aria-label="Plan for next lesson"></th>
     ${sortTh("atom", "Atom", ' style="width:43%;"')}
     ${sortTh("taught", "Taught")}
-    ${sortTh("last", "Last retrieval")}
-    ${sortTh("days", "Days since last retrieval")}
-    ${sortTh("total", "Total retrievals")}
+    ${sortTh("last", "Last")}
+    ${sortTh("next", "Next")}
+    ${sortTh("days", "Days since")}
+    ${sortTh("total", "Total")}
   </tr></thead><tbody>`);
 
 
 
   for (const item of sortedRows) {
-    const { atom, total, last, daysSinceLast, status } = item;
-    const next = status === "scheduled" ? nextSuggestedDate(atom) : null;
+    const { atom, total, last, next, daysSinceLast, status } = item;
     const deferActive = status === "scheduled" && isDeferActive(atom, today);
     const schedulerHighlight = status === "scheduled" && isPlannedRetrieval(atom);
+    const canPlanForNextLesson = showPlanning && schedulerHighlight;
+    const plannedForNextLesson = canPlanForNextLesson && isRetrievalPlanned(atom.id, planningDate, c);
     const schedulerClass = schedulerHighlight ? "scheduler-due" : "";
     // Name the lesson the scheduler will actually use, which differs if the Defer lesson was removed.
     const deferTitle = deferActive ? `Deferred until ${formatDateNice(deferredLesson(atom) || atom.deferUntil)}` : null;
@@ -2953,6 +3076,7 @@ function renderCoverage() {
     const taughtLabel = status === "historic" ? "Historic" : formatDateNice(item.taught);
     rows.push(`
       <tr${schedulerHighlight ? ' class="due-row"' : ''}>
+        <td class="coverage-plan">${canPlanForNextLesson ? `<input type="checkbox" class="coverage-plan-checkbox" data-action="plan-retrieval" data-atom-id="${atom.id}" data-lesson-date="${planningDate}" ${plannedForNextLesson ? "checked" : ""} title="Plan this retrieval for next lesson" aria-label="Plan this retrieval for next lesson">` : ''}</td>
         <td class="atom-name">
           <div class="atom-name-inner">
             <button class="btn ghost coverage-add" data-action="add-retrieval" data-atom-id="${atom.id}" title="Record a retrieval" aria-label="Record a retrieval">+</button>
@@ -2962,6 +3086,7 @@ function renderCoverage() {
         </td>
         <td class="date">${taughtLabel}</td>
         <td class="date">${formatDateNice(last)}</td>
+        <td class="date next-retrieval">${formatDateNice(next)}</td>
         <td class="days">${daysLabel}</td>
         <td class="count"><strong>${total}</strong></td>
       </tr>`);
@@ -2992,6 +3117,12 @@ function renderCoverage() {
   wrap.querySelectorAll('button[data-action="add-retrieval"]').forEach(btn => {
     btn.addEventListener('click', () => {
       openRecordRetrieval(btn.dataset.atomId);
+    });
+  });
+
+  wrap.querySelectorAll('input[data-action="plan-retrieval"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      setRetrievalPlanned(cb.dataset.atomId, cb.dataset.lessonDate, cb.checked);
     });
   });
 }
@@ -3130,6 +3261,8 @@ function openAtomHistory(atomId) {
   lines.push(`<div style="font-weight:500;">${formatDateNice(atom.initial_instruction_date)}</div>`);
   lines.push('</div>');
 
+  lines.push(`<label class="history-longterm"><input type="checkbox" class="history-longterm-checkbox" data-action="history-toggle-longterm" data-atom-id="${atom.id}" ${atom.retrieve !== "N" ? "checked" : ""} aria-label="Long-term retrieval"> <span>Long-term retrieval</span></label>`);
+
   if (status === "scheduled") {
     const schedulerState = getAtomSchedulingState(atom);
     const idealGap = plannedGap(schedulerState, ctx().settings);
@@ -3151,7 +3284,7 @@ function openAtomHistory(atomId) {
         lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">${noLessonNote}</div>`);
       }
     } else {
-      lines.push('<div style="font-size:13px; color:var(--text-muted); font-style:italic;">No further standalone retrieval</div>');
+      lines.push('<div style="font-size:13px; color:var(--text-muted); font-style:italic;">No further retrieval scheduled</div>');
     }
     lines.push('</div>');
   }
@@ -3241,6 +3374,17 @@ function openAtomHistory(atomId) {
   document.querySelectorAll("#history-body [data-action='sort-history-date']").forEach(b => {
     b.addEventListener("click", () => {
       toggleHistoryDateSort(b.dataset.atomId);
+    });
+  });
+
+  document.querySelectorAll("#history-body [data-action='history-toggle-longterm']").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const current = ctx().atoms.find(a => a.id === cb.dataset.atomId);
+      if (!current) return;
+      current.retrieve = cb.checked ? "Y" : "N";
+      saveState();
+      renderAll();
+      openAtomHistory(current.id);
     });
   });
 
@@ -3478,7 +3622,7 @@ function renderAtoms() {
   }
 
   if (visibleAtoms.length === 0) {
-    tbody.innerHTML = `<tr class="empty"><td colspan="6">No atoms match &ldquo;${escapeHtml(searchTerm)}&rdquo;.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty"><td colspan="5">No atoms match &ldquo;${escapeHtml(searchTerm)}&rdquo;.</td></tr>`;
     return;
   }
 
@@ -3513,17 +3657,10 @@ function renderAtoms() {
          </div>`
       : `<select class="inline-select ${!atom.initial_instruction_date ? 'not-set' : ''}" data-atom-id="${atom.id}" data-field="initial">${dateOptionsFor(atom.initial_instruction_date)}</select>`;
 
-    // Long-term retrieval dropdown — safe to change at any time (doesn't orphan history).
-    const retrieveSelect = `<select class="inline-select" data-atom-id="${atom.id}" data-field="retrieve">
-      <option value="Y" ${atom.retrieve !== "N" ? 'selected' : ''}>Yes</option>
-      <option value="N" ${atom.retrieve === "N" ? 'selected' : ''}>No</option>
-    </select>`;
-
     tr.innerHTML = `
       <td>
         <a href="#" class="atom-name-link" data-id="${atom.id}" style="color:var(--text); font-weight:600; text-decoration:none; border-bottom: 1px dotted var(--border-strong);">${escapeHtml(atom.name)}</a>
       </td>
-      <td>${retrieveSelect}</td>
       <td>${initSelect}</td>
       <td>${retrievals.length}</td>
       <td>${formatDateNice(next)}</td>
@@ -3628,15 +3765,12 @@ function editAtomDialog(id) {
     if (initial === null) return;
     updateInitial = true;
   }
-  const retrieve = prompt("Long-term retrieval? Y/N", atom.retrieve || "Y");
-  if (retrieve === null) return;
   atom.name = name.trim() || atom.name;
   atom.type = (type || "").trim();
   if (updateInitial) {
     if (initial === "") atom.initial_instruction_date = null;
     else if (/^\d{4}-\d{2}-\d{2}$/.test(initial.trim())) atom.initial_instruction_date = initial.trim();
   }
-  atom.retrieve = retrieve.trim().toUpperCase() === "N" ? "N" : "Y";
   saveState();
   renderAll();
 }
@@ -3646,11 +3780,10 @@ document.getElementById("atom-add").addEventListener("click", () => {
   const name = document.getElementById("atom-name").value.trim();
   const type = document.getElementById("atom-type").value;
   const initial = document.getElementById("atom-initial").value;
-  const retrieve = document.getElementById("atom-retrieve").value;
   if (!name) { alert("Atom name is required."); return; }
   if (!initial) { alert("Initial instruction date is required."); return; }
   ctx().atoms.push({
-    id: newId(), name, type, retrieve, initial_instruction_date: initial, notes: ""
+    id: newId(), name, type, retrieve: "Y", initial_instruction_date: initial, notes: ""
   });
   saveState();
   document.getElementById("atom-name").value = "";
