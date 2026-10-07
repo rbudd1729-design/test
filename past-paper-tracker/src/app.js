@@ -6,7 +6,6 @@
   'use strict';
 
   const L = window.PPT;
-  const Sample = window.PPTSample;
   const env = {
     id: () => crypto.randomUUID(),
     now: () => new Date().toISOString(),
@@ -165,7 +164,7 @@
     const top = wrap.scrollTop, left = wrap.scrollLeft;
     const cls = currentClass();
     if (!cls) {
-      wrap.innerHTML = '<div class="empty-msg">No classes yet. Use <b>New</b> next to Class to create one, or load sample data.</div>';
+      wrap.innerHTML = '<div class="empty-msg">No classes yet. Use <b>New</b> next to Class to create one, or <b>Import</b> a backup.</div>';
       return;
     }
     const grid = L.buildGrid(state, cls.id);
@@ -745,31 +744,6 @@
     };
     reader.readAsText(file);
   });
-
-  // ---------- test data ----------
-
-  function loadTestData(label, build) {
-    const replace = () => {
-      closePopup();
-      state = build();
-      $('gridWrap').scrollTop = 0;
-      $('gridWrap').scrollLeft = 0;
-      render();
-      updateBackupUI();
-    };
-    if (!state.classes.length && !state.papers.length) { replace(); return; }
-    openDialog({
-      title: `Load ${label}?`,
-      message: 'This replaces all current data (in memory only in this build).',
-      submit: `Load ${label}`,
-      onSubmit: () => { replace(); return null; },
-    });
-  }
-
-  $('loadSample').addEventListener('click', () =>
-    loadTestData('sample data', () => Sample.buildSampleData(L, env, new Date())));
-  $('loadStress').addEventListener('click', () =>
-    loadTestData('stress data', () => Sample.buildStressData(L, env, new Date())));
 
   render();
 })();

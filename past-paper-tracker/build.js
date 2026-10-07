@@ -15,7 +15,6 @@ function build() {
   };
   return read('app.html')
     .replace('/*__LOGIC__*/', () => inline('logic.js'))
-    .replace('/*__SAMPLE__*/', () => inline('sample.js'))
     .replace('/*__APP__*/', () => inline('app.js'));
 }
 

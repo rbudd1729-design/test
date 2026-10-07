@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Past-Paper Tracker</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%235294bf%22/%3E%3Cpath d=%22M8 8h7v7H8zM17 8h7v7h-7zM8 17h7v7H8zM17 17h7v7h-7z%22 fill=%22%23fff%22 opacity=%22.9%22/%3E%3C/svg%3E">
-<!-- Built file: edit src/app.html, src/logic.js, src/sample.js or src/app.js, then run `npm run build`. -->
+<!-- Built file: edit src/app.html, src/logic.js or src/app.js, then run `npm run build`. -->
 <style>
   :root {
     --bg: #121212;
@@ -74,7 +74,7 @@
   .group .val { font-weight: 500; white-space: nowrap; }
   .group .sep { width: 1px; align-self: stretch; background: var(--border); margin: 2px 2px; }
   .muted-text { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
-  .spacer { flex: 1; }
+  .spacer { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
 
   input[type="text"], select {
     background: var(--surface);
@@ -130,12 +130,12 @@
   /* Backup treatment reused from Retrieval Tracker. */
   .toolbar { position: relative; }
   .backup-needed-indicator {
-    display: none;
+    display: inline-flex;
+    visibility: hidden;
     align-items: center;
     flex-shrink: 0;
     white-space: nowrap;
     padding: 6px 10px;
-    margin-left: 4px;
     border-radius: 6px;
     border: 1px solid rgba(245,158,11,.55);
     background: rgba(245,158,11,.10);
@@ -144,7 +144,7 @@
     font-weight: 700;
     letter-spacing: .035em;
   }
-  .backup-needed-indicator.visible { display: inline-flex; }
+  .backup-needed-indicator.visible { visibility: visible; }
   .backup-top-btn {
     background: transparent;
     color: var(--text-muted);
@@ -437,9 +437,10 @@
       <select id="filterSel" aria-label="Week filter"></select>
     </div>
 
-    <span class="backup-needed-indicator" id="backup-needed-indicator" aria-live="polite">BACKUP NEEDED</span>
-
-    <div class="spacer"></div>
+    <!-- The gap in the top bar; the indicator always reserves its space so nothing moves when it shows. -->
+    <div class="spacer">
+      <span class="backup-needed-indicator" id="backup-needed-indicator" aria-live="polite">BACKUP NEEDED</span>
+    </div>
 
     <div class="group">
       <button class="backup-top-btn" id="exportBtn" title="Save a full backup of all classes and data">Backup</button>
@@ -447,12 +448,6 @@
       <span class="muted-text" id="lastExported"></span>
     </div>
     <input type="file" id="importInput" accept="application/json,.json" hidden>
-
-    <div class="group">
-      <span class="lbl">Test data</span>
-      <button class="link" id="loadSample">Load sample data</button>
-      <button class="link" id="loadStress">Load stress data</button>
-    </div>
   </div>
 
   <div class="papers-row" id="papersRow"></div>
@@ -478,9 +473,6 @@
 
 <script>
 /*__LOGIC__*/
-</script>
-<script>
-/*__SAMPLE__*/
 </script>
 <script>
 /*__APP__*/
