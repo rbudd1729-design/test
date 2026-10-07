@@ -1055,6 +1055,14 @@
     border-radius: 4px;
   }
   .modal-close:hover { background: var(--bg); color: var(--text); }
+  /* In-app replacement for the browser's alert / confirm / prompt boxes. Sits above other modals. */
+  .modal-backdrop.app-dialog { z-index: 200; }
+  .app-dialog .modal { max-width: 460px; }
+  .app-dialog form { margin: 0; }
+  .app-dialog-message { white-space: pre-wrap; font-size: 14px; line-height: 1.55; color: var(--text); }
+  .app-dialog-input { width: 100%; margin-top: 12px; }
+  .app-dialog-input[hidden] { display: none; }
+  .app-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
   .history-table { width: 100%; font-size: 13px; }
   .history-table th { font-size: 11px; padding: 8px 10px; }
   .history-table td { padding: 8px 10px; }
@@ -1680,12 +1688,105 @@ Share a quantity in a given ratio
   </div>
 </div>
 
+<!-- ============ IN-APP DIALOG (replaces alert / confirm / prompt) ============ -->
+<div class="modal-backdrop app-dialog" id="app-dialog">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-describedby="app-dialog-message">
+    <form id="app-dialog-form" novalidate>
+      <div class="app-dialog-message" id="app-dialog-message"></div>
+      <input type="text" class="app-dialog-input" id="app-dialog-input" autocomplete="off" aria-labelledby="app-dialog-message" hidden>
+      <div class="app-dialog-actions">
+        <button class="btn ghost" type="button" id="app-dialog-cancel">Cancel</button>
+        <button class="btn" type="submit" id="app-dialog-ok">OK</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 // =====================================================
 // THE LEARNING ENGINE - single-file webapp
 // =====================================================
 
 const STORAGE_KEY = "learning-engine-state-v1";
+
+// ----- In-app dialogs -----
+// Styled replacements for the browser's alert / confirm / prompt boxes.
+// showAlert → Promise<void>, showConfirm → Promise<boolean>, showPrompt → Promise<string|null>.
+// Requests are queued, so a notice raised just before another dialog is never lost.
+const appDialogQueue = [];
+let appDialogCurrent = null;
+let appDialogReturnFocus = null;
+
+function showAlert(message, opts = {}) {
+  return openAppDialog({ kind: "alert", message, ...opts });
+}
+function showConfirm(message, opts = {}) {
+  return openAppDialog({ kind: "confirm", message, ...opts });
+}
+function showPrompt(message, defaultValue = "", opts = {}) {
+  return openAppDialog({ kind: "prompt", message, defaultValue, ...opts });
+}
+
+function openAppDialog(request) {
+  return new Promise(resolve => {
+    appDialogQueue.push({ ...request, resolve });
+    if (!appDialogCurrent) showNextAppDialog();
+  });
+}
+
+function showNextAppDialog() {
+  const backdrop = document.getElementById("app-dialog");
+  const d = appDialogQueue.shift() || null;
+  appDialogCurrent = d;
+  if (!d) {
+    backdrop.classList.remove("open");
+    const target = appDialogReturnFocus;
+    appDialogReturnFocus = null;
+    if (target && document.contains(target) && typeof target.focus === "function") target.focus();
+    return;
+  }
+  if (!backdrop.classList.contains("open")) appDialogReturnFocus = document.activeElement;
+  document.getElementById("app-dialog-message").textContent = d.message;
+  const input = document.getElementById("app-dialog-input");
+  input.hidden = d.kind !== "prompt";
+  input.value = d.kind === "prompt" ? (d.defaultValue ?? "") : "";
+  const ok = document.getElementById("app-dialog-ok");
+  ok.textContent = d.okLabel || "OK";
+  ok.className = d.danger ? "btn danger" : "btn";
+  const cancel = document.getElementById("app-dialog-cancel");
+  cancel.hidden = d.kind === "alert";
+  cancel.textContent = d.cancelLabel || "Cancel";
+  backdrop.classList.add("open");
+  if (d.kind === "prompt") { input.focus(); input.select(); }
+  else ok.focus();
+}
+
+function finishAppDialog(accepted) {
+  const d = appDialogCurrent;
+  if (!d) return;
+  let result;
+  if (d.kind === "confirm") result = accepted;
+  else if (d.kind === "prompt") result = accepted ? document.getElementById("app-dialog-input").value : null;
+  showNextAppDialog();
+  d.resolve(result);
+}
+
+document.getElementById("app-dialog-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  finishAppDialog(true);
+});
+document.getElementById("app-dialog-cancel").addEventListener("click", () => finishAppDialog(false));
+document.getElementById("app-dialog").addEventListener("click", (e) => {
+  // Clicking outside dismisses: an alert is acknowledged, a question is cancelled.
+  if (e.target.id === "app-dialog") finishAppDialog(appDialogCurrent && appDialogCurrent.kind === "alert");
+});
+// Capture phase, so Escape closes only this dialog and not the modal underneath it.
+window.addEventListener("keydown", (e) => {
+  if (!appDialogCurrent || e.key !== "Escape") return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  finishAppDialog(appDialogCurrent.kind === "alert");
+}, true);
 const VALID_TYPES = ["Categorical", "Comparative", "Transformation", "Fact", "Routine"];
 
 function defaultSettings() {
@@ -1872,11 +1973,11 @@ function snapshotState() {
   } catch (e) { console.warn("Snapshot failed", e); }
 }
 
-function restoreSnapshot(ts) {
+async function restoreSnapshot(ts) {
   const snaps = loadSnapshots();
   const s = snaps.find(x => x.ts === ts);
   if (!s) return;
-  if (!confirm(`Restore the snapshot from ${formatTimestampUK(ts)}? Your current state will be replaced (a fresh snapshot of it will be saved first).`)) return;
+  if (!await showConfirm(`Restore the snapshot from ${formatTimestampUK(ts)}? Your current state will be replaced (a fresh snapshot of it will be saved first).`, { okLabel: "Restore" })) return;
   // Save a "before restore" snapshot so the user can undo the restore
   snapshotState();
   state = JSON.parse(s.data);
@@ -2455,7 +2556,7 @@ const OUTCOME_LABELS = {
   ad_hoc: "Grey: unscheduled retrieval"
 };
 
-function recordRetrieval(atom_id, lesson_date, outcome) {
+async function recordRetrieval(atom_id, lesson_date, outcome) {
   if (isTutee()) return false; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!lesson_date || !outcome) return false;
@@ -2471,8 +2572,9 @@ function recordRetrieval(atom_id, lesson_date, outcome) {
     const dateLabel = formatDateNice(lesson_date) || lesson_date;
     const oldLabel = outcomeLabels[existing.outcome] || existing.outcome;
     const newLabel = outcomeLabels[outcome] || outcome;
-    const replace = confirm(
-      `A retrieval is already recorded for "${atomName}" on ${dateLabel} (${oldLabel}).\n\nReplace it with ${newLabel}?`
+    const replace = await showConfirm(
+      `A retrieval is already recorded for "${atomName}" on ${dateLabel} (${oldLabel}).\n\nReplace it with ${newLabel}?`,
+      { okLabel: "Replace" }
     );
     if (!replace) return false;
   }
@@ -2506,8 +2608,8 @@ function clearOutcome(atom_id, lesson_date) {
 
 // Compatibility wrapper for the hidden legacy Today's Lesson view. New retrievals
 // are entered through Coverage and use recordRetrieval directly.
-function recordOutcome(atom_id, lesson_date, outcome) {
-  recordRetrieval(atom_id, lesson_date, outcome);
+async function recordOutcome(atom_id, lesson_date, outcome) {
+  await recordRetrieval(atom_id, lesson_date, outcome);
 }
 
 let recordRetrievalAtomId = null;
@@ -2556,14 +2658,14 @@ function deferAtom(atomId, untilDate) {
   return true;
 }
 
-function deleteRetrieval(recordIndex) {
+async function deleteRetrieval(recordIndex) {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   const index = Number(recordIndex);
   if (!Number.isInteger(index) || index < 0 || index >= c.retrievals.length) return;
   const retrieval = c.retrievals[index];
   if (!retrieval || !retrieval.atom_id) return;
-  if (!confirm("Delete this retrieval? The atom's schedule will be recalculated from the remaining history.")) return;
+  if (!await showConfirm("Delete this retrieval? The atom's schedule will be recalculated from the remaining history.", { okLabel: "Delete", danger: true })) return;
   const atomId = retrieval.atom_id;
   c.retrievals.splice(index, 1);
   saveState();
@@ -2588,7 +2690,7 @@ function switchClass(class_id) {
 }
 
 function createClass(name, type = "class") {
-  if (!name || !name.trim()) { alert("A name is required."); return null; }
+  if (!name || !name.trim()) { showAlert("A name is required."); return null; }
   // The type is fixed at creation; there is no conversion between Class and Tutee.
   const cls = type === "tutee" ? defaultTutee(name.trim()) : defaultClass(name.trim());
   state.classes.push(cls);
@@ -2604,12 +2706,12 @@ function renameClass(class_id, new_name) {
   saveState();
 }
 
-function deleteClass(class_id) {
-  if (state.classes.length <= 1) { alert("You need at least one class or tutee."); return; }
+async function deleteClass(class_id) {
+  if (state.classes.length <= 1) { showAlert("You need at least one class or tutee."); return; }
   const cls = state.classes.find(c => c.id === class_id);
   if (!cls) return;
   const contents = isTutee(cls) ? "all its sessions" : "all its atoms, dates and retrievals";
-  if (!confirm(`Delete "${cls.name}" and ${contents}? This cannot be undone.`)) return;
+  if (!await showConfirm(`Delete "${cls.name}" and ${contents}? This cannot be undone.`, { okLabel: "Delete", danger: true })) return;
   state.classes = state.classes.filter(c => c.id !== class_id);
   if (state.active_class_id === class_id) {
     state.active_class_id = state.classes[0].id;
@@ -2713,9 +2815,9 @@ function renderClasses() {
   });
 
   tbody.querySelectorAll("button[data-action='rename']").forEach(b => {
-    b.addEventListener("click", () => {
+    b.addEventListener("click", async () => {
       const c = state.classes.find(x => x.id === b.dataset.id);
-      const name = prompt("New name:", c.name);
+      const name = await showPrompt("New name:", c.name, { okLabel: "Rename" });
       if (name) { renameClass(b.dataset.id, name); renderAll(); }
     });
   });
@@ -2791,11 +2893,11 @@ function toggleSessionPaid(id) {
   renderAll();
 }
 
-function deleteSession(id) {
+async function deleteSession(id) {
   const t = ctx();
   const sess = findSession(id);
   if (!sess) return;
-  if (!confirm(`Delete the session on ${formatDateNice(sess.date)}?`)) return;
+  if (!await showConfirm(`Delete the session on ${formatDateNice(sess.date)}?`, { okLabel: "Delete", danger: true })) return;
   t.sessions = t.sessions.filter(x => x.id !== id);
   saveState();
   renderAll();
@@ -2836,8 +2938,8 @@ function saveSessionEditor() {
   const t = ctx();
   if (!isTutee(t)) return;
   const date = document.getElementById("session-date").value;
-  if (!date) { alert("Please choose the session date."); return; }
-  if (date > todayISO()) { alert("The session date cannot be in the future."); return; }
+  if (!date) { showAlert("Please choose the session date."); return; }
+  if (date > todayISO()) { showAlert("The session date cannot be in the future."); return; }
   const notes = document.getElementById("session-notes").value;
   const paid = document.querySelector('#session-modal .session-paid-choice[data-paid="true"]').getAttribute("aria-pressed") === "true";
   if (sessionEditId) {
@@ -3389,7 +3491,7 @@ function openAtomHistory(atomId) {
   });
 
   document.querySelectorAll("#history-body [data-status-action]").forEach(b => {
-    b.addEventListener("click", () => {
+    b.addEventListener("click", async () => {
       const current = ctx().atoms.find(a => a.id === b.dataset.atomId);
       if (!current) return;
       const action = b.dataset.statusAction;
@@ -3405,7 +3507,7 @@ function openAtomHistory(atomId) {
         return;
       } else if (action === "delete-atom") {
         const atomName = current.name;
-        if (!confirm(`Delete "${atomName}" and all its retrieval history?\n\nThis cannot be undone from the current view.`)) return;
+        if (!await showConfirm(`Delete "${atomName}" and all its retrieval history?\n\nThis cannot be undone from the current view.`, { okLabel: "Delete", danger: true })) return;
         snapshotState();
         const atomId = current.id;
         const c = ctx();
@@ -3485,9 +3587,9 @@ document.getElementById("add-atoms-save").addEventListener("click", () => {
     .split("\n").map(line => line.trim()).filter(Boolean);
   const date = document.getElementById("coverage-atom-date").value;
   const status = document.getElementById("coverage-atom-status").value;
-  if (names.length === 0) { alert("Enter at least one atom name."); return; }
-  if (status === "scheduled" && !date) { alert("Please choose the date taught."); return; }
-  if (status === "scheduled" && date > todayISO()) { alert("The teaching date cannot be in the future."); return; }
+  if (names.length === 0) { showAlert("Enter at least one atom name."); return; }
+  if (status === "scheduled" && !date) { showAlert("Please choose the date taught."); return; }
+  if (status === "scheduled" && date > todayISO()) { showAlert("The teaching date cannot be in the future."); return; }
 
   const existing = new Set(c.atoms.map(a => a.name.trim().toLowerCase()));
   let added = 0;
@@ -3508,7 +3610,7 @@ document.getElementById("add-atoms-save").addEventListener("click", () => {
   }
 
   if (added === 0) {
-    alert("Those atom names are already in this class.");
+    showAlert("Those atom names are already in this class.");
     return;
   }
   saveState();
@@ -3521,24 +3623,24 @@ document.getElementById("record-retrieval-modal").addEventListener("click", (e) 
   if (e.target.id === "record-retrieval-modal") closeRecordRetrieval();
 });
 document.querySelectorAll("#record-retrieval-modal [data-record-modal-outcome]").forEach(b => {
-  b.addEventListener("click", () => {
+  b.addEventListener("click", async () => {
     if (!recordRetrievalAtomId) return;
     const date = document.getElementById("record-retrieval-date").value;
     if (!date) {
-      alert("Please choose a retrieval date.");
+      showAlert("Please choose a retrieval date.");
       return;
     }
     const atom = ctx().atoms.find(a => a.id === recordRetrievalAtomId);
     if (!atom) { closeRecordRetrieval(); return; }
     if (atom.initial_instruction_date && date < atom.initial_instruction_date) {
-      alert("The retrieval date cannot be before the initial instruction date.");
+      showAlert("The retrieval date cannot be before the initial instruction date.");
       return;
     }
     if (date > todayISO()) {
-      alert("The retrieval date cannot be in the future.");
+      showAlert("The retrieval date cannot be in the future.");
       return;
     }
-    recordRetrieval(recordRetrievalAtomId, date, b.dataset.recordModalOutcome);
+    await recordRetrieval(recordRetrievalAtomId, date, b.dataset.recordModalOutcome);
     closeRecordRetrieval();
     renderAll();
   });
@@ -3557,7 +3659,7 @@ document.getElementById("golden-modal").addEventListener("click", (e) => {
 document.getElementById("worksheet-submit").addEventListener("click", () => {
   const email = document.getElementById("worksheet-email").value.trim();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    alert("Please enter a valid email address.");
+    showAlert("Please enter a valid email address.");
     return;
   }
   logWorksheetEmail(email);
@@ -3692,11 +3794,11 @@ function renderAtoms() {
     });
   });
   tbody.querySelectorAll("button[data-action='delete']").forEach(b => {
-    b.addEventListener("click", () => {
+    b.addEventListener("click", async () => {
       const id = b.dataset.id;
       const c = ctx();
       const atom = c.atoms.find(a => a.id === id);
-      if (!confirm(`Delete "${atom.name}" and all its retrieval history?`)) return;
+      if (!await showConfirm(`Delete "${atom.name}" and all its retrieval history?`, { okLabel: "Delete", danger: true })) return;
       c.atoms = c.atoms.filter(a => a.id !== id);
       c.retrievals = c.retrievals.filter(r => r.atom_id !== id);
       saveState();
@@ -3726,14 +3828,14 @@ function renderTypeBadge(type) {
   return `<span class="badge ${cls}">${escapeHtml(type)}</span>`;
 }
 
-function renameAtomDialog(id, reopenHistory = false) {
+async function renameAtomDialog(id, reopenHistory = false) {
   const atom = ctx().atoms.find(a => a.id === id);
   if (!atom) return false;
-  const name = prompt("Atom name:", atom.name);
+  const name = await showPrompt("Atom name:", atom.name, { okLabel: "Rename" });
   if (name === null) return false;
   const trimmed = name.trim();
   if (!trimmed) {
-    alert("Atom name is required.");
+    showAlert("Atom name is required.");
     return false;
   }
   if (trimmed === atom.name) {
@@ -3747,21 +3849,21 @@ function renameAtomDialog(id, reopenHistory = false) {
   return true;
 }
 
-function editAtomDialog(id) {
+async function editAtomDialog(id) {
   const atom = ctx().atoms.find(a => a.id === id);
   if (!atom) return;
   const hasRecordedRetrievals = atomRetrievals(atom.id).some(r => r.outcome !== "miss" && r.outcome !== "skip");
-  const name = prompt("Atom name:", atom.name);
+  const name = await showPrompt("Atom name:", atom.name);
   if (name === null) return;
   const typeHelp = "Type — one of: " + VALID_TYPES.join(", ");
-  const type = prompt(typeHelp, atom.type || "");
+  const type = await showPrompt(typeHelp, atom.type || "");
   if (type === null) return;
   let initial = null;
   let updateInitial = false;
   if (hasRecordedRetrievals) {
-    alert("Initial instruction date is locked because this atom has recorded retrievals. To restart the sequence from a new date, record a red retrieval (re-teach required).");
+    showAlert("Initial instruction date is locked because this atom has recorded retrievals. To restart the sequence from a new date, record a red retrieval (re-teach required).");
   } else {
-    initial = prompt("Initial instruction date (YYYY-MM-DD), or blank to clear:", atom.initial_instruction_date || "");
+    initial = await showPrompt("Initial instruction date (YYYY-MM-DD), or blank to clear:", atom.initial_instruction_date || "");
     if (initial === null) return;
     updateInitial = true;
   }
@@ -3780,8 +3882,8 @@ document.getElementById("atom-add").addEventListener("click", () => {
   const name = document.getElementById("atom-name").value.trim();
   const type = document.getElementById("atom-type").value;
   const initial = document.getElementById("atom-initial").value;
-  if (!name) { alert("Atom name is required."); return; }
-  if (!initial) { alert("Initial instruction date is required."); return; }
+  if (!name) { showAlert("Atom name is required."); return; }
+  if (!initial) { showAlert("Initial instruction date is required."); return; }
   ctx().atoms.push({
     id: newId(), name, type, retrieve: "Y", initial_instruction_date: initial, notes: ""
   });
@@ -3795,7 +3897,7 @@ document.getElementById("atom-bulk-add").addEventListener("click", () => {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const text = document.getElementById("atom-bulk").value;
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) { alert("Paste some atom names first."); return; }
+  if (lines.length === 0) { showAlert("Paste some atom names first."); return; }
   for (const line of lines) {
     ctx().atoms.push({
       id: newId(), name: line, type: "", retrieve: "Y", initial_instruction_date: null, notes: ""
@@ -3857,20 +3959,20 @@ document.getElementById("date-generate").addEventListener("click", () => {
   const from = document.getElementById("date-from").value;
   const to = document.getElementById("date-to").value;
   const pattern = document.getElementById("date-pattern").value;
-  if (!from || !to) { alert("Pick a From and To date."); return; }
-  if (from > to) { alert("From date must be on or before To date."); return; }
+  if (!from || !to) { showAlert("Pick a From and To date."); return; }
+  if (from > to) { showAlert("From date must be on or before To date."); return; }
 
   let dateMatches; // function(Date) -> bool
   if (pattern === "weekly") {
     const dows = Array.from(document.querySelectorAll(".dow:checked")).map(c => parseInt(c.value, 10));
-    if (dows.length === 0) { alert("Pick at least one day of week."); return; }
+    if (dows.length === 0) { showAlert("Pick at least one day of week."); return; }
     dateMatches = (d) => dows.includes(d.getDay());
   } else {
     const weekAStart = document.getElementById("weekA-start").value;
-    if (!weekAStart) { alert("Pick a date that Week A starts on."); return; }
+    if (!weekAStart) { showAlert("Pick a date that Week A starts on."); return; }
     const dowsA = Array.from(document.querySelectorAll(".dow-a:checked")).map(c => parseInt(c.value, 10));
     const dowsB = Array.from(document.querySelectorAll(".dow-b:checked")).map(c => parseInt(c.value, 10));
-    if (dowsA.length === 0 && dowsB.length === 0) { alert("Pick at least one day across Week A or Week B."); return; }
+    if (dowsA.length === 0 && dowsB.length === 0) { showAlert("Pick at least one day across Week A or Week B."); return; }
     const anchor = fromISO(weekAStart);
     // Snap anchor back to the Monday of its week so the cycle uses Mon-Sun weeks
     const anchorDow = anchor.getDay();
@@ -3902,7 +4004,7 @@ document.getElementById("date-generate").addEventListener("click", () => {
   }
   saveState();
   renderAll();
-  alert(`Added ${added} new lesson date${added === 1 ? "" : "s"} to ${c.name}.`);
+  showAlert(`Added ${added} new lesson date${added === 1 ? "" : "s"} to ${c.name}.`);
 });
 
 // ----- Atom detail popup (example prompt/response + concept notes, synced from the Curriculum Writer) -----
@@ -4144,10 +4246,10 @@ function renderRetrievalRow(entry, date) {
       ${["pass", "struggle", "reteach", "ad_hoc"].map(o => `<button type="button" class="outcome ${o === "ad_hoc" ? "ad-hoc" : o} ${selected === o ? "selected" : ""}" data-outcome="${o}" title="${OUTCOME_LABELS[o]}" aria-label="${OUTCOME_LABELS[o]}" aria-pressed="${selected === o}"></button>`).join("")}
     </div>`;
   row.querySelectorAll(".retrieval-actions button[data-outcome]").forEach(b => {
-    b.addEventListener("click", () => {
+    b.addEventListener("click", async () => {
       const outcome = b.dataset.outcome;
       if (selected === outcome) clearOutcome(atom.id, date);
-      else recordOutcome(atom.id, date, outcome);
+      else await recordOutcome(atom.id, date, outcome);
       renderAll();
     });
   });
@@ -4272,7 +4374,7 @@ document.getElementById("set-save").addEventListener("click", () => {
   settingsDraftClassId = ctx().id;
   saveState();
   renderAll();
-  alert(`Settings saved for ${ctx().name}.`);
+  showAlert(`Settings saved for ${ctx().name}.`);
 });
 
 ["set-seed", "set-mult", "set-cap"].forEach(id => {
@@ -4365,10 +4467,10 @@ document.getElementById("data-import").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const parsed = JSON.parse(reader.result);
-      if (!confirm("Replace all current data with the imported file?")) return;
+      if (!await showConfirm("Replace all current data with the imported file?", { okLabel: "Replace data", danger: true })) return;
       let newState;
       if (parsed.classes && Array.isArray(parsed.classes)) {
         newState = parsed;
@@ -4390,7 +4492,7 @@ document.getElementById("data-import").addEventListener("change", (e) => {
       markBackupClean();
       renderAll();
     } catch (err) {
-      alert("Couldn't read that file: " + err.message);
+      showAlert("Couldn't read that file: " + err.message);
     }
   };
   reader.readAsText(file);
@@ -4409,7 +4511,7 @@ document.getElementById("writer-sync").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const parsed = JSON.parse(reader.result);
       const incoming = parsed.atoms;
@@ -4417,7 +4519,7 @@ document.getElementById("writer-sync").addEventListener("change", (e) => {
       const c = ctx();
       if (!c || isTutee(c)) throw new Error("Select a class first: tutees have no atoms.");
       const unitName = (parsed.unit && parsed.unit.name) ? parsed.unit.name : "this unit";
-      if (!confirm(`Merge ${incoming.length} atom(s) from "${unitName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history — only their content is updated, and new atoms are added.`)) { e.target.value = ""; return; }
+      if (!await showConfirm(`Merge ${incoming.length} atom(s) from "${unitName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history — only their content is updated, and new atoms are added.`, { okLabel: "Merge" })) { e.target.value = ""; return; }
       const byWriterId = new Map();
       c.atoms.forEach(a => { if (a.writer_id) byWriterId.set(a.writer_id, a); });
       let updated = 0, added = 0;
@@ -4451,9 +4553,9 @@ document.getElementById("writer-sync").addEventListener("change", (e) => {
       }
       saveState();
       renderAll();
-      alert(`Synced from "${unitName}".\n\nUpdated ${updated} existing atom(s) — retrieval history preserved.\nAdded ${added} new atom(s).\n\nSet initial instruction dates for the new atoms in the library below as you teach them.`);
+      showAlert(`Synced from "${unitName}".\n\nUpdated ${updated} existing atom(s) — retrieval history preserved.\nAdded ${added} new atom(s).\n\nSet initial instruction dates for the new atoms in the library below as you teach them.`);
     } catch (err) {
-      alert("Couldn't sync that file: " + err.message);
+      showAlert("Couldn't sync that file: " + err.message);
     }
   };
   reader.readAsText(file);
@@ -4465,7 +4567,7 @@ document.getElementById("writer-sync").addEventListener("change", (e) => {
 // and (content only) by the existing "Import atoms" merge, since it carries `atoms` + `unit`.
 document.getElementById("class-export").addEventListener("click", () => {
   const c = ctx();
-  if (!c) { alert("No active class selected."); return; }
+  if (!c) { showAlert("No active class selected."); return; }
   const payload = {
     format: "le-class-export-v1",
     exported_at: new Date().toISOString(),
@@ -4509,7 +4611,7 @@ document.getElementById("class-merge").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const parsed = JSON.parse(reader.result);
       if (parsed.classes && Array.isArray(parsed.classes)) throw new Error("That looks like a full backup. Use \"Restore from backup\" instead.");
@@ -4521,7 +4623,7 @@ document.getElementById("class-merge").addEventListener("change", (e) => {
       // File types: le-class-export-v1 (atoms + history), le-atoms-export-v1 (content only),
       // or a Curriculum Writer atoms file (content; concept notes live in `notes`, ids in `stable_id`).
       const isLE = parsed.format === "le-class-export-v1" || parsed.format === "le-atoms-export-v1";
-      if (!confirm(`Import "${srcName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history (content is refreshed); new atoms are added. No classes are created, nothing is wiped.`)) { e.target.value = ""; return; }
+      if (!await showConfirm(`Import "${srcName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history (content is refreshed); new atoms are added. No classes are created, nothing is wiped.`, { okLabel: "Import" })) { e.target.value = ""; return; }
       const byWriterId = new Map();
       const byId = new Map();
       c.atoms.forEach(a => { if (a.writer_id) byWriterId.set(a.writer_id, a); byId.set(a.id, a); });
@@ -4574,9 +4676,9 @@ document.getElementById("class-merge").addEventListener("change", (e) => {
       }
       saveState();
       renderAll();
-      alert(`Imported "${srcName}" into "${c.name}".\n\nUpdated ${updated} existing atom(s) — history preserved.\nAdded ${added} new atom(s), carrying ${historyRows} retrieval record(s).`);
+      showAlert(`Imported "${srcName}" into "${c.name}".\n\nUpdated ${updated} existing atom(s) — history preserved.\nAdded ${added} new atom(s), carrying ${historyRows} retrieval record(s).`);
     } catch (err) {
-      alert("Couldn't import that file: " + err.message);
+      showAlert("Couldn't import that file: " + err.message);
     }
   };
   reader.readAsText(file);
@@ -4616,8 +4718,8 @@ function updateAtomsExportCount() {
 function closeAtomsExportModal() { document.getElementById("atoms-export-modal").classList.remove("open"); }
 function openAtomPicker(mode) {
   const c = ctx();
-  if (!c) { alert("No active class selected."); return; }
-  if (!c.atoms || c.atoms.length === 0) { alert("This class has no atoms yet."); return; }
+  if (!c) { showAlert("No active class selected."); return; }
+  if (!c.atoms || c.atoms.length === 0) { showAlert("This class has no atoms yet."); return; }
   _atomsExportIds = new Set(c.atoms.map(a => a.id));   // default: all selected
   const del = mode === "delete";
   document.getElementById("atoms-picker-title").textContent = del ? "Delete atoms" : "Export atoms";
@@ -4641,7 +4743,7 @@ document.getElementById("atoms-export-go").addEventListener("click", () => {
   const c = ctx();
   if (!c) return;
   const chosen = (c.atoms || []).filter(a => _atomsExportIds.has(a.id));
-  if (chosen.length === 0) { alert("Select at least one atom to export."); return; }
+  if (chosen.length === 0) { showAlert("Select at least one atom to export."); return; }
   const incConcept = document.getElementById("exp-inc-concept").checked;
   const incExamples = document.getElementById("exp-inc-examples").checked;
   const incHistory = document.getElementById("exp-inc-history").checked;
@@ -4680,12 +4782,12 @@ document.getElementById("atoms-export-go").addEventListener("click", () => {
 });
 
 // ---- Delete SELECTED atoms (from the same picker) — snapshot first, reversible ----
-document.getElementById("atoms-delete-go").addEventListener("click", () => {
+document.getElementById("atoms-delete-go").addEventListener("click", async () => {
   const c = ctx();
   if (!c) return;
   const ids = new Set([..._atomsExportIds].filter(id => (c.atoms || []).some(a => a.id === id)));
-  if (ids.size === 0) { alert("Select at least one atom to delete."); return; }
-  if (!confirm(`Delete ${ids.size} selected atom(s) from "${c.name}"?\n\nTheir retrieval history is removed too. A snapshot is saved first, so you can roll it back from "Recent snapshots".`)) return;
+  if (ids.size === 0) { showAlert("Select at least one atom to delete."); return; }
+  if (!await showConfirm(`Delete ${ids.size} selected atom(s) from "${c.name}"?\n\nTheir retrieval history is removed too. A snapshot is saved first, so you can roll it back from "Recent snapshots".`, { okLabel: "Delete", danger: true })) return;
   snapshotState();
   c.atoms = (c.atoms || []).filter(a => !ids.has(a.id));
   c.retrievals = (c.retrievals || []).filter(r => !ids.has(r.atom_id));
@@ -4694,11 +4796,11 @@ document.getElementById("atoms-delete-go").addEventListener("click", () => {
   closeAtomsExportModal();
 });
 
-document.getElementById("data-clear").addEventListener("click", () => {
-  const typed = prompt('This will permanently delete ALL classes, atoms, lesson dates and retrievals.\n\nYour last 20 snapshots will still be available in "Recent snapshots" if you change your mind.\n\nType DELETE (in capitals) to confirm:');
+document.getElementById("data-clear").addEventListener("click", async () => {
+  const typed = await showPrompt('This will permanently delete ALL classes, atoms, lesson dates and retrievals.\n\nYour last 20 snapshots will still be available in "Recent snapshots" if you change your mind.\n\nType DELETE (in capitals) to confirm:', "", { okLabel: "Delete everything", danger: true });
   if (typed === null) return;
   if (typed.trim() !== "DELETE") {
-    alert('Cancelled. You need to type DELETE exactly to confirm.');
+    showAlert('Cancelled. You need to type DELETE exactly to confirm.');
     return;
   }
   state = defaultState();
@@ -4711,18 +4813,18 @@ document.getElementById("data-clear").addEventListener("click", () => {
 // and mark each past unactioned scheduled retrieval as Pass. This turns an inferred
 // onboarding baseline into real historical retrieval records without inventing dates.
 // Existing recorded outcomes are never overwritten. A snapshot is auto-saved first.
-document.getElementById("data-backfill").addEventListener("click", () => {
+document.getElementById("data-backfill").addEventListener("click", async () => {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!c) return;
-  if (c.atoms.length === 0) { alert("No atoms in this class to backfill."); return; }
-  if (c.lesson_dates.length === 0) { alert("This class has no lesson dates yet. Set up the lesson calendar first — the engine can only place retrievals on dates that exist."); return; }
+  if (c.atoms.length === 0) { showAlert("No atoms in this class to backfill."); return; }
+  if (c.lesson_dates.length === 0) { showAlert("This class has no lesson dates yet. Set up the lesson calendar first — the engine can only place retrievals on dates that exist."); return; }
   const todayIso = todayISO();
   const skippedAtoms = c.atoms.filter(atom => isDeferActive(atom, todayIso));
   const skipNote = skippedAtoms.length > 0
     ? `\n\n${skippedAtoms.length} atom${skippedAtoms.length === 1 ? " is" : "s are"} currently deferred. Those atoms will be left unchanged by Backfill.`
     : "";
-  const ok = confirm(`Backfill past retrievals for "${c.name}"?\n\nFor every atom, the engine will reconstruct the past retrieval pattern from its original instruction date and lesson calendar, and add records where no retrieval is already recorded. Make sure the lesson calendar includes the historical lesson dates covering the period you want reconstructed. Existing retrievals are left untouched.${skipNote}\n\nA snapshot is saved automatically so you can roll back.`);
+  const ok = await showConfirm(`Backfill past retrievals for "${c.name}"?\n\nFor every atom, the engine will reconstruct the past retrieval pattern from its original instruction date and lesson calendar, and add records where no retrieval is already recorded. Make sure the lesson calendar includes the historical lesson dates covering the period you want reconstructed. Existing retrievals are left untouched.${skipNote}\n\nA snapshot is saved automatically so you can roll back.`, { okLabel: "Backfill" });
   if (!ok) return;
   // Trigger a snapshot of the pre-backfill state explicitly.
   snapshotState();
@@ -4762,11 +4864,11 @@ document.getElementById("data-backfill").addEventListener("click", () => {
   const collisionMessage = collisions.length > 0
     ? `\n\n${collisions.length} atom${collisions.length === 1 ? " was" : "s were"} not reconstructed beyond a date that already has an Unscheduled retrieval. The Unscheduled retrieval was kept, and these atoms remain due from that date:\n${collisions.join("\n")}`
     : "";
-  alert(`Backfilled ${filled} retrieval${filled === 1 ? "" : "s"} for "${c.name}".${skippedMessage} A snapshot of the previous state was saved.${collisionMessage}`);
+  showAlert(`Backfilled ${filled} retrieval${filled === 1 ? "" : "s"} for "${c.name}".${skippedMessage} A snapshot of the previous state was saved.${collisionMessage}`);
 });
 
-document.getElementById("data-seed").addEventListener("click", () => {
-  if (state.classes.some(c => (c.atoms || []).length > 0 || (c.sessions || []).length > 0) && !confirm("Replace current data with sample data?")) return;
+document.getElementById("data-seed").addEventListener("click", async () => {
+  if (state.classes.some(c => (c.atoms || []).length > 0 || (c.sessions || []).length > 0) && !await showConfirm("Replace current data with sample data?", { okLabel: "Replace data", danger: true })) return;
   state = makeSampleState();
   saveState();
   renderAll();
