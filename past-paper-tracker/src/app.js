@@ -1,6 +1,6 @@
 /*
  * Past-Paper Tracker — UI. All data changes go through PPT (logic.js) via commit().
- * Stage 2: in-memory only; storage arrives in Stage 3 (commit() is the single write point).
+ * Interim build: in-memory state, with working JSON backup/restore. Persistent browser storage can be added separately.
  */
 (function () {
   'use strict';
@@ -14,6 +14,32 @@
 
   let state = L.createInitialState(env, new Date());
 
+  // Backup baseline: kept in memory for this interim build. When persistence is added,
+  // this can move to the same browser-backed baseline used by Retrieval Tracker.
+  function backupDataHash(value) {
+    const data = JSON.parse(JSON.stringify(value));
+    if (data.settings) data.settings.lastExportedAt = null;
+    const json = JSON.stringify(data);
+    let h = 0;
+    for (let i = 0; i < json.length; i++) h = (h * 31 + json.charCodeAt(i)) | 0;
+    return String(h);
+  }
+  let backupBaselineHash = backupDataHash(state);
+
+  function updateBackupUI() {
+    const btn = $('exportBtn');
+    const indicator = $('backup-needed-indicator');
+    if (!btn) return;
+    const needsBackup = backupDataHash(state) !== backupBaselineHash;
+    btn.classList.toggle('needs-backup', needsBackup);
+    if (indicator) indicator.classList.toggle('visible', needsBackup);
+  }
+
+  function markBackupClean() {
+    backupBaselineHash = backupDataHash(state);
+    updateBackupUI();
+  }
+
   const $ = (id) => document.getElementById(id);
   const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESC_MAP[c]);
@@ -23,6 +49,7 @@
     if (!res.ok) return res.error;
     state = res.state;
     render();
+    updateBackupUI();
     return null;
   }
 
@@ -61,7 +88,6 @@
       : '<option value="">No classes yet</option>';
     sel.value = cls ? cls.id : '';
     sel.disabled = !state.classes.length;
-    $('classCourse').textContent = cls ? L.getCourse(state, cls.courseId).name : '';
     $('classRename').disabled = !cls;
     $('classDelete').disabled = !cls;
 
@@ -88,7 +114,9 @@
     fs.innerHTML = opts;
     fs.value = String(wf);
 
-    $('lastExported').textContent = 'last exported: ' + L.lastExportedText(state.settings.lastExportedAt, new Date());
+    const last = L.lastExportedText(state.settings.lastExportedAt, new Date());
+    $('lastExported').textContent = 'Last backup: ' + (last === 'never' ? 'Never' : last);
+    updateBackupUI();
   }
 
   function renderPapersRow() {
@@ -98,15 +126,37 @@
       row.innerHTML = '';
       return;
     }
-    const chips = L.checklist(state, cls.id).map((x) =>
-      `<label class="chip${x.active ? ' on' : ''}"><input type="checkbox" data-paper="${esc(x.paper.id)}"${x.active ? ' checked' : ''}>${esc(x.paper.name)}</label>`
+    const papers = L.checklist(state, cls.id);
+    const activeCount = papers.filter((x) => x.active).length;
+    const options = papers.map((x) =>
+      `<label class="paper-option${x.active ? ' on' : ''}">` +
+      `<input type="checkbox" data-paper="${esc(x.paper.id)}"${x.active ? ' checked' : ''}>` +
+      `<span class="paper-name">${esc(x.paper.name)}</span>` +
+      `<span class="paper-count">${x.paper.questionCount} Q</span>` +
+      `</label>`
     ).join('');
+
     row.innerHTML =
-      `<span class="lbl">Papers</span><div class="chips">${chips}</div><button class="link" id="paperAdd">+ Add paper</button>` +
+      `<div class="paper-selector-wrap">` +
+        `<button class="paper-selector-btn" id="paperSelectorBtn" type="button" aria-expanded="false">` +
+          `Select papers <span class="count">(${activeCount} active)</span>` +
+        `</button>` +
+        `<div class="paper-selector" id="paperSelector" hidden>` +
+          `<div class="paper-selector-head">` +
+            `<span class="paper-selector-title">Active papers</span>` +
+            `<span class="paper-selector-actions">` +
+              `<button class="link" type="button" data-paper-select="all">All</button>` +
+              `<button class="link" type="button" data-paper-select="none">None</button>` +
+            `</span>` +
+          `</div>` +
+          `<div class="paper-selector-list">${options}</div>` +
+        `</div>` +
+      `</div>` +
+      `<button class="link" id="paperAdd">+ Add paper</button>` +
       `<span class="legend">` +
-      `<span><span class="sw" style="background:var(--cell-green-bg);border-color:var(--cell-green-border)"></span>Available</span>` +
-      `<span><span class="sw" style="background:var(--cell-red-bg);border-color:var(--cell-red-border)"></span>Used</span>` +
-      `<span><span class="sw" style="background:repeating-linear-gradient(135deg,var(--cell-grey-bg) 0 3px,var(--cell-grey-stripe) 3px 6px);border-color:#4d4d4d"></span>Unusable</span>` +
+        `<span><span class="sw" style="background:var(--cell-green-bg);border-color:var(--cell-green-border)"></span>Available</span>` +
+        `<span><span class="sw" style="background:var(--cell-red-bg);border-color:var(--cell-red-border)"></span>Used</span>` +
+        `<span><span class="sw" style="background:repeating-linear-gradient(135deg,var(--cell-grey-bg) 0 3px,var(--cell-grey-stripe) 3px 6px);border-color:#4d4d4d"></span>Unusable</span>` +
       `</span>`;
   }
 
@@ -124,15 +174,19 @@
       return;
     }
     const last = grid.columns.length - 1;
-    const head = grid.columns.map((col, i) =>
-      `<th data-paper="${esc(col.paper.id)}"><div class="ph">` +
-      `<span class="pname" title="${esc(col.paper.name)} (${col.paper.questionCount} questions)">${esc(col.paper.name)}</span>` +
+    const head = grid.columns.map((col, i) => {
+      const m = /^(\d{4})\s+(.+)$/.exec(col.paper.name.trim());
+      const paperHeader = m
+        ? `<span class="pname" title="${esc(col.paper.name)} (${col.paper.questionCount} questions)"><span class="pyear">${esc(m[1])}</span><span class="pcode">${esc(m[2])}</span></span>`
+        : `<span class="pname" title="${esc(col.paper.name)} (${col.paper.questionCount} questions)">${esc(col.paper.name)}</span>`;
+      return `<th data-paper="${esc(col.paper.id)}"><div class="ph">` +
+      paperHeader +
       `<span class="pctl">` +
       `<button data-act="left" title="Move left"${i === 0 ? ' disabled' : ''}>&#8249;</button>` +
       `<button data-act="menu" title="Paper options">&#8943;</button>` +
       `<button data-act="right" title="Move right"${i === last ? ' disabled' : ''}>&#8250;</button>` +
-      `</span></div></th>`
-    ).join('');
+      `</span></div></th>`;
+    }).join('');
     const openQ = popup ? popup.questionId : null;
     const rows = [];
     for (let r = 0; r < grid.rowCount; r++) {
@@ -366,12 +420,25 @@
     if (ev.key !== 'Escape' || $('dlg').open) return;
     if (popup) { ev.preventDefault(); closePopup(); }
     if (menuPaperId) closeMenu();
+    const selector = $('paperSelector');
+    if (selector && !selector.hidden) {
+      selector.hidden = true;
+      $('paperSelectorBtn')?.setAttribute('aria-expanded', 'false');
+    }
   });
 
   document.addEventListener('mousedown', (ev) => {
     if ($('dlg').open) return;
     if (popup && !$('popup').contains(ev.target) && !ev.target.closest('td.c')) closePopup();
     if (menuPaperId && !$('menu').contains(ev.target) && !ev.target.closest('button[data-act="menu"]')) closeMenu();
+
+    const selector = $('paperSelector');
+    if (selector && !selector.hidden &&
+        !selector.contains(ev.target) &&
+        !ev.target.closest('#paperSelectorBtn')) {
+      selector.hidden = true;
+      $('paperSelectorBtn')?.setAttribute('aria-expanded', 'false');
+    }
   });
 
   // ---------- dialogs ----------
@@ -532,6 +599,28 @@
   });
 
   $('papersRow').addEventListener('click', (ev) => {
+    const selectorBtn = ev.target.closest('#paperSelectorBtn');
+    if (selectorBtn) {
+      const panel = $('paperSelector');
+      const isOpen = !panel.hidden;
+      panel.hidden = isOpen;
+      selectorBtn.setAttribute('aria-expanded', String(!isOpen));
+      return;
+    }
+
+    const selectAction = ev.target.closest('[data-paper-select]');
+    if (selectAction) {
+      const cls = currentClass();
+      const wantActive = selectAction.dataset.paperSelect === 'all';
+      let next = state;
+      for (const item of L.checklist(state, cls.id)) {
+        next = L.setPaperActive(next, cls.id, item.paper.id, wantActive).state;
+      }
+      closePopup();
+      commit({ ok: true, state: next });
+      return;
+    }
+
     if (!ev.target.closest('#paperAdd')) return;
     const cls = currentClass();
     openDialog({
@@ -592,6 +681,71 @@
     });
   }
 
+  // ---------- backup / restore ----------
+
+  function downloadBackup() {
+    const res = L.exportBackup(state, new Date());
+    if (!res.ok) {
+      openDialog({ title: 'Backup failed', message: res.error, submit: null });
+      return;
+    }
+    const blob = new Blob([res.json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = res.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+
+    state = res.state;
+    markBackupClean();
+    render();
+  }
+
+  $('exportBtn').addEventListener('click', downloadBackup);
+
+  $('importBtn').addEventListener('click', () => $('importInput').click());
+
+  $('importInput').addEventListener('change', (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const validated = L.validateBackup(reader.result);
+        if (!validated.ok) {
+          openDialog({ title: 'Import failed', message: validated.error, submit: null });
+          return;
+        }
+        const s = validated.summary;
+        openDialog({
+          title: 'Restore backup?',
+          message: `This will replace the current data with the selected backup.\n\nClasses: ${s.classes}\nPapers: ${s.papers}\nQuestions: ${s.questions}\nUsage records: ${s.usages}\n\nThe current in-memory state will be replaced.`,
+          submit: 'Restore backup',
+          danger: true,
+          onSubmit: () => {
+            const res = L.applyImport(validated);
+            if (!res.ok) return res.error;
+            state = res.state;
+            backupBaselineHash = backupDataHash(state);
+            $('gridWrap').scrollTop = 0;
+            $('gridWrap').scrollLeft = 0;
+            render();
+            updateBackupUI();
+            return null;
+          },
+        });
+      } catch (err) {
+        openDialog({ title: 'Import failed', message: String(err.message || err), submit: null });
+      } finally {
+        ev.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  });
+
   // ---------- test data ----------
 
   function loadTestData(label, build) {
@@ -601,6 +755,7 @@
       $('gridWrap').scrollTop = 0;
       $('gridWrap').scrollLeft = 0;
       render();
+      updateBackupUI();
     };
     if (!state.classes.length && !state.papers.length) { replace(); return; }
     openDialog({

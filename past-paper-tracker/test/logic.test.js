@@ -94,9 +94,9 @@ test('positive integer parsing', () => {
 
 // ---------- initial state ----------
 
-test('first run seeds exactly Maths and Further Maths and default settings', () => {
+test('first run seeds exactly Maths, Further Maths and GCSE and default settings', () => {
   const s = L.createInitialState(makeEnv(), new Date(2026, 9, 7));
-  assert.deepEqual(s.courses.map((c) => c.name), ['Maths', 'Further Maths']);
+  assert.deepEqual(s.courses.map((c) => c.name), ['Maths', 'Further Maths', 'GCSE']);
   assert.deepEqual(s.settings, {
     academicYear: '2026–27', currentWeek: 1, selectedClassId: null, weekFilter: 'all', lastExportedAt: null,
   });
@@ -586,7 +586,8 @@ test('import: rejects invalid backups and never returns data', () => {
     'newer schema': mut((b) => { b.schemaVersion = L.SCHEMA_VERSION + 1; }),
     'bad exportedAt': mut((b) => { b.exportedAt = 'yesterday'; }),
     'missing collection': mut((b) => { delete b.data.usages; }),
-    'three courses': mut((b) => { b.data.courses.push({ id: 'c3', name: 'Stats' }); }),
+    'extra course': mut((b) => { b.data.courses.push({ id: 'c4', name: 'Stats' }); }),
+    'missing course': mut((b) => { b.data.courses = b.data.courses.filter((c) => c.name !== 'GCSE'); }),
     'duplicate id': mut((b) => { b.data.questions[1].id = b.data.questions[0].id; }),
     'paper → missing course': mut((b) => { b.data.papers[0].courseId = 'zzz'; }),
     'duplicate paper name': mut((b) => { b.data.papers[1].name = b.data.papers[0].name.toUpperCase(); }),

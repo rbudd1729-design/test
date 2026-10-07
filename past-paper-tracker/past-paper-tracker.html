@@ -30,8 +30,8 @@
     --cell-red-text: #f28b82;
     --cell-grey-bg: #3a3a3a;
     --cell-grey-stripe: #444;
-    --cell-w: 66px;
-    --cell-h: 26px;
+    --cell-w: 52px;
+    --cell-h: 23px;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -126,6 +126,53 @@
   button.link.danger { color: var(--text-muted); }
   button.link.danger:hover:not(:disabled) { color: var(--reteach); }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Backup treatment reused from Retrieval Tracker. */
+  .toolbar { position: relative; }
+  .backup-needed-indicator {
+    display: none;
+    align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 6px 10px;
+    margin-left: 4px;
+    border-radius: 6px;
+    border: 1px solid rgba(245,158,11,.55);
+    background: rgba(245,158,11,.10);
+    color: #d97706;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .035em;
+  }
+  .backup-needed-indicator.visible { display: inline-flex; }
+  .backup-top-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+    cursor: pointer;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    box-shadow: none;
+  }
+  .backup-top-btn:hover {
+    background: var(--bg);
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+  .backup-top-btn.needs-backup {
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    border-color: rgba(255,255,255,.16);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(239,68,68,.22);
+  }
+  .backup-top-btn.needs-backup:hover {
+    filter: brightness(1.08);
+    color: #fff;
+  }
+  .backup-top-btn:active { transform: translateY(0); }
   button.step {
     background: transparent;
     border: 1px solid var(--border-strong);
@@ -138,30 +185,114 @@
   button.step:hover:not(:disabled) { color: var(--text); background: var(--surface); }
   .field-err { color: var(--reteach); font-size: 12px; white-space: nowrap; }
 
-  /* active-paper checklist */
-  .papers-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; }
-  .papers-row > .lbl, .papers-row > .link, .papers-row > .legend { padding-top: 2px; }
-  /* compact: at most ~2 rows, scrolls internally when a course has many papers */
-  .chips { display: flex; flex-wrap: wrap; gap: 5px; max-height: 52px; overflow-y: auto; flex: 0 1 auto; min-width: 0; }
-  .papers-row .lbl { color: var(--text-muted); font-size: 12px; margin-right: 2px; }
-  .chip {
+  /* active-paper selector */
+  .papers-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .papers-row > .lbl,
+  .papers-row > .legend { padding-top: 2px; }
+  .paper-selector-wrap { position: relative; }
+  .paper-selector-btn {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 1px 9px 1px 6px;
-    border-radius: 12px;
-    font-size: 12px;
+    gap: 7px;
+    background: transparent;
     border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 5px 9px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .paper-selector-btn:hover { background: var(--bg); }
+  .paper-selector-btn .count {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+  .paper-selector {
+    position: absolute;
+    z-index: 15;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 300px;
+    max-height: 360px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.45);
+  }
+  .paper-selector[hidden] { display: none; }
+  .paper-selector-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .paper-selector-title {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .paper-selector-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .paper-selector-list {
+    max-height: 305px;
+    overflow-y: auto;
+    padding: 5px;
+  }
+  .paper-option {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 7px;
+    border-radius: 5px;
     color: var(--text-muted);
     cursor: pointer;
     user-select: none;
+  }
+  .paper-option:hover {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .paper-option.on { color: var(--text); }
+  .paper-option input {
+    margin: 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+  .paper-option .paper-name { flex: 1; }
+  .paper-option .paper-count {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .papers-row .legend {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
     white-space: nowrap;
   }
-  .chip:hover { color: var(--text); }
-  .chip.on { background: var(--accent-bg); border-color: #2c4a66; color: var(--primary); }
-  .chip input { margin: 0; accent-color: var(--primary); cursor: pointer; }
-  .legend { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
-  .legend .sw { display: inline-block; width: 14px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 1px solid transparent; }
+  .legend .sw {
+    display: inline-block;
+    width: 14px;
+    height: 11px;
+    border-radius: 3px;
+    vertical-align: -1px;
+    margin-right: 4px;
+    border: 1px solid transparent;
+  }
 
   /* ---------- grid ---------- */
   #gridWrap { flex: 1; overflow: auto; position: relative; }
@@ -177,7 +308,10 @@
   table.grid thead th.corner { left: 0; z-index: 3; }
   table.grid tbody th { left: 0; z-index: 1; padding: 0 8px 0 10px; text-align: right; font-variant-numeric: tabular-nums; }
   .ph { width: var(--cell-w); display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .ph .pname { color: var(--text); font-size: 12px; font-weight: 500; max-width: var(--cell-w); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ph .pname { color: var(--text); font-size: 12px; font-weight: 500; max-width: var(--cell-w); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; line-height: 1.15; }
+  .ph .pyear, .ph .pcode { display: block; }
+  .ph .pyear { color: var(--text-muted); font-size: 11px; }
+  .ph .pcode { color: var(--text); font-size: 12px; font-weight: 500; }
   .ph .pctl { display: flex; gap: 0; opacity: 0.45; transition: opacity 0.1s; }
   table.grid thead th:hover .pctl, .ph .pctl:focus-within { opacity: 1; }
   .pctl button {
@@ -274,12 +408,10 @@
 <body>
 <header>
   <div class="toolbar">
-    <h1>Past-Paper Tracker</h1>
 
     <div class="group">
       <span class="lbl">Class</span>
       <select id="classSel" aria-label="Class"></select>
-      <span class="muted-text" id="classCourse"></span>
       <span class="sep"></span>
       <button class="link" id="classNew">New</button>
       <button class="link" id="classRename">Rename</button>
@@ -305,14 +437,17 @@
       <select id="filterSel" aria-label="Week filter"></select>
     </div>
 
-    <div class="group">
-      <span class="lbl">Backup</span>
-      <button class="link" id="exportBtn" disabled title="Comes in Stage 3">Export</button>
-      <button class="link" id="importBtn" disabled title="Comes in Stage 3">Import</button>
-      <span class="muted-text" id="lastExported"></span>
-    </div>
+    <span class="backup-needed-indicator" id="backup-needed-indicator" aria-live="polite">BACKUP NEEDED</span>
 
     <div class="spacer"></div>
+
+    <div class="group">
+      <button class="backup-top-btn" id="exportBtn" title="Save a full backup of all classes and data">Backup</button>
+      <button class="btn ghost small" id="importBtn" title="Import a backup file">Import</button>
+      <span class="muted-text" id="lastExported"></span>
+    </div>
+    <input type="file" id="importInput" accept="application/json,.json" hidden>
+
     <div class="group">
       <span class="lbl">Test data</span>
       <button class="link" id="loadSample">Load sample data</button>
@@ -361,7 +496,7 @@
 
   const SCHEMA_VERSION = 1;
   const APP_VERSION = '1.0.0';
-  const COURSE_NAMES = ['Maths', 'Further Maths'];
+  const COURSE_NAMES = ['Maths', 'Further Maths', 'GCSE'];
   const EN_DASH = '–';
   const COLLECTIONS = ['courses', 'papers', 'questions', 'classes', 'classPapers', 'usages'];
 
@@ -897,8 +1032,8 @@
 
     const courses = indexById(d.courses, 'course');
     const names = d.courses.map((c) => c && c.name).sort();
-    if (d.courses.length !== 2 || JSON.stringify(names) !== JSON.stringify(COURSE_NAMES.slice().sort())) {
-      err('There must be exactly two courses: Maths and Further Maths.');
+    if (d.courses.length !== COURSE_NAMES.length || JSON.stringify(names) !== JSON.stringify(COURSE_NAMES.slice().sort())) {
+      err('There must be exactly three courses: Maths, Further Maths and GCSE.');
     }
 
     const papers = indexById(d.papers, 'paper');
@@ -1198,7 +1333,7 @@
 <script>
 /*
  * Past-Paper Tracker — UI. All data changes go through PPT (logic.js) via commit().
- * Stage 2: in-memory only; storage arrives in Stage 3 (commit() is the single write point).
+ * Interim build: in-memory state, with working JSON backup/restore. Persistent browser storage can be added separately.
  */
 (function () {
   'use strict';
@@ -1212,6 +1347,32 @@
 
   let state = L.createInitialState(env, new Date());
 
+  // Backup baseline: kept in memory for this interim build. When persistence is added,
+  // this can move to the same browser-backed baseline used by Retrieval Tracker.
+  function backupDataHash(value) {
+    const data = JSON.parse(JSON.stringify(value));
+    if (data.settings) data.settings.lastExportedAt = null;
+    const json = JSON.stringify(data);
+    let h = 0;
+    for (let i = 0; i < json.length; i++) h = (h * 31 + json.charCodeAt(i)) | 0;
+    return String(h);
+  }
+  let backupBaselineHash = backupDataHash(state);
+
+  function updateBackupUI() {
+    const btn = $('exportBtn');
+    const indicator = $('backup-needed-indicator');
+    if (!btn) return;
+    const needsBackup = backupDataHash(state) !== backupBaselineHash;
+    btn.classList.toggle('needs-backup', needsBackup);
+    if (indicator) indicator.classList.toggle('visible', needsBackup);
+  }
+
+  function markBackupClean() {
+    backupBaselineHash = backupDataHash(state);
+    updateBackupUI();
+  }
+
   const $ = (id) => document.getElementById(id);
   const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESC_MAP[c]);
@@ -1221,6 +1382,7 @@
     if (!res.ok) return res.error;
     state = res.state;
     render();
+    updateBackupUI();
     return null;
   }
 
@@ -1259,7 +1421,6 @@
       : '<option value="">No classes yet</option>';
     sel.value = cls ? cls.id : '';
     sel.disabled = !state.classes.length;
-    $('classCourse').textContent = cls ? L.getCourse(state, cls.courseId).name : '';
     $('classRename').disabled = !cls;
     $('classDelete').disabled = !cls;
 
@@ -1286,7 +1447,9 @@
     fs.innerHTML = opts;
     fs.value = String(wf);
 
-    $('lastExported').textContent = 'last exported: ' + L.lastExportedText(state.settings.lastExportedAt, new Date());
+    const last = L.lastExportedText(state.settings.lastExportedAt, new Date());
+    $('lastExported').textContent = 'Last backup: ' + (last === 'never' ? 'Never' : last);
+    updateBackupUI();
   }
 
   function renderPapersRow() {
@@ -1296,15 +1459,37 @@
       row.innerHTML = '';
       return;
     }
-    const chips = L.checklist(state, cls.id).map((x) =>
-      `<label class="chip${x.active ? ' on' : ''}"><input type="checkbox" data-paper="${esc(x.paper.id)}"${x.active ? ' checked' : ''}>${esc(x.paper.name)}</label>`
+    const papers = L.checklist(state, cls.id);
+    const activeCount = papers.filter((x) => x.active).length;
+    const options = papers.map((x) =>
+      `<label class="paper-option${x.active ? ' on' : ''}">` +
+      `<input type="checkbox" data-paper="${esc(x.paper.id)}"${x.active ? ' checked' : ''}>` +
+      `<span class="paper-name">${esc(x.paper.name)}</span>` +
+      `<span class="paper-count">${x.paper.questionCount} Q</span>` +
+      `</label>`
     ).join('');
+
     row.innerHTML =
-      `<span class="lbl">Papers</span><div class="chips">${chips}</div><button class="link" id="paperAdd">+ Add paper</button>` +
+      `<div class="paper-selector-wrap">` +
+        `<button class="paper-selector-btn" id="paperSelectorBtn" type="button" aria-expanded="false">` +
+          `Select papers <span class="count">(${activeCount} active)</span>` +
+        `</button>` +
+        `<div class="paper-selector" id="paperSelector" hidden>` +
+          `<div class="paper-selector-head">` +
+            `<span class="paper-selector-title">Active papers</span>` +
+            `<span class="paper-selector-actions">` +
+              `<button class="link" type="button" data-paper-select="all">All</button>` +
+              `<button class="link" type="button" data-paper-select="none">None</button>` +
+            `</span>` +
+          `</div>` +
+          `<div class="paper-selector-list">${options}</div>` +
+        `</div>` +
+      `</div>` +
+      `<button class="link" id="paperAdd">+ Add paper</button>` +
       `<span class="legend">` +
-      `<span><span class="sw" style="background:var(--cell-green-bg);border-color:var(--cell-green-border)"></span>Available</span>` +
-      `<span><span class="sw" style="background:var(--cell-red-bg);border-color:var(--cell-red-border)"></span>Used</span>` +
-      `<span><span class="sw" style="background:repeating-linear-gradient(135deg,var(--cell-grey-bg) 0 3px,var(--cell-grey-stripe) 3px 6px);border-color:#4d4d4d"></span>Unusable</span>` +
+        `<span><span class="sw" style="background:var(--cell-green-bg);border-color:var(--cell-green-border)"></span>Available</span>` +
+        `<span><span class="sw" style="background:var(--cell-red-bg);border-color:var(--cell-red-border)"></span>Used</span>` +
+        `<span><span class="sw" style="background:repeating-linear-gradient(135deg,var(--cell-grey-bg) 0 3px,var(--cell-grey-stripe) 3px 6px);border-color:#4d4d4d"></span>Unusable</span>` +
       `</span>`;
   }
 
@@ -1322,15 +1507,19 @@
       return;
     }
     const last = grid.columns.length - 1;
-    const head = grid.columns.map((col, i) =>
-      `<th data-paper="${esc(col.paper.id)}"><div class="ph">` +
-      `<span class="pname" title="${esc(col.paper.name)} (${col.paper.questionCount} questions)">${esc(col.paper.name)}</span>` +
+    const head = grid.columns.map((col, i) => {
+      const m = /^(\d{4})\s+(.+)$/.exec(col.paper.name.trim());
+      const paperHeader = m
+        ? `<span class="pname" title="${esc(col.paper.name)} (${col.paper.questionCount} questions)"><span class="pyear">${esc(m[1])}</span><span class="pcode">${esc(m[2])}</span></span>`
+        : `<span class="pname" title="${esc(col.paper.name)} (${col.paper.questionCount} questions)">${esc(col.paper.name)}</span>`;
+      return `<th data-paper="${esc(col.paper.id)}"><div class="ph">` +
+      paperHeader +
       `<span class="pctl">` +
       `<button data-act="left" title="Move left"${i === 0 ? ' disabled' : ''}>&#8249;</button>` +
       `<button data-act="menu" title="Paper options">&#8943;</button>` +
       `<button data-act="right" title="Move right"${i === last ? ' disabled' : ''}>&#8250;</button>` +
-      `</span></div></th>`
-    ).join('');
+      `</span></div></th>`;
+    }).join('');
     const openQ = popup ? popup.questionId : null;
     const rows = [];
     for (let r = 0; r < grid.rowCount; r++) {
@@ -1564,12 +1753,25 @@
     if (ev.key !== 'Escape' || $('dlg').open) return;
     if (popup) { ev.preventDefault(); closePopup(); }
     if (menuPaperId) closeMenu();
+    const selector = $('paperSelector');
+    if (selector && !selector.hidden) {
+      selector.hidden = true;
+      $('paperSelectorBtn')?.setAttribute('aria-expanded', 'false');
+    }
   });
 
   document.addEventListener('mousedown', (ev) => {
     if ($('dlg').open) return;
     if (popup && !$('popup').contains(ev.target) && !ev.target.closest('td.c')) closePopup();
     if (menuPaperId && !$('menu').contains(ev.target) && !ev.target.closest('button[data-act="menu"]')) closeMenu();
+
+    const selector = $('paperSelector');
+    if (selector && !selector.hidden &&
+        !selector.contains(ev.target) &&
+        !ev.target.closest('#paperSelectorBtn')) {
+      selector.hidden = true;
+      $('paperSelectorBtn')?.setAttribute('aria-expanded', 'false');
+    }
   });
 
   // ---------- dialogs ----------
@@ -1730,6 +1932,28 @@
   });
 
   $('papersRow').addEventListener('click', (ev) => {
+    const selectorBtn = ev.target.closest('#paperSelectorBtn');
+    if (selectorBtn) {
+      const panel = $('paperSelector');
+      const isOpen = !panel.hidden;
+      panel.hidden = isOpen;
+      selectorBtn.setAttribute('aria-expanded', String(!isOpen));
+      return;
+    }
+
+    const selectAction = ev.target.closest('[data-paper-select]');
+    if (selectAction) {
+      const cls = currentClass();
+      const wantActive = selectAction.dataset.paperSelect === 'all';
+      let next = state;
+      for (const item of L.checklist(state, cls.id)) {
+        next = L.setPaperActive(next, cls.id, item.paper.id, wantActive).state;
+      }
+      closePopup();
+      commit({ ok: true, state: next });
+      return;
+    }
+
     if (!ev.target.closest('#paperAdd')) return;
     const cls = currentClass();
     openDialog({
@@ -1790,6 +2014,71 @@
     });
   }
 
+  // ---------- backup / restore ----------
+
+  function downloadBackup() {
+    const res = L.exportBackup(state, new Date());
+    if (!res.ok) {
+      openDialog({ title: 'Backup failed', message: res.error, submit: null });
+      return;
+    }
+    const blob = new Blob([res.json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = res.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+
+    state = res.state;
+    markBackupClean();
+    render();
+  }
+
+  $('exportBtn').addEventListener('click', downloadBackup);
+
+  $('importBtn').addEventListener('click', () => $('importInput').click());
+
+  $('importInput').addEventListener('change', (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const validated = L.validateBackup(reader.result);
+        if (!validated.ok) {
+          openDialog({ title: 'Import failed', message: validated.error, submit: null });
+          return;
+        }
+        const s = validated.summary;
+        openDialog({
+          title: 'Restore backup?',
+          message: `This will replace the current data with the selected backup.\n\nClasses: ${s.classes}\nPapers: ${s.papers}\nQuestions: ${s.questions}\nUsage records: ${s.usages}\n\nThe current in-memory state will be replaced.`,
+          submit: 'Restore backup',
+          danger: true,
+          onSubmit: () => {
+            const res = L.applyImport(validated);
+            if (!res.ok) return res.error;
+            state = res.state;
+            backupBaselineHash = backupDataHash(state);
+            $('gridWrap').scrollTop = 0;
+            $('gridWrap').scrollLeft = 0;
+            render();
+            updateBackupUI();
+            return null;
+          },
+        });
+      } catch (err) {
+        openDialog({ title: 'Import failed', message: String(err.message || err), submit: null });
+      } finally {
+        ev.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  });
+
   // ---------- test data ----------
 
   function loadTestData(label, build) {
@@ -1799,6 +2088,7 @@
       $('gridWrap').scrollTop = 0;
       $('gridWrap').scrollLeft = 0;
       render();
+      updateBackupUI();
     };
     if (!state.classes.length && !state.papers.length) { replace(); return; }
     openDialog({

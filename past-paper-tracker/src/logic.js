@@ -17,7 +17,7 @@
 
   const SCHEMA_VERSION = 1;
   const APP_VERSION = '1.0.0';
-  const COURSE_NAMES = ['Maths', 'Further Maths'];
+  const COURSE_NAMES = ['Maths', 'Further Maths', 'GCSE'];
   const EN_DASH = '–';
   const COLLECTIONS = ['courses', 'papers', 'questions', 'classes', 'classPapers', 'usages'];
 
@@ -553,8 +553,8 @@
 
     const courses = indexById(d.courses, 'course');
     const names = d.courses.map((c) => c && c.name).sort();
-    if (d.courses.length !== 2 || JSON.stringify(names) !== JSON.stringify(COURSE_NAMES.slice().sort())) {
-      err('There must be exactly two courses: Maths and Further Maths.');
+    if (d.courses.length !== COURSE_NAMES.length || JSON.stringify(names) !== JSON.stringify(COURSE_NAMES.slice().sort())) {
+      err('There must be exactly three courses: Maths, Further Maths and GCSE.');
     }
 
     const papers = indexById(d.papers, 'paper');
