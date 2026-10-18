@@ -1032,7 +1032,9 @@
   .app-dialog-message { white-space: pre-wrap; font-size: 14px; line-height: 1.55; color: var(--text); }
   .app-dialog-input { width: 100%; margin-top: 12px; }
   .app-dialog-input[hidden] { display: none; }
-  .app-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .app-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .app-dialog-choices { display: contents; }
+  .class-details-summary { font-size: 12px; color: var(--text-muted); margin-top: 3px; white-space: pre-wrap; }
   .history-table { width: 100%; font-size: 13px; }
   .history-table th { font-size: 11px; padding: 8px 10px; }
   .history-table td { padding: 8px 10px; }
@@ -1208,7 +1210,7 @@ Share a quantity in a given ratio
       <div class="row" style="justify-content: space-between; align-items: center; gap:12px; flex-wrap:wrap;">
         <div class="row" style="gap:8px;">
           <button class="coverage-add-atoms-btn" id="coverage-add-atoms" type="button" title="Add atoms to this class">Add atoms</button>
-          <button class="btn ghost" id="coverage-export-txt" title="Export a teaching record (atoms and holidays) for the active class">Export .txt</button>
+          <button class="btn ghost" id="coverage-export-txt" title="Export a teaching record for the active class: standard, or full with class details and retrieval details">Export .txt</button>
         </div>
         <div style="display:flex; align-items:center; gap:7px;">
           <label for="coverage-filter" style="margin:0; font-size:12px; color:var(--text-muted);">Show</label>
@@ -1660,6 +1662,42 @@ Share a quantity in a given ratio
   </div>
 </div>
 
+<!-- ============ CLASS DETAILS EDITOR ============ -->
+<div class="modal-backdrop" id="class-details-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="class-details-title" style="max-width: 520px;">
+    <div class="modal-header">
+      <div>
+        <h2 id="class-details-title">Class details</h2>
+        <div class="modal-sub" id="class-details-sub"></div>
+      </div>
+      <button class="modal-close" id="class-details-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="record-retrieval-form">
+      <div class="modal-sub" style="margin:0;">For reference and the full export only. Nothing here affects lesson dates or the schedule.</div>
+      <div>
+        <label for="class-details-year">Year group</label>
+        <input type="text" id="class-details-year" placeholder="e.g. Year 10" autocomplete="off">
+      </div>
+      <div>
+        <label>Approximate GCSE target grades</label>
+        <div class="row" style="gap:8px; align-items:center;">
+          <select id="class-details-grade-low" aria-label="Lowest target grade" style="width:auto; min-width:90px;"></select>
+          <span style="color:var(--text-muted);">to</span>
+          <select id="class-details-grade-high" aria-label="Highest target grade" style="width:auto; min-width:90px;"></select>
+        </div>
+      </div>
+      <div>
+        <label for="class-details-comments">Other comments</label>
+        <textarea id="class-details-comments" rows="4" style="width:100%; resize:vertical;"></textarea>
+      </div>
+      <div class="row" style="gap:8px;">
+        <button type="button" class="btn" id="class-details-save">Save details</button>
+        <button type="button" class="btn ghost" id="class-details-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ============ EXPORT / DELETE ATOMS MODAL ============ -->
 <div class="modal-backdrop" id="atoms-export-modal">
   <div class="modal" role="dialog" aria-modal="true" style="max-width: 580px;">
@@ -1703,6 +1741,7 @@ Share a quantity in a given ratio
       <input type="text" class="app-dialog-input" id="app-dialog-input" autocomplete="off" aria-labelledby="app-dialog-message" hidden>
       <div class="app-dialog-actions">
         <button class="btn ghost" type="button" id="app-dialog-cancel">Cancel</button>
+        <span class="app-dialog-choices" id="app-dialog-choices"></span>
         <button class="btn" type="submit" id="app-dialog-ok">OK</button>
       </div>
     </form>
@@ -1733,6 +1772,10 @@ function showConfirm(message, opts = {}) {
 function showPrompt(message, defaultValue = "", opts = {}) {
   return openAppDialog({ kind: "prompt", message, defaultValue, ...opts });
 }
+// choices: [{ label, value }]. Resolves to the chosen value, or null if cancelled.
+function showChoice(message, choices, opts = {}) {
+  return openAppDialog({ kind: "choice", message, choices, ...opts });
+}
 
 function openAppDialog(request) {
   return new Promise(resolve => {
@@ -1760,20 +1803,33 @@ function showNextAppDialog() {
   const ok = document.getElementById("app-dialog-ok");
   ok.textContent = d.okLabel || "OK";
   ok.className = d.danger ? "btn danger" : "btn";
+  ok.hidden = d.kind === "choice";
+  const choiceSlot = document.getElementById("app-dialog-choices");
+  choiceSlot.innerHTML = "";
+  for (const choice of (d.kind === "choice" ? d.choices : [])) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.textContent = choice.label;
+    b.addEventListener("click", () => finishAppDialog(true, choice.value));
+    choiceSlot.appendChild(b);
+  }
   const cancel = document.getElementById("app-dialog-cancel");
   cancel.hidden = d.kind === "alert";
   cancel.textContent = d.cancelLabel || "Cancel";
   backdrop.classList.add("open");
   if (d.kind === "prompt") { input.focus(); input.select(); }
+  else if (d.kind === "choice") { if (choiceSlot.firstChild) choiceSlot.firstChild.focus(); }
   else ok.focus();
 }
 
-function finishAppDialog(accepted) {
+function finishAppDialog(accepted, choiceValue) {
   const d = appDialogCurrent;
   if (!d) return;
   let result;
   if (d.kind === "confirm") result = accepted;
   else if (d.kind === "prompt") result = accepted ? document.getElementById("app-dialog-input").value : null;
+  else if (d.kind === "choice") result = accepted && choiceValue !== undefined ? choiceValue : null;
   showNextAppDialog();
   d.resolve(result);
 }
@@ -1811,6 +1867,23 @@ function defaultProfile() {
     default_presentation_medium: ""    // "read aloud" | "projected" | "printed" | "mini-whiteboards" | "mixed"
   };
 }
+// Class details are descriptive only (shown on the Classes screen and in the full export).
+// Nothing in the scheduler reads them. Grades are "" or "1".."9".
+const GCSE_GRADES = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+function defaultClassDetails() {
+  return { year_group: "", target_grade_low: "", target_grade_high: "", comments: "" };
+}
+function normaliseClassDetails(c) {
+  const d = isPlainObject(c.details) ? c.details : {};
+  const text = v => (typeof v === "string" ? v : (typeof v === "number" ? String(v) : ""));
+  const grade = v => (GCSE_GRADES.includes(text(v).trim()) ? text(v).trim() : "");
+  c.details = {
+    year_group: text(d.year_group),
+    target_grade_low: grade(d.target_grade_low),
+    target_grade_high: grade(d.target_grade_high),
+    comments: text(d.comments)
+  };
+}
 function defaultClass(name) {
   return {
     id: newId("c"),
@@ -1823,7 +1896,8 @@ function defaultClass(name) {
     settings: defaultSettings(),
     profile: defaultProfile(),
     notes: "",
-    holidays: []
+    holidays: [],
+    details: defaultClassDetails()
   };
 }
 // A private tuition student. Tutees have no atoms, lesson dates, retrievals or spacing
@@ -1892,6 +1966,7 @@ function normaliseParsedState(parsed, legacyName) {
       c.profile = { ...defaultProfile(), ...(c.profile || {}) };
       if (typeof c.notes !== "string") c.notes = "";
       if (!Array.isArray(c.holidays)) c.holidays = [];
+      normaliseClassDetails(c);
       for (const atom of c.atoms) {
         if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
         migrateLegacySkip(atom);
@@ -2565,6 +2640,15 @@ function noLessonAvailableNote(atom) {
   return `No lesson in the calendar after ${formatDateNice(target)}`;
 }
 
+// The ideal date for the next retrieval: the last scheduling event plus the planned gap,
+// before snapping to a lesson. Null when the atom is not scheduled or needs no more retrievals.
+function idealRetrievalDate(atom) {
+  if (atomStatus(atom) !== "scheduled") return null;
+  const sched = getAtomSchedulingState(atom);
+  if (!sched.last_date || (atom.retrieve === "N" && sched.hasRealPass)) return null;
+  return addDays(sched.last_date, plannedGap(sched, ctx().settings));
+}
+
 // Build the full event timeline for an atom: initial instruction, recorded retrievals,
 // the next pending retrieval, then future projections assuming each is passed.
 // Returns events: { date, type: 'I'|'R', n, status: 'recorded'|'pending'|'projected', outcome? }
@@ -2971,6 +3055,7 @@ function renderClasses() {
         <strong>${escapeHtml(c.name)}</strong>
         ${isTutee(c) ? '<span class="badge ad-hoc" style="margin-left:6px;">tutee</span>' : ""}
         ${isActive ? '<span class="badge new" style="margin-left:6px;">active</span>' : ""}
+        ${!isTutee(c) && classDetailsSummary(c) ? `<div class="class-details-summary">${escapeHtml(classDetailsSummary(c))}</div>` : ""}
       </td>
       ${isTutee(c)
         ? `<td colspan="3" style="color:var(--text-muted);">${escapeHtml(sessionSummary(c))}</td>`
@@ -2981,6 +3066,7 @@ function renderClasses() {
         ${isActive ? "" : `<button class="icon-btn" data-action="switch" data-id="${c.id}">Switch to</button>`}
         <button class="icon-btn" data-action="up" data-id="${c.id}" ${state.classes.indexOf(c) === 0 ? "disabled" : ""}>Up</button>
         <button class="icon-btn" data-action="down" data-id="${c.id}" ${state.classes.indexOf(c) === state.classes.length - 1 ? "disabled" : ""}>Down</button>
+        ${isTutee(c) ? "" : `<button class="icon-btn" data-action="details" data-id="${c.id}">Details</button>`}
         <button class="icon-btn" data-action="rename" data-id="${c.id}">Rename</button>
         <button class="icon-btn" data-action="delete" data-id="${c.id}">Delete</button>
       </td>`;
@@ -3006,6 +3092,9 @@ function renderClasses() {
   tbody.querySelectorAll("button[data-action='delete']").forEach(b => {
     b.addEventListener("click", () => deleteClass(b.dataset.id));
   });
+  tbody.querySelectorAll("button[data-action='details']").forEach(b => {
+    b.addEventListener("click", () => openClassDetails(b.dataset.id));
+  });
 
 }
 
@@ -3016,6 +3105,71 @@ document.getElementById("new-class-add").addEventListener("click", () => {
     document.getElementById("new-class-name").value = "";
     renderAll();
   }
+});
+
+// ----- Class details: year group, approximate GCSE target grades, comments -----
+function classGradeRange(d) {
+  const lo = d.target_grade_low, hi = d.target_grade_high;
+  if (lo && hi) return lo === hi ? lo : `${lo}-${hi}`;
+  if (lo) return `${lo} or above`;
+  if (hi) return `up to ${hi}`;
+  return "";
+}
+// One line for the Classes table, e.g. "Year 10 · Target grades 4-6".
+function classDetailsSummary(c) {
+  const d = c.details || defaultClassDetails();
+  const parts = [];
+  if (d.year_group.trim()) parts.push(d.year_group.trim());
+  const range = classGradeRange(d);
+  if (range) parts.push(`Target grades ${range}`);
+  return parts.join(" · ");
+}
+
+let classDetailsEditId = null;
+function openClassDetails(id) {
+  const c = state.classes.find(x => x.id === id);
+  if (!c || isTutee(c)) return;
+  normaliseClassDetails(c);
+  classDetailsEditId = c.id;
+  document.getElementById("class-details-sub").textContent = c.name;
+  document.getElementById("class-details-year").value = c.details.year_group;
+  for (const [selId, value] of [["class-details-grade-low", c.details.target_grade_low], ["class-details-grade-high", c.details.target_grade_high]]) {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = `<option value="">Not set</option>` + GCSE_GRADES.map(g => `<option value="${g}">${g}</option>`).join("");
+    sel.value = value;
+  }
+  document.getElementById("class-details-comments").value = c.details.comments;
+  document.getElementById("class-details-modal").classList.add("open");
+  document.getElementById("class-details-year").focus();
+}
+function closeClassDetails() {
+  classDetailsEditId = null;
+  document.getElementById("class-details-modal").classList.remove("open");
+}
+function saveClassDetails() {
+  const c = state.classes.find(x => x.id === classDetailsEditId);
+  if (!c || isTutee(c)) { closeClassDetails(); return; }
+  const low = document.getElementById("class-details-grade-low").value;
+  const high = document.getElementById("class-details-grade-high").value;
+  if (low && high && Number(low) > Number(high)) {
+    showAlert("The lowest target grade cannot be higher than the highest.");
+    return;
+  }
+  c.details = {
+    year_group: document.getElementById("class-details-year").value.trim(),
+    target_grade_low: low,
+    target_grade_high: high,
+    comments: document.getElementById("class-details-comments").value.replace(/\s+$/, "")
+  };
+  saveState();
+  closeClassDetails();
+  renderAll();
+}
+document.getElementById("class-details-save").addEventListener("click", saveClassDetails);
+document.getElementById("class-details-cancel").addEventListener("click", closeClassDetails);
+document.getElementById("class-details-close").addEventListener("click", closeClassDetails);
+document.getElementById("class-details-modal").addEventListener("click", (e) => {
+  if (e.target.id === "class-details-modal") closeClassDetails();
 });
 
 // ----- Tuition: sessions for a Tutee -----
@@ -3576,11 +3730,7 @@ function openAtomHistory(atomId) {
 
 
   if (status === "scheduled") {
-    const schedulerState = getAtomSchedulingState(atom);
-    const idealGap = plannedGap(schedulerState, ctx().settings);
-    const idealDate = schedulerState.last_date && !(atom.retrieve === "N" && schedulerState.hasRealPass)
-      ? addDays(schedulerState.last_date, idealGap)
-      : null;
+    const idealDate = idealRetrievalDate(atom);
     const scheduledDate = idealDate ? nextSuggestedDate(atom) : null;
     lines.push('<div style="min-width:0; flex:1;">');
     lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Ideal retrieval</div>`);
@@ -3909,6 +4059,7 @@ document.addEventListener("keydown", (e) => {
     closeAddAtoms();
     closeWorksheetModal();
     closeSessionEditor();
+    closeClassDetails();
     if (document.getElementById("welcome-modal").classList.contains("open")) closeWelcome();
     if (annotationActive) hideAnnotations();
   }
@@ -4737,7 +4888,9 @@ function formatDateShort(iso) {
   return `${SHORT_WEEKDAYS[fromISO(iso).getDay()]} ${formatDateNice(iso)}`;
 }
 
-function saveCoverageTextFile() {
+// Teaching record export. The standard file lists the atoms and holidays. The full file adds
+// the class details at the top and, after each atom in brackets, its retrieval details.
+function saveCoverageTextFile(full = false) {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!c) return;
@@ -4757,9 +4910,20 @@ function saveCoverageTextFile() {
     return clean(a.name).localeCompare(clean(b.name), "en-GB", { sensitivity: "base" });
   });
   const lines = [clean(c.name), ""];
+  if (full) {
+    const d = c.details || defaultClassDetails();
+    const comments = String(d.comments || "").split(/\r?\n/).map(l => l.trimEnd());
+    lines.push("CLASS DETAILS");
+    lines.push(`Year group: ${clean(d.year_group) || "Not set"}`);
+    lines.push(`Approximate GCSE target grades: ${classGradeRange(d) || "Not set"}`);
+    if (comments.some(l => l.trim())) lines.push("Comments:", ...comments);
+    else lines.push("Comments: None");
+    lines.push("", "ATOMS", "");
+  }
   for (const atom of included) {
     const date = formatDateShort(atom.initial_instruction_date);
-    lines.push(date ? `${date}: ${clean(atom.name)}` : clean(atom.name));
+    const entry = date ? `${date}: ${clean(atom.name)}` : clean(atom.name);
+    lines.push(full ? `${entry} (${atomRetrievalSummary(atom)})` : entry);
   }
   if (included.length === 0) lines.push("No atoms recorded.");
   const holidays = sortedHolidays(c);
@@ -4777,14 +4941,36 @@ function saveCoverageTextFile() {
   const safeClassName = String(c.name || "class")
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-+|-+$/g, "") || "class";
-  a.download = `teaching-record-${safeClassName}-${todayISO()}.txt`;
+  a.download = `teaching-record-${full ? "full-" : ""}${safeClassName}-${todayISO()}.txt`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-document.getElementById("coverage-export-txt").addEventListener("click", saveCoverageTextFile);
+// Retrieval details for the full export. Totals and the last date count the same records as
+// the Coverage table's Total and Last columns (everything except Missed and legacy Skipped).
+// The next ideal date is the Ideal retrieval shown in the atom's history.
+function atomRetrievalSummary(atom) {
+  const events = atomRetrievals(atom.id)
+    .filter(r => r.outcome !== "miss" && r.outcome !== "skip")
+    .sort((a, b) => a.lesson_date.localeCompare(b.lesson_date));
+  const last = events.length ? events[events.length - 1].lesson_date : null;
+  let next;
+  if (atomStatus(atom) === "archived") next = "none (archived)";
+  else next = idealRetrievalDate(atom) ? formatDateShort(idealRetrievalDate(atom)) : "none (no further retrieval scheduled)";
+  return `total retrievals: ${events.length}; last retrieval: ${last ? formatDateShort(last) : "none"}; next ideal retrieval: ${next}`;
+}
+
+document.getElementById("coverage-export-txt").addEventListener("click", async () => {
+  if (isTutee()) return;
+  const choice = await showChoice(
+    "Which export would you like?\n\nStandard: the teaching record as before (atoms and holidays).\n\nFull: class details at the top, and each atom followed by its total retrievals, last retrieval date and next ideal retrieval date.",
+    [{ label: "Standard", value: "standard" }, { label: "Full", value: "full" }],
+    { cancelLabel: "Cancel" }
+  );
+  if (choice) saveCoverageTextFile(choice === "full");
+});
 
 const BACKUP_FORMAT = 2;
 function saveBackupFile() {
@@ -4826,6 +5012,7 @@ function checkSchoolFields(c, label) {
     if (c[key] !== undefined && !Array.isArray(c[key])) return `${label}: "${key}" should be a list.`;
   }
   if (c.settings !== undefined && !isPlainObject(c.settings)) return `${label}: "settings" is not valid.`;
+  if (c.details !== undefined && !isPlainObject(c.details)) return `${label}: "details" is not valid.`;
   for (const a of (c.atoms || [])) {
     if (!isPlainObject(a)) return `${label}: an atom is not a valid record.`;
     if ((typeof a.id !== "string" && typeof a.id !== "number") || a.id === "") return `${label}: an atom has no id.`;
