@@ -27,6 +27,9 @@
     --warning-text: #d6a34a;
   }
   * { box-sizing: border-box; }
+  /* Always reserve the vertical scrollbar's space. Otherwise a class long enough to scroll
+     narrows the page by the scrollbar width, shifting every control and column sideways. */
+  html { scrollbar-gutter: stable; }
   html, body {
     margin: 0;
     padding: 0;
@@ -39,7 +42,7 @@
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 18px 28px 0;
+    padding: 18px 28px 8px;
   }
   .header-top {
     position: relative;
@@ -109,10 +112,17 @@
     padding: 2px 4px;
     cursor: pointer;
     outline: none;
-    width: 70px;
-    min-width: 70px;
-    max-width: 70px;
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
     color-scheme: dark;
+  }
+  /* Keep the backup controls to the left of the wider class picker. */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
   .class-switcher select option {
     background: var(--bg);
@@ -280,6 +290,18 @@
     min-height: 60px;
     width: 100%;
   }
+  /* Atom notes: the box grows with its text (see growNotesBox); Save notes and the status are
+     coloured so that unsaved text is hard to miss. */
+  #history-notes { max-height: 60vh; overflow-y: auto; }
+  #history-notes-status { font-size: 12px; color: var(--text-muted); }
+  #history-notes-status.unsaved { color: var(--warning-text); font-weight: 600; }
+  #history-notes-status.unsaved::before { content: "\25CF\00a0"; }
+  #history-notes-status.saved { color: var(--pass); font-weight: 600; }
+  #history-notes-status.saved::before { content: "\2713\00a0"; }
+  button.btn.ghost#history-notes-save { color: var(--primary); border-color: var(--primary); }
+  button.btn.ghost#history-notes-save:hover { color: var(--primary-hover); border-color: var(--primary-hover); }
+  button.btn.ghost#history-notes-save.dirty { background: var(--primary); color: #fff; border-color: var(--primary); }
+  button.btn.ghost#history-notes-save.dirty:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
   button.btn {
     background: var(--primary);
     color: white;
@@ -768,7 +790,9 @@
   }
   .coverage-table {
     border-collapse: collapse;
+    table-layout: fixed;
     width: 100%;
+    min-width: 760px;
     font-size: 12px;
   }
   .coverage-table th, .coverage-table td {
@@ -798,14 +822,16 @@
   .coverage-table th:first-child, .coverage-table td:first-child { text-align: left; }
   .coverage-table td { text-align: right; color: var(--text); }
   .coverage-table td.atom-name {
-    max-width: 360px;
     font-weight: 400;
+    overflow: hidden;
   }
   .coverage-table td.atom-name > .atom-name-inner {
     display: flex;
     align-items: center;
     gap: 12px;
     min-width: 0;
+    width: 100%;
+    overflow: hidden;
   }
   .coverage-table td.atom-name a {
     color: var(--text);
@@ -824,27 +850,18 @@
     text-underline-offset: 3px;
     cursor: help;
   }
-  .coverage-table td.atom-name a.scheduler-due { color: var(--text); font-weight: 700; }
+  .coverage-table td.atom-name a.scheduler-due { color: #f0c85a; font-weight: 700; }
   .coverage-table td.atom-name a.scheduler-due:hover { color: var(--primary); }
-  .coverage-table tr.due-row td { background: var(--border); }
-  .coverage-table tr.due-row td.atom-name { box-shadow: inset 3px 0 0 var(--text); }
-  .coverage-table td.count { width: 42px; }
-  .coverage-table td.days { width: 72px; }
-  .coverage-table td.action { width: 38px; padding-left: 2px; padding-right: 2px; }
-  .coverage-table th.coverage-plan,
-  .coverage-table td.coverage-plan {
-    width: 30px;
-    padding-left: 4px;
-    padding-right: 4px;
-    text-align: center !important;
-  }
+  .coverage-table tr.due-row td { background: rgba(234, 179, 8, 0.13); }
+  .coverage-table tr.due-row td.atom-name { box-shadow: inset 3px 0 0 rgba(234, 179, 8, 0.8); }
+  /* Next-lesson tick boxes: a visual aid only, never read by the scheduler. */
   .coverage-plan-checkbox {
     appearance: none;
     -webkit-appearance: none;
     width: 14px;
     height: 14px;
     margin: 0;
-    vertical-align: middle;
+    flex: 0 0 auto;
     cursor: pointer;
     background: var(--border-strong);
     border: 1px solid #555;
@@ -852,6 +869,7 @@
     display: inline-grid;
     place-content: center;
   }
+  .coverage-plan-checkbox:hover { border-color: var(--primary-hover); }
   .coverage-plan-checkbox:checked {
     background: var(--primary);
     border-color: var(--primary);
@@ -867,6 +885,8 @@
     outline: 2px solid var(--primary-hover);
     outline-offset: 2px;
   }
+  /* Coverage columns use explicit widths below so changing class cannot resize them to fit its contents. */
+  .coverage-table td.action { width: 38px; padding-left: 2px; padding-right: 2px; }
   .coverage-rename {
     padding: 2px 5px;
     font-size: 11px;
@@ -916,16 +936,6 @@
   .record-retrieval-outcomes button.ad-hoc { background: var(--unscheduled); }
   .record-retrieval-outcomes button:hover { filter: brightness(1.15); }
   .record-retrieval-outcomes button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-  /* Keep the three scheduling date columns visually uniform. */
-  .coverage-table th.coverage-sort[data-sort-key="taught"],
-  .coverage-table th.coverage-sort[data-sort-key="last"],
-  .coverage-table th.coverage-sort[data-sort-key="next"],
-  .coverage-table td.date {
-    width: 82px;
-    min-width: 82px;
-  }
-  .coverage-table th[data-sort-key="next"],
-  .coverage-table td.next-retrieval { min-width: 70px; }
   .coverage-table tr:last-child td { border-bottom: none; }
   .coverage-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
   .coverage-summary {
@@ -939,47 +949,6 @@
   .coverage-summary strong { color: var(--text); font-size: 12px; }
   .history-status-actions { display:flex; gap:8px; flex-wrap:wrap; margin: 16px 0 18px; }
   .history-status-note { font-size:12px; color:var(--text-muted); margin: 2px 0 16px; }
-.history-longterm {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 16px;
-    font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .history-longterm-checkbox {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 15px;
-    height: 15px;
-    margin: 0;
-    flex: 0 0 auto;
-    cursor: pointer;
-    background: var(--border-strong);
-    border: 1px solid #555;
-    border-radius: 3px;
-    display: inline-grid;
-    place-content: center;
-  }
-  .history-longterm-checkbox:checked {
-    background: var(--primary);
-    border-color: var(--primary);
-  }
-  .history-longterm-checkbox:checked::after {
-    content: "✓";
-    color: #fff;
-    font-size: 10px;
-    line-height: 1;
-    font-weight: 700;
-  }
-  .history-longterm-checkbox:focus-visible {
-    outline: 2px solid var(--primary-hover);
-    outline-offset: 2px;
-  }
-  @media (max-width: 700px) {
-    .coverage-table td.atom-name { max-width: 240px; }
-  }
   .schedule-legend {
     display: flex;
     gap: 14px;
@@ -1010,7 +979,8 @@
   .session-notes { margin-top: 8px; white-space: pre-wrap; color: var(--text-muted); font-size: 13px; }
   .session-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
   .paid-toggle { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); border-radius: 999px; padding: 2px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
-  .paid-toggle.unpaid { color: var(--text); border-color: var(--text); font-weight: 700; }
+  .paid-toggle.unpaid { color: var(--warning-text); background: var(--warning-bg); border-color: rgba(214,163,74,.55); font-weight: 600; }
+  .paid-toggle.unpaid:hover { background: #3a2e16; }
   .session-paid-choice[aria-pressed="true"] { border-color: var(--text); color: var(--text); font-weight: 700; }
   .modal-backdrop {
     position: fixed;
@@ -1086,6 +1056,12 @@
     .retrieval-row { grid-template-columns: 1fr; }
     .retrieval-actions { justify-content: flex-start; }
     .header-top { flex-direction: column; align-items: stretch; }
+    .header-actions { flex-wrap: wrap; justify-content: space-between; }
+    .class-switcher select {
+      width: 90px;
+      min-width: 90px;
+      max-width: 90px;
+    }
     .backup-needed-indicator.visible {
       position: static;
       transform: none;
@@ -1095,6 +1071,15 @@
     nav.tabs { justify-content: flex-start; margin-left: 0; }
     .schedule-grid td.atom-col, .schedule-grid th.atom-col { min-width: 140px; max-width: 160px; }
   }
+  .storage-banner {
+    position: sticky; top: 0; z-index: 2500;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    padding: 10px 28px; font-size: 14px; line-height: 1.4;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .storage-banner.stale { background: var(--warning-bg); color: var(--warning-text); }
+  .storage-banner.fail { background: var(--reteach-bg); color: var(--text); border-bottom-color: var(--reteach); }
+  .storage-banner span { flex: 1 1 320px; }
 </style>
 </head>
 <body>
@@ -1111,7 +1096,7 @@
       <button data-screen="schedule">Schedule</button>
     </nav>
     <span class="backup-needed-indicator" id="backup-needed-indicator" aria-live="polite">BACKUP NEEDED</span>
-    <div style="display: flex; align-items: center; gap: 8px;">
+    <div class="header-actions">
       <button class="backup-top-btn" id="top-data-export" title="Save a full backup of all classes and data">Backup</button>
       <button class="btn ghost" id="top-data-import" title="Import a backup file">Import</button>
       <span class="backup-top-status" id="last-backup-status">Last backup: Never</span>
@@ -1223,13 +1208,13 @@ Share a quantity in a given ratio
       <div class="row" style="justify-content: space-between; align-items: center; gap:12px; flex-wrap:wrap;">
         <div class="row" style="gap:8px;">
           <button class="coverage-add-atoms-btn" id="coverage-add-atoms" type="button" title="Add atoms to this class">Add atoms</button>
-          <button class="btn ghost" id="coverage-export-txt" title="Export atom names and teaching dates for the active class">Export .txt</button>
+          <button class="btn ghost" id="coverage-export-txt" title="Export a teaching record (atoms and holidays) for the active class">Export .txt</button>
         </div>
         <div style="display:flex; align-items:center; gap:7px;">
           <label for="coverage-filter" style="margin:0; font-size:12px; color:var(--text-muted);">Show</label>
           <select id="coverage-filter" style="width:auto; min-width:120px;">
             <option value="active" selected>Active</option>
-            <option value="scheduled">Scheduled</option>
+            <option value="historic">Historic</option>
             <option value="archived">Archived</option>
           </select>
         </div>
@@ -1384,6 +1369,28 @@ Share a quantity in a given ratio
       <h2>Scheduled dates</h2>
       <div id="dates-count" style="display:none;">0</div>
       <div id="dates-list" class="pill-input"></div>
+    </div>
+
+    <div class="card school-only">
+      <h2>Holidays</h2>
+      <div class="subtitle">Holidays for the active class, for reference and the teaching-record export only. They have no effect on lesson dates or the schedule.</div>
+      <div class="row" style="align-items: flex-end;">
+        <div style="flex: 1 1 200px;">
+          <label for="holiday-name">Name</label>
+          <input type="text" id="holiday-name" placeholder="e.g. October half-term">
+        </div>
+        <div>
+          <label for="holiday-start">Start</label>
+          <input type="date" id="holiday-start">
+        </div>
+        <div>
+          <label for="holiday-end">End</label>
+          <input type="date" id="holiday-end">
+        </div>
+        <button class="btn ghost" id="holiday-save" type="button">Add</button>
+        <button class="btn ghost" id="holiday-cancel" type="button" style="display:none;">Cancel</button>
+      </div>
+      <div id="holidays-list" style="margin-top: 14px;"></div>
     </div>
   </section>
 
@@ -1577,7 +1584,7 @@ Share a quantity in a given ratio
         <div style="flex: 0 1 180px;">
           <label for="coverage-atom-status">Status</label>
           <select id="coverage-atom-status">
-            <option value="scheduled" selected>Scheduled</option>
+            <option value="scheduled" selected>Active</option>
             <option value="historic">Historic</option>
           </select>
         </div>
@@ -1815,7 +1822,8 @@ function defaultClass(name) {
     planned_retrievals: {},
     settings: defaultSettings(),
     profile: defaultProfile(),
-    notes: ""
+    notes: "",
+    holidays: []
   };
 }
 // A private tuition student. Tutees have no atoms, lesson dates, retrievals or spacing
@@ -1854,51 +1862,67 @@ function defaultState() {
   return { classes: [cls], active_class_id: cls.id };
 }
 
+// Change stamp: every successful save stores a fresh stamp. If the stored stamp is not the one
+// this page last wrote (or loaded), another tab or another copy of this file has saved since,
+// and saving here would silently overwrite its work.
+const STAMP_KEY = "learning-engine-write-stamp";
+function readStoredStamp() {
+  try { return localStorage.getItem(STAMP_KEY); } catch (e) { return null; }
+}
 let state = loadState();
+let knownStamp = readStoredStamp();
+let staleTab = false;
+
+// Turns parsed JSON (from storage or from an imported file) into a valid state object.
+// legacyName names the single class made from the old pre-multi-class file shape.
+function normaliseParsedState(parsed, legacyName) {
+  if (!parsed || typeof parsed !== "object") throw new Error("Unrecognised file structure.");
+  // Migrate old (pre-multi-class) format
+  if (parsed.classes && Array.isArray(parsed.classes)) {
+    // Already multi-class; merge defaults
+    for (const c of parsed.classes) {
+      if (c.type === "tutee") { normaliseTutee(c); continue; }
+      c.atoms = c.atoms || [];
+      c.lesson_dates = c.lesson_dates || [];
+      c.retrievals = c.retrievals || [];
+      c.planned_retrievals = (c.planned_retrievals && typeof c.planned_retrievals === "object" && !Array.isArray(c.planned_retrievals))
+        ? c.planned_retrievals
+        : {};
+      c.settings = { ...defaultSettings(), ...(c.settings || {}) };
+      c.profile = { ...defaultProfile(), ...(c.profile || {}) };
+      if (typeof c.notes !== "string") c.notes = "";
+      if (!Array.isArray(c.holidays)) c.holidays = [];
+      for (const atom of c.atoms) {
+        if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
+        migrateLegacySkip(atom);
+      }
+    }
+    if (parsed.classes.length === 0) return defaultState();
+    if (!parsed.classes.find(c => c.id === parsed.active_class_id)) {
+      parsed.active_class_id = parsed.classes[0].id;
+    }
+    return parsed;
+  }
+  // Old shape: wrap top-level fields in a single class
+  const cls = defaultClass(legacyName);
+  cls.atoms = parsed.atoms || [];
+  cls.lesson_dates = parsed.lesson_dates || [];
+  cls.retrievals = parsed.retrievals || [];
+  cls.planned_retrievals = {};
+  cls.settings = { ...defaultSettings(), ...(parsed.settings || {}) };
+  cls.notes = typeof parsed.notes === "string" ? parsed.notes : "";
+  for (const atom of cls.atoms) {
+    if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
+    migrateLegacySkip(atom);
+  }
+  return { classes: [cls], active_class_id: cls.id };
+}
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
-    const parsed = JSON.parse(raw);
-    // Migrate old (pre-multi-class) format
-    if (parsed.classes && Array.isArray(parsed.classes)) {
-      // Already multi-class; merge defaults
-      for (const c of parsed.classes) {
-        if (c.type === "tutee") { normaliseTutee(c); continue; }
-        c.atoms = c.atoms || [];
-        c.lesson_dates = c.lesson_dates || [];
-        c.retrievals = c.retrievals || [];
-        c.planned_retrievals = (c.planned_retrievals && typeof c.planned_retrievals === "object" && !Array.isArray(c.planned_retrievals))
-          ? c.planned_retrievals
-          : {};
-        c.settings = { ...defaultSettings(), ...(c.settings || {}) };
-        c.profile = { ...defaultProfile(), ...(c.profile || {}) };
-        if (typeof c.notes !== "string") c.notes = "";
-        for (const atom of c.atoms) {
-          if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
-          migrateLegacySkip(atom);
-        }
-      }
-      if (parsed.classes.length === 0) return defaultState();
-      if (!parsed.classes.find(c => c.id === parsed.active_class_id)) {
-        parsed.active_class_id = parsed.classes[0].id;
-      }
-      return parsed;
-    }
-    // Old shape: wrap top-level fields in a single class
-    const cls = defaultClass("Class 1");
-    cls.atoms = parsed.atoms || [];
-    cls.lesson_dates = parsed.lesson_dates || [];
-    cls.retrievals = parsed.retrievals || [];
-    cls.planned_retrievals = {};
-    cls.settings = { ...defaultSettings(), ...(parsed.settings || {}) };
-    cls.notes = typeof parsed.notes === "string" ? parsed.notes : "";
-    for (const atom of cls.atoms) {
-      if (!["scheduled", "historic", "archived"].includes(atom.status)) atom.status = "scheduled";
-      migrateLegacySkip(atom);
-    }
-    return { classes: [cls], active_class_id: cls.id };
+    return normaliseParsedState(JSON.parse(raw), "Class 1");
   } catch (e) {
     console.warn("Failed to load state, starting fresh", e);
     return defaultState();
@@ -1938,15 +1962,110 @@ function initialiseBackupBaseline() {
   updateBackupButton();
 }
 
+// ----- Storage problems: a banner at the top of the page, never a silent failure -----
+let storageBannerKind = null;
+function hideStorageBanner(kind) {
+  if (kind && storageBannerKind !== kind) return;
+  const el = document.getElementById("storage-banner");
+  if (el) el.remove();
+  storageBannerKind = null;
+}
+function showStorageBanner(kind, message, actions) {
+  let el = document.getElementById("storage-banner");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "storage-banner";
+    el.setAttribute("role", "alert");
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+  el.className = "storage-banner " + kind;
+  el.textContent = "";
+  const msg = document.createElement("span");
+  msg.textContent = message;
+  el.appendChild(msg);
+  for (const a of (actions || [])) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn ghost";
+    b.textContent = a.label;
+    b.addEventListener("click", a.run);
+    el.appendChild(b);
+  }
+  storageBannerKind = kind;
+}
+
+function markStale() {
+  staleTab = true;
+  showStorageBanner("stale",
+    "Another tab or copy of this file has saved changes since this page was opened. Saving here is paused so that nothing is overwritten.",
+    [
+      { label: "Reload latest data", run: () => location.reload() },
+      { label: "Keep this tab's version", run: keepThisTabsVersion }
+    ]);
+}
+
+async function keepThisTabsVersion() {
+  if (!await showConfirm("Overwrite the data saved by the other tab with what is on screen here?\n\nA snapshot of the other version is kept first, so you can bring it back from Settings > Recent snapshots.", { okLabel: "Overwrite", danger: true })) return;
+  try {
+    const other = localStorage.getItem(STORAGE_KEY);
+    if (other) storeSnapshot(other);
+  } catch (e) { /* the overwrite is still what the user asked for */ }
+  knownStamp = readStoredStamp();
+  staleTab = false;
+  lastSnapshotHash = null;
+  hideStorageBanner("stale");
+  saveState();
+  renderSnapshots();
+}
+
+// Writes the live state. Returns true only if it is safely in storage. Never throws.
+function writeLiveState() {
+  if (readStoredStamp() !== knownStamp) { markStale(); return false; }
+  const json = JSON.stringify(state);
+  const put = () => localStorage.setItem(STORAGE_KEY, json);
+  let ok = false;
+  try { put(); ok = true; }
+  catch (e) {
+    // The usual cause is the snapshots filling the quota. The live data matters more than the
+    // snapshots, so give snapshots up (oldest first, halving each time) until the write fits.
+    try {
+      let snaps = loadSnapshots();
+      while (!ok && snaps.length) {
+        snaps = snaps.slice(0, Math.floor(snaps.length / 2));
+        if (snaps.length) localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snaps));
+        else localStorage.removeItem(SNAPSHOTS_KEY);
+        snapshotsLimited = true;
+        try { put(); ok = true; } catch (e2) { /* keep freeing */ }
+      }
+    } catch (e3) { /* fall through to the banner */ }
+  }
+  if (!ok) {
+    showStorageBanner("fail",
+      "Your latest changes could NOT be saved: this browser's storage is full or unavailable. They exist in this tab only and will be lost if it is closed or reloaded. Download a backup now.",
+      [{ label: "Backup now", run: () => saveBackupFile() }]);
+    return false;
+  }
+  const stamp = String(Date.now()) + "-" + Math.random().toString(36).slice(2, 8).padEnd(6, "0");
+  try { localStorage.setItem(STAMP_KEY, stamp); knownStamp = stamp; }
+  catch (e) { knownStamp = readStoredStamp(); }
+  if (storageBannerKind === "fail") hideStorageBanner("fail");
+  return true;
+}
+
 function saveState(options = {}) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  if (options.snapshot !== false) snapshotState();
+  const ok = writeLiveState();
+  if (ok && options.snapshot !== false) snapshotState();
   updateBackupButton();
+  return ok;
 }
 
 // ----- Snapshot system: auto-save the last N states for one-click rollback -----
 const SNAPSHOTS_KEY = "learning-engine-snapshots-v1";
 const MAX_SNAPSHOTS = 20;
+// Browsers allow roughly 5M characters per site. Stay under that, and always leave room for the
+// live data to grow, so that snapshots can never crowd out the data they are protecting.
+const STORAGE_TOTAL_BUDGET = 4800000;
+let snapshotsLimited = false;
 
 function loadSnapshots() {
   try {
@@ -1954,23 +2073,56 @@ function loadSnapshots() {
   } catch (e) { return []; }
 }
 
+function snapshotBudget() {
+  let other = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k === SNAPSHOTS_KEY) continue;
+    other += k.length + (localStorage.getItem(k) || "").length;
+  }
+  const live = (localStorage.getItem(STORAGE_KEY) || "").length;
+  return STORAGE_TOTAL_BUDGET - other - Math.max(250000, Math.floor(live * 0.5));
+}
+
+// Stores one snapshot (newest first), dropping the oldest as needed to stay within the budget.
+// Returns true if the new snapshot is held.
+function storeSnapshot(json) {
+  let snaps = loadSnapshots();
+  snaps.unshift({ ts: Date.now(), data: json });
+  while (snaps.length > MAX_SNAPSHOTS) snaps.pop();
+  const wanted = snaps.length;
+  const sizes = snaps.map(s => JSON.stringify(s).length + 1);
+  let total = 2 + sizes.reduce((a, b) => a + b, 0);
+  const budget = snapshotBudget();
+  while (snaps.length && total > budget) { total -= sizes[snaps.length - 1]; snaps.pop(); }
+  for (;;) {
+    try {
+      if (snaps.length) localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snaps));
+      else localStorage.removeItem(SNAPSHOTS_KEY);
+      break;
+    } catch (e) {
+      if (!snaps.length) break;
+      snaps.pop();
+    }
+  }
+  snapshotsLimited = snaps.length < wanted;
+  return snaps.length > 0 && snaps[0].data === json;
+}
+
 let lastSnapshotHash = null;
 // Snapshot dedupe ignores active_class_id: switching class is navigation, not a data change.
 function snapshotDataHash(value) {
   return hashState({ ...value, active_class_id: undefined });
 }
+// Returns true if the current state is held in a snapshot afterwards.
 function snapshotState() {
   try {
-    const json = JSON.stringify(state);
-    // Cheap dedupe: skip if state hasn't actually changed
     const h = snapshotDataHash(state);
-    if (h === lastSnapshotHash) return;
-    lastSnapshotHash = h;
-    const snaps = loadSnapshots();
-    snaps.unshift({ ts: Date.now(), data: json });
-    while (snaps.length > MAX_SNAPSHOTS) snaps.pop();
-    localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snaps));
-  } catch (e) { console.warn("Snapshot failed", e); }
+    if (h === lastSnapshotHash) return true;
+    const held = storeSnapshot(JSON.stringify(state));
+    if (held) lastSnapshotHash = h;
+    return held;
+  } catch (e) { console.warn("Snapshot failed", e); return false; }
 }
 
 async function restoreSnapshot(ts) {
@@ -1980,15 +2132,31 @@ async function restoreSnapshot(ts) {
   if (!await showConfirm(`Restore the snapshot from ${formatTimestampUK(ts)}? Your current state will be replaced (a fresh snapshot of it will be saved first).`, { okLabel: "Restore" })) return;
   // Save a "before restore" snapshot so the user can undo the restore
   snapshotState();
-  state = JSON.parse(s.data);
+  const previous = state;
+  try {
+    state = normaliseParsedState(JSON.parse(s.data), "Class 1");
+  } catch (e) {
+    state = previous;
+    showAlert("That snapshot couldn't be read, so nothing was changed.");
+    return;
+  }
   settingsDraftDirty = false;
   settingsDraftClassId = null;
-  // Don't trigger snapshotState again on this save (it would dedupe anyway)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!saveState({ snapshot: false })) {
+    state = previous;
+    renderAll();
+    showAlert("The snapshot could not be saved to this browser's storage, so nothing was changed. See the message at the top of the page.");
+    return;
+  }
   lastSnapshotHash = null;
   updateBackupButton();
   renderAll();
 }
+
+// Another tab saving fires this event; the check at save time is the backstop.
+window.addEventListener("storage", (e) => {
+  if ((e.key === null || e.key === STAMP_KEY || e.key === STORAGE_KEY) && readStoredStamp() !== knownStamp) markStale();
+});
 
 // ----- Worksheet fake-door: log clicks and email captures locally -----
 const WS_SIGNALS_KEY = "learning-engine-worksheet-signals-v1";
@@ -2057,14 +2225,27 @@ function setAtomStatus(atom, nextStatus) {
   }
 
   if (current === "archived") {
-    const restored = atom.archived_from_status === "historic" ? "historic" : "scheduled";
-    atom.status = nextStatus === restored ? restored : nextStatus;
+    // Unarchiving always returns the atom to the category it occupied before archiving.
+    const restored = archivedFromStatus(atom);
+    if (nextStatus !== restored) return false;
+    atom.status = restored;
     delete atom.archived_from_status;
     return true;
   }
 
-  atom.status = nextStatus;
-  return true;
+  // Active ("scheduled") and Historic atoms are independent records: there is no direct
+  // conversion between them. Archive the atom and create a new record instead.
+  return false;
+}
+// The category an archived atom returns to when unarchived (legacy records default to Active).
+function archivedFromStatus(atom) {
+  return atom && atom.archived_from_status === "historic" ? "historic" : "scheduled";
+}
+// A Historic record, whether currently Historic or archived from Historic. These sit wholly
+// outside the retrieval programme, so scheduler-specific controls are never offered for them.
+function isHistoricRecord(atom) {
+  const status = atomStatus(atom);
+  return status === "historic" || (status === "archived" && archivedFromStatus(atom) === "historic");
 }
 
 // ----- Date helpers -----
@@ -2621,7 +2802,8 @@ function openRecordRetrieval(atomId) {
   recordRetrievalAtomId = atomId;
   const dateInput = document.getElementById("record-retrieval-date");
   dateInput.value = todayISO();
-  dateInput.min = atom.initial_instruction_date || "";
+  // Historic atoms can have retrievals recorded, but any legacy teaching date they hold is not used.
+  dateInput.min = isHistoricRecord(atom) ? "" : (atom.initial_instruction_date || "");
   dateInput.max = todayISO();
   document.getElementById("record-retrieval-sub").textContent = atom.name;
   document.getElementById("record-retrieval-modal").classList.add("open");
@@ -3058,7 +3240,8 @@ function setRetrievalPlanned(atomId, lessonDate, planned) {
   if (next.length) c.planned_retrievals[lessonDate] = next;
   else delete c.planned_retrievals[lessonDate];
 
-  saveState();
+  // A tick is a planning aid, not a change to the atom's history, so no snapshot is taken.
+  saveState({ snapshot: false });
   renderCoverage();
 }
 
@@ -3086,9 +3269,11 @@ function renderCoverage() {
 
   const visibleByStatus = c.atoms.filter(atom => {
     const status = atomStatus(atom);
+    // Mutually exclusive categories. A legacy Historic atom that still carries an old
+    // teaching date is Historic, never Active.
     if (filter === "archived") return status === "archived";
-    if (filter === "scheduled") return status === "scheduled" && !!atom.initial_instruction_date;
-    return status === "historic" || (status === "scheduled" && !!atom.initial_instruction_date);
+    if (filter === "historic") return status === "historic";
+    return status === "scheduled" && !!atom.initial_instruction_date;
   });
 
   const rowsData = visibleByStatus.map((atom, idx) => {
@@ -3106,7 +3291,7 @@ function renderCoverage() {
     return {
       atom, idx,
       status,
-      taught: status === "historic" ? "Historic" : (atom.initial_instruction_date || null),
+      taught: isHistoricRecord(atom) ? "Historic" : (atom.initial_instruction_date || null),
       last,
       next,
       daysSinceLast,
@@ -3135,9 +3320,9 @@ function renderCoverage() {
   if (rowsData.length === 0) {
     const message = filter === "archived"
       ? "No archived atoms."
-      : filter === "scheduled"
-        ? "No scheduled atoms with an initial teaching date."
-        : "No active atoms with an initial teaching date or Historic status.";
+      : filter === "historic"
+        ? "No Historic atoms."
+        : "No Active atoms with an initial teaching date.";
     wrap.innerHTML = `<div class="coverage-empty">${message}</div>`;
     return;
   }
@@ -3149,9 +3334,15 @@ function renderCoverage() {
 
   const showPlanning = planningHorizon === "next-lesson" && !!nextLesson;
   const rows = [];
-  rows.push(`<table class="coverage-table"><thead><tr>
-    <th class="coverage-plan" aria-label="Plan for next lesson"></th>
-    ${sortTh("atom", "Atom", ' style="width:43%;"')}
+  rows.push(`<table class="coverage-table"><colgroup>
+    <col style="width:48%">
+    <col style="width:11%">
+    <col style="width:11%">
+    <col style="width:11%">
+    <col style="width:12%">
+    <col style="width:7%">
+  </colgroup><thead><tr>
+    ${sortTh("atom", "Atom")}
     ${sortTh("taught", "Taught")}
     ${sortTh("last", "Last")}
     ${sortTh("next", "Next")}
@@ -3165,8 +3356,6 @@ function renderCoverage() {
     const { atom, total, last, next, daysSinceLast, status } = item;
     const deferActive = status === "scheduled" && isDeferActive(atom, today);
     const schedulerHighlight = status === "scheduled" && isPlannedRetrieval(atom);
-    const canPlanForNextLesson = showPlanning && schedulerHighlight;
-    const plannedForNextLesson = canPlanForNextLesson && isRetrievalPlanned(atom.id, planningDate, c);
     const schedulerClass = schedulerHighlight ? "scheduler-due" : "";
     // Name the lesson the scheduler will actually use, which differs if the Defer lesson was removed.
     const deferTitle = deferActive ? `Deferred until ${formatDateNice(deferredLesson(atom) || atom.deferUntil)}` : null;
@@ -3175,15 +3364,16 @@ function renderCoverage() {
       : 'Click for atom history';
     const noLessonNote = status === "scheduled" && !next ? noLessonAvailableNote(atom) : null;
     const daysLabel = daysSinceLast == null ? "Never" : String(daysSinceLast);
-    const taughtLabel = status === "historic" ? "Historic" : formatDateNice(item.taught);
+    const historicRecord = isHistoricRecord(atom);
+    const taughtLabel = historicRecord ? "Historic" : formatDateNice(item.taught);
     rows.push(`
       <tr${schedulerHighlight ? ' class="due-row"' : ''}>
-        <td class="coverage-plan">${canPlanForNextLesson ? `<input type="checkbox" class="coverage-plan-checkbox" data-action="plan-retrieval" data-atom-id="${atom.id}" data-lesson-date="${planningDate}" ${plannedForNextLesson ? "checked" : ""} title="Plan this retrieval for next lesson" aria-label="Plan this retrieval for next lesson">` : ''}</td>
         <td class="atom-name">
           <div class="atom-name-inner">
             <button class="btn ghost coverage-add" data-action="add-retrieval" data-atom-id="${atom.id}" title="Record a retrieval" aria-label="Record a retrieval">+</button>
             <a href="#" class="${schedulerClass}${schedulerHighlight ? ' ' : ''}${deferActive ? 'defer-active' : ''}" data-atom-id="${atom.id}" title="${escapeHtml(deferTitle || title)}">${escapeHtml(atom.name)}</a>
-            ${noLessonNote ? `<span style="font-size:12px; color:var(--text-muted); flex:0 0 auto; white-space:nowrap;" title="Add lesson dates in Classes">${escapeHtml(noLessonNote)}</span>` : ""}
+            ${noLessonNote ? `<span style="font-size:12px; color:var(--text-muted); flex:0 1 auto; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(noLessonNote)}">${escapeHtml(noLessonNote)}</span>` : ""}
+            ${showPlanning ? `<input type="checkbox" class="coverage-plan-checkbox" data-atom-id="${atom.id}" data-lesson-date="${nextLesson}" ${isRetrievalPlanned(atom.id, nextLesson) ? "checked" : ""} title="Tick for ${formatDateNice(nextLesson)} (planning aid only; does not affect the schedule)" aria-label="Tick ${escapeHtml(atom.name)} for ${formatDateNice(nextLesson)}">` : ""}
           </div>
         </td>
         <td class="date">${taughtLabel}</td>
@@ -3216,17 +3406,18 @@ function renderCoverage() {
     });
   });
 
+  wrap.querySelectorAll('input.coverage-plan-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      setRetrievalPlanned(cb.dataset.atomId, cb.dataset.lessonDate, cb.checked);
+    });
+  });
+
   wrap.querySelectorAll('button[data-action="add-retrieval"]').forEach(btn => {
     btn.addEventListener('click', () => {
       openRecordRetrieval(btn.dataset.atomId);
     });
   });
 
-  wrap.querySelectorAll('input[data-action="plan-retrieval"]').forEach(cb => {
-    cb.addEventListener('change', () => {
-      setRetrievalPlanned(cb.dataset.atomId, cb.dataset.lessonDate, cb.checked);
-    });
-  });
 }
 
 // ----- Render: Schedule overview -----
@@ -3338,9 +3529,23 @@ function toggleHistoryDateSort(atomId) {
   openAtomHistory(atomId);
 }
 
+// Makes the notes box tall enough for its text (up to 60% of the window, then it scrolls).
+// It never shrinks below the 4 rows it starts with.
+function growNotesBox(box) {
+  if (!box || !box.offsetParent) return;
+  box.style.height = "auto";
+  const border = box.offsetHeight - box.clientHeight;
+  box.style.height = Math.max(84, box.scrollHeight + border) + "px";
+}
+
 function openAtomHistory(atomId) {
   const atom = ctx().atoms.find(a => a.id === atomId);
   if (!atom) return;
+  // The modal re-renders after actions such as Defer or Archive; keep any unsaved notes being
+  // typed for this atom. Once the modal has been closed, an unsaved draft is discarded.
+  const openNotes = document.getElementById("history-modal").classList.contains("open")
+    ? document.getElementById("history-notes") : null;
+  const notesDraft = openNotes && openNotes.dataset.atomId === atom.id ? openNotes.value : null;
 
   document.getElementById("history-title").textContent = atom.name;
   document.getElementById("history-sub").textContent = "";
@@ -3360,10 +3565,15 @@ function openAtomHistory(atomId) {
   lines.push('<div style="display:flex; gap:28px; align-items:flex-start; margin-bottom:18px;">');
   lines.push('<div style="min-width:0; flex:1;">');
   lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">First taught</div>`);
-  lines.push(`<div style="font-weight:500;">${formatDateNice(atom.initial_instruction_date)}</div>`);
+  if (isHistoricRecord(atom)) {
+    lines.push(`<div style="font-weight:500;">${atom.initial_instruction_date ? formatDateNice(atom.initial_instruction_date) : "Historic"}</div>`);
+    // Legacy Historic records may still hold an old teaching date; it is kept but never used.
+    lines.push(`<div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Historic atom: outside the retrieval schedule${atom.initial_instruction_date ? "; this date is not used" : ""}</div>`);
+  } else {
+    lines.push(`<div style="font-weight:500;">${formatDateNice(atom.initial_instruction_date)}</div>`);
+  }
   lines.push('</div>');
 
-  lines.push(`<label class="history-longterm"><input type="checkbox" class="history-longterm-checkbox" data-action="history-toggle-longterm" data-atom-id="${atom.id}" ${atom.retrieve !== "N" ? "checked" : ""} aria-label="Long-term retrieval"> <span>Long-term retrieval</span></label>`);
 
   if (status === "scheduled") {
     const schedulerState = getAtomSchedulingState(atom);
@@ -3392,17 +3602,17 @@ function openAtomHistory(atomId) {
   }
   lines.push('</div>');
 
+  // Notes: plain text stored on the atom (atom.notes). Saved only by the Save notes button;
+  // closing the modal without saving leaves the stored notes unchanged.
+  const savedNotes = typeof atom.notes === "string" ? atom.notes : "";
+  const notesValue = notesDraft !== null ? notesDraft : savedNotes;
+  lines.push(`<label for="history-notes" style="font-size:12px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Notes</label>`);
+  lines.push(`<textarea id="history-notes" data-atom-id="${atom.id}" rows="4" style="min-height:84px; resize:vertical;" placeholder="Notes about this atom">${escapeHtml(notesValue)}</textarea>`);
+  lines.push(`<div style="display:flex; align-items:center; gap:10px; margin-top:8px;"><button class="btn ghost${notesValue !== savedNotes ? " dirty" : ""}" id="history-notes-save" type="button">Save notes</button><span id="history-notes-status" class="${notesValue !== savedNotes ? "unsaved" : ""}">${notesValue !== savedNotes ? "Unsaved changes" : ""}</span></div>`);
+
   const statusActions = [];
   statusActions.push(`<button class="btn ghost history-status-action" data-status-action="rename" data-atom-id="${atom.id}">Rename</button>`);
-  if (status === "scheduled") {
-    statusActions.push(`<button class="btn ghost history-status-action" data-status-action="historic" data-atom-id="${atom.id}">Make Historic</button>`);
-    statusActions.push(`<button class="btn ghost history-status-action" data-status-action="archive" data-atom-id="${atom.id}">Archive</button>`);
-  } else if (status === "historic") {
-    if (atom.initial_instruction_date) {
-      statusActions.push(`<button class="btn ghost history-status-action" data-status-action="scheduled" data-atom-id="${atom.id}">Make Scheduled</button>`);
-    } else {
-      statusActions.push('<div class="history-status-note">This Historic atom has no initial teaching date, so it cannot be scheduled.</div>');
-    }
+  if (status === "scheduled" || status === "historic") {
     statusActions.push(`<button class="btn ghost history-status-action" data-status-action="archive" data-atom-id="${atom.id}">Archive</button>`);
   } else {
     statusActions.push(`<button class="btn ghost history-status-action" data-status-action="unarchive" data-atom-id="${atom.id}">Unarchive</button>`);
@@ -3467,6 +3677,28 @@ function openAtomHistory(atomId) {
     });
   });
 
+  const notesBox = document.getElementById("history-notes");
+  const notesStatus = document.getElementById("history-notes-status");
+  const notesSaveBtn = document.getElementById("history-notes-save");
+  notesBox.addEventListener("input", () => {
+    const current = ctx().atoms.find(a => a.id === notesBox.dataset.atomId);
+    const stored = current && typeof current.notes === "string" ? current.notes : "";
+    const unsaved = notesBox.value !== stored;
+    notesStatus.textContent = unsaved ? "Unsaved changes" : "";
+    notesStatus.className = unsaved ? "unsaved" : "";
+    notesSaveBtn.classList.toggle("dirty", unsaved);
+    growNotesBox(notesBox);
+  });
+  notesSaveBtn.addEventListener("click", () => {
+    const current = ctx().atoms.find(a => a.id === notesBox.dataset.atomId);
+    if (!current) return;
+    current.notes = notesBox.value;
+    saveState();
+    notesStatus.textContent = "Saved";
+    notesStatus.className = "saved";
+    notesSaveBtn.classList.remove("dirty");
+  });
+
   document.querySelectorAll("#history-body .history-delete-btn").forEach(b => {
     b.addEventListener("click", () => {
       deleteRetrieval(b.dataset.retrievalIndex);
@@ -3479,28 +3711,12 @@ function openAtomHistory(atomId) {
     });
   });
 
-  document.querySelectorAll("#history-body [data-action='history-toggle-longterm']").forEach(cb => {
-    cb.addEventListener("change", () => {
-      const current = ctx().atoms.find(a => a.id === cb.dataset.atomId);
-      if (!current) return;
-      current.retrieve = cb.checked ? "Y" : "N";
-      saveState();
-      renderAll();
-      openAtomHistory(current.id);
-    });
-  });
-
   document.querySelectorAll("#history-body [data-status-action]").forEach(b => {
     b.addEventListener("click", async () => {
       const current = ctx().atoms.find(a => a.id === b.dataset.atomId);
       if (!current) return;
       const action = b.dataset.statusAction;
-      if (action === "historic") {
-        setAtomStatus(current, "historic");
-      } else if (action === "scheduled") {
-        if (!current.initial_instruction_date) return;
-        setAtomStatus(current, "scheduled");
-      } else if (action === "archive") {
+      if (action === "archive") {
         setAtomStatus(current, "archived");
       } else if (action === "rename") {
         renameAtomDialog(current.id, true);
@@ -3518,9 +3734,21 @@ function openAtomHistory(atomId) {
         renderAll();
         return;
       } else if (action === "unarchive") {
-        const restored = current.archived_from_status === "historic" ? "historic" : "scheduled";
-        if (restored === "scheduled" && !current.initial_instruction_date) return;
-        setAtomStatus(current, restored);
+        const restored = archivedFromStatus(current);
+        if (restored === "scheduled" && !current.initial_instruction_date) {
+          showAlert("This atom was archived without an initial teaching date, so it cannot be restored to Active.");
+          return;
+        }
+        // Restoring is allowed alongside a same-named record, but make it a deliberate choice.
+        const key = String(current.name || "").trim().toLowerCase();
+        const clash = ctx().atoms.find(a => a.id !== current.id && atomStatus(a) !== "archived"
+          && String(a.name || "").trim().toLowerCase() === key);
+        if (clash) {
+          const clashLabel = atomStatus(clash) === "historic" ? "Historic" : "Active";
+          const ok = await showConfirm(`Another atom called "${clash.name}" is already ${clashLabel}.\n\nRestore this one to ${restored === "historic" ? "Historic" : "Active"} anyway? The two records stay separate.`, { okLabel: "Restore" });
+          if (!ok) return;
+        }
+        if (!setAtomStatus(current, restored)) return;
       }
       saveState();
       renderAll();
@@ -3529,6 +3757,7 @@ function openAtomHistory(atomId) {
   });
 
   document.getElementById("history-modal").classList.add("open");
+  growNotesBox(document.getElementById("history-notes"));
 }
 
 function closeAtomHistory() {
@@ -3591,11 +3820,14 @@ document.getElementById("add-atoms-save").addEventListener("click", () => {
   if (status === "scheduled" && !date) { showAlert("Please choose the date taught."); return; }
   if (status === "scheduled" && date > todayISO()) { showAlert("The teaching date cannot be in the future."); return; }
 
-  const existing = new Set(c.atoms.map(a => a.name.trim().toLowerCase()));
+  // Archived atoms do not block a name: a new record may reuse the name of an archived one
+  // and the two stay fully independent. Active and Historic atoms still block duplicates.
+  const existing = new Set(c.atoms.filter(a => atomStatus(a) !== "archived").map(a => String(a.name || "").trim().toLowerCase()));
   let added = 0;
+  const skippedNames = [];
   for (const name of names) {
     const key = name.toLowerCase();
-    if (existing.has(key)) continue;
+    if (existing.has(key)) { skippedNames.push(name); continue; }
     c.atoms.push({
       id: newId(),
       name,
@@ -3610,12 +3842,15 @@ document.getElementById("add-atoms-save").addEventListener("click", () => {
   }
 
   if (added === 0) {
-    showAlert("Those atom names are already in this class.");
+    showAlert("Those atom names are already in use by Active or Historic atoms in this class.");
     return;
   }
   saveState();
   closeAddAtoms();
   renderAll();
+  if (skippedNames.length) {
+    showAlert(`Added ${added} atom${added === 1 ? "" : "s"}. Skipped ${skippedNames.length} already in use by an Active or Historic atom:\n${skippedNames.join("\n")}`);
+  }
 });
 
 document.getElementById("record-retrieval-close").addEventListener("click", closeRecordRetrieval);
@@ -3632,7 +3867,7 @@ document.querySelectorAll("#record-retrieval-modal [data-record-modal-outcome]")
     }
     const atom = ctx().atoms.find(a => a.id === recordRetrievalAtomId);
     if (!atom) { closeRecordRetrieval(); return; }
-    if (atom.initial_instruction_date && date < atom.initial_instruction_date) {
+    if (!isHistoricRecord(atom) && atom.initial_instruction_date && date < atom.initial_instruction_date) {
       showAlert("The retrieval date cannot be before the initial instruction date.");
       return;
     }
@@ -3933,6 +4168,94 @@ function renderDates() {
     });
   });
 }
+
+// ----- Holidays: named date ranges per class, for information and the teaching-record
+// export only. Nothing in the scheduler reads them; lesson dates are never changed.
+let holidayEditId = null;
+
+function classHolidays(c = ctx()) {
+  return c && Array.isArray(c.holidays) ? c.holidays : [];
+}
+
+function sortedHolidays(c = ctx()) {
+  // Most recent first by start date; ties by name.
+  return classHolidays(c).slice().sort((a, b) =>
+    String(b.start).localeCompare(String(a.start)) ||
+    String(a.name || "").localeCompare(String(b.name || ""), "en-GB", { sensitivity: "base" }));
+}
+
+function resetHolidayForm() {
+  holidayEditId = null;
+  document.getElementById("holiday-name").value = "";
+  document.getElementById("holiday-start").value = "";
+  document.getElementById("holiday-end").value = "";
+  document.getElementById("holiday-save").textContent = "Add";
+  document.getElementById("holiday-cancel").style.display = "none";
+}
+
+function renderHolidays() {
+  const list = document.getElementById("holidays-list");
+  if (!list) return;
+  const c = ctx();
+  // An edit in progress belongs to one class; drop it if that holiday is no longer here.
+  if (holidayEditId && !classHolidays(c).some(h => h.id === holidayEditId)) resetHolidayForm();
+  const holidays = sortedHolidays(c);
+  if (holidays.length === 0) {
+    list.innerHTML = '<div style="font-size:13px; color:var(--text-muted);">No holidays recorded for this class.</div>';
+    return;
+  }
+  list.innerHTML = `<table><thead><tr><th>Name</th><th>Start</th><th>End</th><th></th></tr></thead><tbody>${holidays.map(h => `
+    <tr>
+      <td><strong>${escapeHtml(h.name)}</strong></td>
+      <td>${formatDateNice(h.start)}</td>
+      <td>${formatDateNice(h.end)}</td>
+      <td style="text-align:right;">
+        <button class="icon-btn" data-holiday-edit="${h.id}">Edit</button>
+        <button class="icon-btn" data-holiday-delete="${h.id}">Delete</button>
+      </td>
+    </tr>`).join("")}</tbody></table>`;
+  list.querySelectorAll("[data-holiday-edit]").forEach(b => b.addEventListener("click", () => {
+    const h = classHolidays().find(x => x.id === b.dataset.holidayEdit);
+    if (!h) return;
+    holidayEditId = h.id;
+    document.getElementById("holiday-name").value = h.name;
+    document.getElementById("holiday-start").value = h.start;
+    document.getElementById("holiday-end").value = h.end;
+    document.getElementById("holiday-save").textContent = "Save changes";
+    document.getElementById("holiday-cancel").style.display = "";
+    document.getElementById("holiday-name").focus();
+  }));
+  list.querySelectorAll("[data-holiday-delete]").forEach(b => b.addEventListener("click", async () => {
+    const c2 = ctx();
+    const h = classHolidays(c2).find(x => x.id === b.dataset.holidayDelete);
+    if (!h) return;
+    if (!await showConfirm(`Delete the holiday "${h.name}"?`, { okLabel: "Delete", danger: true })) return;
+    c2.holidays = classHolidays(c2).filter(x => x.id !== h.id);
+    if (holidayEditId === h.id) resetHolidayForm();
+    saveState();
+    renderAll();
+  }));
+}
+
+document.getElementById("holiday-save").addEventListener("click", () => {
+  if (isTutee()) return; // school data only
+  const c = ctx();
+  if (!c) return;
+  const name = document.getElementById("holiday-name").value.trim();
+  const start = document.getElementById("holiday-start").value;
+  const end = document.getElementById("holiday-end").value;
+  if (!name) { showAlert("Please give the holiday a name."); return; }
+  if (!start || !end) { showAlert("Please choose a start date and an end date."); return; }
+  if (end < start) { showAlert("The end date cannot be before the start date."); return; }
+  if (!Array.isArray(c.holidays)) c.holidays = [];
+  const existing = holidayEditId ? c.holidays.find(h => h.id === holidayEditId) : null;
+  if (existing) Object.assign(existing, { name, start, end });
+  else c.holidays.push({ id: newId("h"), name, start, end });
+  resetHolidayForm();
+  saveState();
+  renderAll();
+});
+document.getElementById("holiday-cancel").addEventListener("click", resetHolidayForm);
 
 document.getElementById("date-add-one").addEventListener("click", () => {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
@@ -4325,8 +4648,13 @@ function renderSnapshots() {
   const el = document.getElementById("snapshots-list");
   if (!el) return;
   const snaps = loadSnapshots();
+  const limitNote = snapshotsLimited
+    ? `<div style="font-size:12px; color:var(--warning-text); margin-bottom:6px;">${snaps.length === 0
+        ? "Browser storage is too full to keep snapshots."
+        : `Browser storage is limited, so only the newest ${snaps.length} snapshot${snaps.length === 1 ? " is" : "s are"} kept (up to ${MAX_SNAPSHOTS} when there is room).`} Use Backup to keep a safe copy.</div>`
+    : "";
   if (snaps.length === 0) {
-    el.innerHTML = '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">No snapshots yet. Snapshots are saved automatically as you use the app.</div>';
+    el.innerHTML = limitNote + '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">No snapshots yet. Snapshots are saved automatically as you use the app.</div>';
     return;
   }
   const rows = snaps.map(s => {
@@ -4346,7 +4674,7 @@ function renderSnapshots() {
       <button class="btn ghost" data-restore-ts="${s.ts}" style="padding:4px 10px; font-size:12px;">Restore</button>
     </div>`;
   }).join("");
-  el.innerHTML = rows;
+  el.innerHTML = limitNote + rows;
   el.querySelectorAll("button[data-restore-ts]").forEach(b => {
     b.addEventListener("click", () => restoreSnapshot(parseInt(b.dataset.restoreTs, 10)));
   });
@@ -4402,25 +4730,46 @@ function updateLastBackupStatus() {
   el.textContent = `Last backup: ${formatTimestampUK(timestamp)}`;
 }
 
+// Compact UK date for the teaching record, e.g. "Mon 03/10/26".
+const SHORT_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+function formatDateShort(iso) {
+  if (!iso) return "";
+  return `${SHORT_WEEKDAYS[fromISO(iso).getDay()]} ${formatDateNice(iso)}`;
+}
+
 function saveCoverageTextFile() {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const c = ctx();
   if (!c) return;
-  const rows = c.atoms
-    .filter(atom => !!atom.initial_instruction_date)
-    .map(atom => {
-      const name = String(atom.name || "").replace(/[\t\r\n]+/g, " ").trim();
-      return `${name}\t${formatDateNice(atom.initial_instruction_date)}`;
-    });
-
-  const className = String(c.name || "").replace(/[\t\r\n]+/g, " ").trim();
-  const text = `${className}\n\n` + c.atoms
-    .filter(atom => !!atom.initial_instruction_date)
-    .map(atom => {
-      const name = String(atom.name || "").replace(/[\t\r\n]+/g, " ").trim();
-      return `${formatDateNice(atom.initial_instruction_date)}: ${name}`;
-    })
-    .join("\n") + "\n";
+  const clean = v => String(v || "").replace(/[\t\r\n]+/g, " ").trim();
+  // Teaching record: every Active atom and every Archived atom, with no status shown.
+  // Historic atoms are excluded, including those archived from Historic.
+  const included = c.atoms.filter(atom => {
+    const status = atomStatus(atom);
+    if (status === "scheduled") return !!atom.initial_instruction_date;
+    if (status === "archived") return archivedFromStatus(atom) !== "historic";
+    return false;
+  });
+  // Newest original teaching date first; same date (or no date) alphabetical by name.
+  included.sort((a, b) => {
+    const ad = a.initial_instruction_date || "", bd = b.initial_instruction_date || "";
+    if (ad !== bd) return bd.localeCompare(ad);
+    return clean(a.name).localeCompare(clean(b.name), "en-GB", { sensitivity: "base" });
+  });
+  const lines = [clean(c.name), ""];
+  for (const atom of included) {
+    const date = formatDateShort(atom.initial_instruction_date);
+    lines.push(date ? `${date}: ${clean(atom.name)}` : clean(atom.name));
+  }
+  if (included.length === 0) lines.push("No atoms recorded.");
+  const holidays = sortedHolidays(c);
+  if (holidays.length) {
+    lines.push("", "HOLIDAYS");
+    for (const h of holidays) {
+      lines.push("", clean(h.name), `${formatDateShort(h.start)} - ${formatDateShort(h.end)}`);
+    }
+  }
+  const text = lines.join("\n") + "\n";
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -4428,7 +4777,7 @@ function saveCoverageTextFile() {
   const safeClassName = String(c.name || "class")
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-+|-+$/g, "") || "class";
-  a.download = `coverage-${safeClassName}-${todayISO()}.txt`;
+  a.download = `teaching-record-${safeClassName}-${todayISO()}.txt`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -4437,12 +4786,15 @@ function saveCoverageTextFile() {
 
 document.getElementById("coverage-export-txt").addEventListener("click", saveCoverageTextFile);
 
+const BACKUP_FORMAT = 2;
 function saveBackupFile() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  // backup_format and exported_at describe the file; importing ignores them and keeps only the data.
+  const payload = { backup_format: BACKUP_FORMAT, exported_at: new Date().toISOString(), ...state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `retrieval-tracker-${todayISO()}.json`;
+  a.download = `Retrieval Backup ${todayISO()}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -4463,38 +4815,150 @@ initialiseBackupBaseline();
 document.getElementById("data-import-btn").addEventListener("click", () => {
   document.getElementById("data-import").click();
 });
+// ---- Import: check the file completely before anything is touched ----
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const KNOWN_OUTCOMES = ["pass", "struggle", "reteach", "ad_hoc", "miss", "skip"];
+function isPlainObject(v) { return !!v && typeof v === "object" && !Array.isArray(v); }
+
+// Returns an error message, or null if the school-class fields (atoms, dates, retrievals) look sound.
+function checkSchoolFields(c, label) {
+  for (const key of ["atoms", "lesson_dates", "retrievals"]) {
+    if (c[key] !== undefined && !Array.isArray(c[key])) return `${label}: "${key}" should be a list.`;
+  }
+  if (c.settings !== undefined && !isPlainObject(c.settings)) return `${label}: "settings" is not valid.`;
+  for (const a of (c.atoms || [])) {
+    if (!isPlainObject(a)) return `${label}: an atom is not a valid record.`;
+    if ((typeof a.id !== "string" && typeof a.id !== "number") || a.id === "") return `${label}: an atom has no id.`;
+    if (typeof a.name !== "string") return `${label}: an atom has no name.`;
+    const d = a.initial_instruction_date;
+    if (d !== undefined && d !== null && !(typeof d === "string" && ISO_DATE_RE.test(d))) return `${label}: atom "${a.name}" has an invalid date taught.`;
+  }
+  for (const d of (c.lesson_dates || [])) {
+    if (!(typeof d === "string" && ISO_DATE_RE.test(d))) return `${label}: the lesson dates contain an invalid date.`;
+  }
+  for (const r of (c.retrievals || [])) {
+    if (!isPlainObject(r) || r.atom_id === undefined || r.atom_id === null) return `${label}: a retrieval record is incomplete.`;
+    if (!(typeof r.lesson_date === "string" && ISO_DATE_RE.test(r.lesson_date))) return `${label}: a retrieval record has an invalid date.`;
+    if (r.outcome !== undefined && !KNOWN_OUTCOMES.includes(r.outcome)) return `${label}: a retrieval record has an unrecognised outcome.`;
+  }
+  return null;
+}
+
+// Returns { error } or { legacy, counts } without modifying anything.
+function checkBackupFile(p) {
+  if (!isPlainObject(p)) return { error: "This isn't a Retrieval Tracker backup (expected a JSON object)." };
+  if (typeof p.backup_format === "number" && p.backup_format > BACKUP_FORMAT) {
+    return { error: "This backup was made by a newer version of the tracker than this file. Open it in that newer version instead." };
+  }
+  if (Array.isArray(p.classes)) {
+    if (p.classes.length === 0) return { error: "The file contains no classes or tutees, so importing it would leave the app empty." };
+    const ids = new Set();
+    for (let i = 0; i < p.classes.length; i++) {
+      const c = p.classes[i];
+      const label = `Record ${i + 1}`;
+      if (!isPlainObject(c)) return { error: `${label} is not a class or tutee.` };
+      if (typeof c.id !== "string" || c.id === "") return { error: `${label} has no id.` };
+      if (ids.has(c.id)) return { error: `${label} repeats an id used by another class or tutee.` };
+      ids.add(c.id);
+      if (typeof c.name !== "string") return { error: `${label} has no name.` };
+      if (c.type === "tutee") {
+        if (c.sessions !== undefined && !Array.isArray(c.sessions)) return { error: `Tutee "${c.name}": "sessions" should be a list.` };
+        for (const s of (c.sessions || [])) {
+          if (!isPlainObject(s) || !(typeof s.date === "string" && ISO_DATE_RE.test(s.date))) return { error: `Tutee "${c.name}": a session has no valid date.` };
+        }
+      } else {
+        const err = checkSchoolFields(c, `Class "${c.name}"`);
+        if (err) return { error: err };
+      }
+    }
+    return { legacy: false, counts: countData(p.classes) };
+  }
+  if (Array.isArray(p.atoms)) {
+    const err = checkSchoolFields(p, "The file");
+    if (err) return { error: err };
+    return { legacy: true, counts: countData([p]) };
+  }
+  return { error: "This isn't a full backup: it has no list of classes. (Atom lists from the Curriculum Writer are not backups.)" };
+}
+
+function countData(list) {
+  const n = { classes: 0, tutees: 0, atoms: 0, retrievals: 0, sessions: 0 };
+  for (const c of list) {
+    if (c.type === "tutee") { n.tutees++; n.sessions += (c.sessions || []).length; }
+    else { n.classes++; n.atoms += (c.atoms || []).length; n.retrievals += (c.retrievals || []).length; }
+  }
+  return n;
+}
+function describeCounts(n) {
+  const plural = (k, one, many) => `${k} ${k === 1 ? one : many}`;
+  return [plural(n.classes, "class", "classes"), plural(n.tutees, "tutee", "tutees"), plural(n.atoms, "atom", "atoms"), plural(n.retrievals, "retrieval", "retrievals"), plural(n.sessions, "session", "sessions")].join(", ");
+}
+
+async function importBackupText(text) {
+  let parsed;
+  try { parsed = JSON.parse(text); }
+  catch (err) { showAlert("Couldn't import that file: it isn't valid JSON.\n\nNothing was changed."); return; }
+  const check = checkBackupFile(parsed);
+  if (check.error) { showAlert("Couldn't import that file: " + check.error + "\n\nNothing was changed."); return; }
+
+  const current = countData(state.classes);
+  const lessThan = [];
+  for (const [k, label] of [["classes", "classes"], ["tutees", "tutees"], ["atoms", "atoms"], ["retrievals", "retrievals"], ["sessions", "sessions"]]) {
+    if (check.counts[k] < current[k]) lessThan.push(`${label} (${check.counts[k]} in the file, ${current[k]} now)`);
+  }
+  let when = "date not recorded (made before dated backups)";
+  if (typeof parsed.exported_at === "string" && !isNaN(Date.parse(parsed.exported_at))) when = formatTimestampUK(Date.parse(parsed.exported_at));
+
+  // Keep the current data recoverable before asking: the snapshot costs nothing if the user cancels.
+  const snapped = snapshotState();
+  const lines = [
+    "Replace ALL current data with this file?",
+    "",
+    `Now:  ${describeCounts(current)}`,
+    `File: ${describeCounts(check.counts)}`,
+    `File made: ${when}`
+  ];
+  if (check.legacy) lines.push("", "This is an older single-class file. It will replace everything with ONE class called \"Imported\".");
+  if (lessThan.length) lines.push("", "The file has FEWER " + lessThan.join(", ") + ".");
+  lines.push("", snapped
+    ? "A snapshot of your current data has just been saved. You can undo this from Settings > Recent snapshots."
+    : "WARNING: a snapshot of your current data could not be saved (storage is full). If you need it, cancel and use Backup first.");
+  if (!await showConfirm(lines.join("\n"), { okLabel: "Replace data", danger: true })) return;
+
+  const previous = state;
+  let next;
+  try {
+    const clone = JSON.parse(text);
+    // Keep only the data: the description fields (backup_format, exported_at) do not belong in state.
+    const normalised = normaliseParsedState(clone, "Imported");
+    next = { classes: normalised.classes, active_class_id: normalised.active_class_id };
+  } catch (err) {
+    showAlert("Couldn't import that file: " + err.message + "\n\nNothing was changed.");
+    return;
+  }
+  state = next;
+  settingsDraftDirty = false;
+  settingsDraftClassId = null;
+  if (!saveState({ snapshot: false })) {
+    state = previous;
+    renderAll();
+    showAlert("The imported data could not be saved to this browser's storage, so nothing was changed. See the message at the top of the page.");
+    return;
+  }
+  lastSnapshotHash = null;
+  markBackupClean();
+  renderAll();
+}
+
 document.getElementById("data-import").addEventListener("change", (e) => {
-  const file = e.target.files[0];
+  const input = e.target;
+  const file = input.files[0];
+  // Clear the chooser so that choosing the same file again fires a new change event.
+  input.value = "";
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = async () => {
-    try {
-      const parsed = JSON.parse(reader.result);
-      if (!await showConfirm("Replace all current data with the imported file?", { okLabel: "Replace data", danger: true })) return;
-      let newState;
-      if (parsed.classes && Array.isArray(parsed.classes)) {
-        newState = parsed;
-      } else if (parsed.atoms) {
-        const cls = defaultClass("Imported");
-        cls.atoms = parsed.atoms || [];
-        cls.lesson_dates = parsed.lesson_dates || [];
-        cls.retrievals = parsed.retrievals || [];
-        cls.settings = { ...defaultSettings(), ...(parsed.settings || {}) };
-        newState = { classes: [cls], active_class_id: cls.id };
-      } else {
-        throw new Error("Unrecognised file structure.");
-      }
-      for (const cls of newState.classes) for (const atom of (cls.atoms || [])) migrateLegacySkip(atom);
-      state = newState;
-      settingsDraftDirty = false;
-      settingsDraftClassId = null;
-      saveState();
-      markBackupClean();
-      renderAll();
-    } catch (err) {
-      showAlert("Couldn't read that file: " + err.message);
-    }
-  };
+  reader.onload = () => { importBackupText(String(reader.result)); };
+  reader.onerror = () => showAlert("Couldn't read that file.\n\nNothing was changed.");
   reader.readAsText(file);
 });
 
@@ -4585,7 +5049,9 @@ document.getElementById("class-export").addEventListener("click", () => {
       response: a.response || "",
       concept_notes: a.concept_notes || "",
       initial_instruction_date: a.initial_instruction_date || null,
-      notes: a.notes || ""
+      notes: a.notes || "",
+      status: atomStatus(a),
+      ...(atomStatus(a) === "archived" ? { archived_from_status: archivedFromStatus(a) } : {})
     })),
     retrievals: (c.retrievals || []).map(r => ({ atom_id: r.atom_id, lesson_date: r.lesson_date, outcome: r.outcome, ...(r.additional ? { additional: true } : {}) }))
   };
@@ -4657,6 +5123,8 @@ document.getElementById("class-merge").addEventListener("change", (e) => {
             ...content
           };
           if (!ATOM_STATUSES.includes(atom.status)) atom.status = "scheduled";
+          if (atom.status === "archived" && inc.archived_from_status === "historic") atom.archived_from_status = "historic";
+          else if (atom.status === "archived") atom.archived_from_status = "scheduled";
           c.atoms.push(atom);
           if (wid) byWriterId.set(wid, atom);
           byId.set(newLocalId, atom);
@@ -4750,7 +5218,8 @@ document.getElementById("atoms-export-go").addEventListener("click", () => {
   const incInstruction = document.getElementById("exp-inc-instruction").checked;
   const incNotes = document.getElementById("exp-inc-notes").checked;
   const atoms = chosen.map(a => {
-    const o = { id: a.id, writer_id: a.writer_id || null, name: a.name || "", type: a.type || "", retrieve: a.retrieve || "Y" };
+    const o = { id: a.id, writer_id: a.writer_id || null, name: a.name || "", type: a.type || "", retrieve: a.retrieve || "Y", status: atomStatus(a) };
+    if (o.status === "archived") o.archived_from_status = archivedFromStatus(a);
     if (incExamples) { o.prompt = a.prompt || ""; o.response = a.response || ""; }
     if (incConcept) o.concept_notes = a.concept_notes || "";
     if (incInstruction) o.initial_instruction_date = a.initial_instruction_date || null;
@@ -4951,6 +5420,7 @@ function renderAll() {
   } else {
     renderAtoms();
     renderDates();
+    renderHolidays();
     renderToday();
     renderCoverage();
     renderSchedule();
@@ -4973,7 +5443,21 @@ document.getElementById("class-notes").addEventListener("input", (e) => {
   const c = ctx();
   c.notes = e.target.value;
   clearTimeout(classNotesSaveTimer);
-  classNotesSaveTimer = setTimeout(() => saveState({ snapshot: false }), 300);
+  classNotesSaveTimer = setTimeout(() => { classNotesSaveTimer = null; saveState({ snapshot: false }); }, 300);
+});
+// Save pending notes at once if the tab is hidden or closed within the 300 ms delay.
+function flushPendingNotes() {
+  if (classNotesSaveTimer === null) return;
+  clearTimeout(classNotesSaveTimer);
+  classNotesSaveTimer = null;
+  saveState({ snapshot: false });
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushPendingNotes(); });
+window.addEventListener("pagehide", flushPendingNotes);
+// Leaving the notes box takes a snapshot (deduplicated), so notes are covered by rollback too.
+document.getElementById("class-notes").addEventListener("blur", () => {
+  if (classNotesSaveTimer !== null) { clearTimeout(classNotesSaveTimer); classNotesSaveTimer = null; }
+  saveState();
 });
 
 // Atom library search — re-render atoms on every keystroke.
@@ -4989,7 +5473,10 @@ renderAll();
 
 // Refresh date-dependent indicators when returning to the tab.
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") renderAll();
+  if (document.visibilityState === "visible") {
+    if (readStoredStamp() !== knownStamp) markStale();
+    renderAll();
+  }
 });
 
 // ----- Interest signals panel: hidden by default, shown only with ?signals=1
