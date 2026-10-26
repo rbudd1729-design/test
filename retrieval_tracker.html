@@ -1903,11 +1903,8 @@ function getAtomSchedulingState(atom) {
   // retrieval. This separates memory evidence from lesson-calendar constraints.
   // Returns: { last_date, history, anchorDate, last_successful_gap, hasPassed }.
   // hasPassed is true once a Pass has been recorded since the anchor (important for retrieve=N).
-  // Missed outcomes are excluded from scheduling history — they don't count as
-  // retrievals and don't change the spacing calculation. Legacy Skip records, if present
-  // in imported data, are treated the same way for backward compatibility. A missed event
-  // moves the next occurrence beyond the dealt-with scheduled lesson; simply ignoring a
-  // recommendation creates no event at all.
+  // Legacy Missed and Skip records, if present in saved data, are excluded from scheduling
+  // history: they don't count as retrievals and don't move the next retrieval.
   if (!atom.initial_instruction_date) {
     return { last_date: null, history: [], anchorDate: null, last_successful_gap: null, hasPassed: false };
   }
@@ -2116,11 +2113,18 @@ function openRecordRetrieval(atomId) {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
   const atom = ctx().atoms.find(a => a.id === atomId);
   if (!atom) return;
+  // A check in the lesson that taught the atom is not spaced retrieval, so the earliest
+  // retrieval date is the day after teaching.
+  const earliest = !isHistoricRecord(atom) && atom.initial_instruction_date ? addDays(atom.initial_instruction_date, 1) : "";
+  if (earliest && earliest > todayISO()) {
+    showAlert(`"${atom.name}" was taught on ${formatDateNice(atom.initial_instruction_date)}, so a retrieval can only be recorded from the following day.`);
+    return;
+  }
   recordRetrievalAtomId = atomId;
   const dateInput = document.getElementById("record-retrieval-date");
   dateInput.value = todayISO();
   // Historic atoms can have retrievals recorded, but any legacy teaching date they hold is not used.
-  dateInput.min = isHistoricRecord(atom) ? "" : (atom.initial_instruction_date || "");
+  dateInput.min = earliest;
   dateInput.max = todayISO();
   document.getElementById("record-retrieval-sub").textContent = atom.name;
   document.getElementById("record-retrieval-modal").classList.add("open");
@@ -3161,8 +3165,8 @@ document.querySelectorAll("#record-retrieval-modal [data-record-modal-outcome]")
     }
     const atom = ctx().atoms.find(a => a.id === recordRetrievalAtomId);
     if (!atom) { closeRecordRetrieval(); return; }
-    if (!isHistoricRecord(atom) && atom.initial_instruction_date && date < atom.initial_instruction_date) {
-      showAlert("The retrieval date cannot be before the initial instruction date.");
+    if (!isHistoricRecord(atom) && atom.initial_instruction_date && date <= atom.initial_instruction_date) {
+      showAlert("The retrieval date must be after the day the atom was taught.");
       return;
     }
     if (date > todayISO()) {
@@ -3255,9 +3259,9 @@ async function handlePlannedOutcome(outcome) {
       saveState({ snapshot: false });
     } else {
       const date = todayISO();
-      // Same date rule as the existing record dialog.
-      if (!isHistoricRecord(atom) && atom.initial_instruction_date && date < atom.initial_instruction_date) {
-        await showAlert(`"${atom.name}" has an initial instruction date after today, so a retrieval cannot be recorded. Choose Skip, or change its date.`);
+      // Same date rule as the existing record dialog: retrievals start the day after teaching.
+      if (!isHistoricRecord(atom) && atom.initial_instruction_date && date <= atom.initial_instruction_date) {
+        await showAlert(`"${atom.name}" was taught on ${formatDateNice(atom.initial_instruction_date)}, so a retrieval can only be recorded from the following day. Choose Skip, or change its date.`);
         return;
       }
       // recordRetrieval clears the selection itself once the outcome is saved. If the teacher
