@@ -58,37 +58,6 @@
     font-weight: 600;
     letter-spacing: -0.01em;
   }
-  .pro-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #2c5f7f 0%, #1e4356 100%);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 2px 7px;
-    border-radius: 4px;
-    vertical-align: middle;
-    margin-left: 6px;
-    position: relative;
-    top: -2px;
-    text-transform: uppercase;
-  }
-  header .tagline {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-bottom: 14px;
-  }
-  .prompt-vars .var-name { color: #2c5f7f; font-weight: 600; }
-  .copy-feedback {
-    display: inline-block;
-    color: #1a7f4f;
-    font-size: 12px;
-    font-weight: 600;
-    margin-left: 8px;
-    opacity: 0;
-    transition: opacity 200ms;
-  }
-  .copy-feedback.show { opacity: 1; }
   .class-switcher {
     display: flex;
     align-items: center;
@@ -128,17 +97,6 @@
     background: var(--bg);
     color: var(--text);
   }
-  .class-switcher .manage-link {
-    background: none;
-    border: none;
-    color: var(--primary);
-    cursor: pointer;
-    font-size: 12px;
-    padding: 2px 6px;
-    border-left: 1px solid var(--border);
-    font-family: inherit;
-  }
-  .class-switcher .manage-link:hover { text-decoration: underline; }
   .backup-needed-indicator {
     position: absolute;
     top: 50%;
@@ -211,13 +169,6 @@
     font-family: inherit;
   }
 
-  /* Keep Today's Lesson and Schedule available internally, but hide their navigation tabs. */
-  nav.tabs button[data-screen="dates"],
-  nav.tabs button[data-screen="atoms"],
-  nav.tabs button[data-screen="today"],
-  nav.tabs button[data-screen="schedule"] {
-    display: none;
-  }
   nav.tabs button.active {
     color: var(--primary);
     border-bottom-color: var(--primary);
@@ -393,11 +344,6 @@
   .badge.outcome-dot.reteach { background: var(--reteach); }
   .badge.outcome-dot.ad-hoc { background: var(--unscheduled); border: none; }
   .badge.new { background: var(--accent-bg); color: var(--primary); }
-  .badge.type-categorical { background: #eef4f8; color: #2c5f7f; }
-  .badge.type-comparative { background: #f1eef8; color: #6c4f9b; }
-  .badge.type-transformation { background: #f8f1ee; color: #9b6c4f; }
-  .badge.type-fact { background: #f4f8ee; color: #5f7f2c; }
-  .badge.type-routine { background: #f8eef4; color: #9b4f7c; }
   .pill-input {
     display: flex;
     flex-wrap: wrap;
@@ -430,89 +376,6 @@
     opacity: 0.6;
   }
   .pill button:hover { opacity: 1; }
-  .retrieval-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 16px;
-    align-items: center;
-    padding: 12px 14px;
-    border-radius: 6px;
-    border-left: 3px solid transparent;
-    background: var(--bg);
-    margin-bottom: 6px;
-  }
-  .retrieval-row:last-child { margin-bottom: 0; }
-  .retrieval-row.overdue {
-    border-left-color: var(--text-muted);
-    background: var(--surface);
-  }
-  .retrieval-info .name {
-    font-weight: 600;
-    font-size: 15px;
-    margin-bottom: 4px;
-    color: var(--text);
-  }
-  .retrieval-info .meta {
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  /* Mini type badge — quieter than the colourful Atoms-table version */
-  .type-mini {
-    display: inline-block;
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: 500;
-    background: var(--bg);
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-  }
-  .type-mini.type-categorical { color: #2c5f7f; border-color: #c5d4df; }
-  .type-mini.type-comparative { color: #6c4f9b; border-color: #d2cadf; }
-  .type-mini.type-transformation { color: #9b6c4f; border-color: #dfd2c5; }
-  .type-mini.type-fact { color: #5f7f2c; border-color: #d4dfc5; }
-  .type-mini.type-routine { color: #9b4f7c; border-color: #dfc5d4; }
-  /* Inline editable selects in the atom library */
-  .inline-select {
-    padding: 5px 8px;
-    font-size: 13px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    border-radius: 4px;
-    cursor: pointer;
-    color: var(--text);
-    font-family: inherit;
-    max-width: 220px;
-  }
-  .inline-select:hover { border-color: var(--border-strong); }
-  .inline-select:focus { border-color: var(--primary); outline: none; }
-  .inline-select.not-set { color: var(--text-muted); font-style: italic; }
-  .retrieval-actions {
-    display: flex;
-    gap: 6px;
-  }
-  .retrieval-actions button {
-    border: 1px solid var(--border-strong);
-    background: var(--surface);
-    color: var(--text-muted);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-family: inherit;
-    transition: all 0.15s;
-  }
-  .retrieval-actions button.outcome { min-width: 36px; min-height: 30px; padding: 0; border-color: transparent; }
-  .retrieval-actions button.outcome.pass { background: var(--pass); }
-  .retrieval-actions button.outcome.struggle { background: var(--struggle); }
-  .retrieval-actions button.outcome.reteach { background: var(--reteach); }
-  .retrieval-actions button.outcome.ad-hoc { background: var(--unscheduled); }
-  .retrieval-actions button.outcome:hover { filter: brightness(1.15); }
-  .retrieval-actions button.outcome.selected { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
   .empty-state {
     text-align: center;
     padding: 36px 20px;
@@ -523,21 +386,6 @@
     color: var(--text);
     font-weight: 500;
   }
-  .empty-state .cta-row {
-    margin-top: 16px;
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .empty-state .cta-row a {
-    color: var(--primary);
-    text-decoration: none;
-    border-bottom: 1px dotted var(--primary);
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .empty-state .cta-row a:hover { color: var(--primary-hover); }
   /* Help icons: small (?) markers that show a tooltip on hover */
   .help-icon {
     display: inline-flex;
@@ -582,68 +430,6 @@
   }
   .help-icon:hover::after { opacity: 1; }
 
-  /* Annotation overlay system: inline callouts that explain the current view. */
-  .annotation-box {
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-    color: #ffffff;
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin: 16px 0;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.5;
-    box-shadow: 0 8px 24px rgba(44, 95, 127, 0.32);
-    animation: annotation-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  .annotation-box .number {
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #ffffff;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-  }
-  .annotation-box .text { flex: 1; padding-top: 4px; }
-  @keyframes annotation-pop {
-    from { opacity: 0; transform: scale(0.94) translateY(-8px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .annotation-done {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 10px 22px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    z-index: 80;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-    font-family: inherit;
-  }
-  .annotation-done:hover { background: var(--primary-hover); }
-  .helper {
-    background: var(--accent-bg);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: var(--text);
-    margin-bottom: 16px;
-  }
-  .helper.warn { background: var(--warning-bg); }
-  .helper strong { color: var(--primary); }
   details { margin-top: 12px; }
   details summary {
     cursor: pointer;
@@ -670,75 +456,6 @@
     padding-top: 16px;
     border-top: 1px solid var(--border);
   }
-  .type-help {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 4px 12px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .type-help dt { font-weight: 600; color: var(--text); }
-  /* Schedule grid */
-  .schedule-wrap {
-    overflow: auto;
-    max-height: 65vh;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-  }
-  .schedule-grid {
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 12px;
-    width: max-content;
-  }
-  .schedule-grid th, .schedule-grid td {
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    padding: 4px 6px;
-    text-align: center;
-    min-width: 38px;
-    height: 32px;
-    white-space: nowrap;
-  }
-  .schedule-grid thead th {
-    position: sticky;
-    top: 0;
-    background: var(--bg);
-    z-index: 2;
-  }
-  .schedule-grid th.atom-col, .schedule-grid td.atom-col {
-    position: sticky;
-    left: 0;
-    background: var(--surface);
-    text-align: left;
-    min-width: 220px;
-    max-width: 260px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    z-index: 1;
-    cursor: pointer;
-  }
-  .schedule-grid thead th.atom-col { background: var(--bg); z-index: 3; } /* top-left corner */
-  .schedule-grid td.atom-col:hover { background: var(--accent-bg); }
-  .schedule-grid th {
-    font-weight: 500;
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .schedule-grid th.today-col { background: var(--accent-bg); color: var(--primary); }
-  .cell-I { background: var(--accent-bg); color: var(--primary); font-weight: 600; }
-  .cell-pass { background: var(--pass-bg); color: var(--pass); font-weight: 500; }
-  .cell-struggle { background: var(--struggle-bg); color: var(--struggle); font-weight: 500; }
-  .cell-reteach { background: var(--reteach-bg); color: var(--reteach); font-weight: 500; }
-  .cell-pending { background: var(--surface); color: var(--text); font-weight: 700; box-shadow: inset 0 0 0 1px var(--text-muted); }
-  .cell-projected { color: var(--text-muted); opacity: 0.65; }
-  .cell-superseded { background: var(--reteach-bg); color: var(--reteach); text-decoration: line-through; opacity: 0.85; }
-  .cell-reteach-event { background: var(--reteach); color: #fff; font-weight: 700; }
-  .cell-skipped { background: var(--bg); color: var(--unscheduled); font-weight: 600; }
   /* Curriculum coverage table */
   .coverage-add-atoms-btn {
     background: var(--accent-bg);
@@ -888,15 +605,6 @@
   }
   /* Coverage columns use explicit widths below so changing class cannot resize them to fit its contents. */
   .coverage-table td.action { width: 38px; padding-left: 2px; padding-right: 2px; }
-  .coverage-rename {
-    padding: 2px 5px;
-    font-size: 11px;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    background: transparent;
-    white-space: nowrap;
-  }
-  .coverage-rename:hover { color: var(--text); background: var(--bg); }
   .btn.coverage-add {
     width: 24px;
     height: 24px;
@@ -965,35 +673,8 @@
   .record-retrieval-outcomes button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
   .coverage-table tr:last-child td { border-bottom: none; }
   .coverage-empty { padding: 30px 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
-  .coverage-summary {
-    display: flex;
-    gap: 10px;
-    align-items: baseline;
-    margin-bottom: 6px;
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-  .coverage-summary strong { color: var(--text); font-size: 12px; }
   .history-status-actions { display:flex; gap:8px; flex-wrap:wrap; margin: 16px 0 18px; }
-  .history-status-note { font-size:12px; color:var(--text-muted); margin: 2px 0 16px; }
-  .schedule-legend {
-    display: flex;
-    gap: 14px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .schedule-legend .swatch {
-    display: inline-block;
-    width: 14px; height: 14px;
-    border-radius: 3px;
-    margin-right: 4px;
-    vertical-align: middle;
-    border: 1px solid var(--border);
-  }
 
-  /* Modal */
   /* Record type: a selected Tutee hides school-only UI; a Class hides tutee-only UI. */
   body.tutee-mode .school-only { display: none !important; }
   body:not(.tutee-mode) .tutee-only { display: none !important; }
@@ -1105,8 +786,6 @@
   @media (max-width: 640px) {
     main { padding: 16px; }
     header { padding: 14px 16px 0; }
-    .retrieval-row { grid-template-columns: 1fr; }
-    .retrieval-actions { justify-content: flex-start; }
     .header-top { flex-direction: column; align-items: stretch; }
     .header-actions { flex-wrap: wrap; justify-content: space-between; }
     .class-switcher select {
@@ -1121,7 +800,6 @@
       order: 1;
     }
     nav.tabs { justify-content: flex-start; margin-left: 0; }
-    .schedule-grid td.atom-col, .schedule-grid th.atom-col { min-width: 140px; max-width: 160px; }
   }
   .storage-banner {
     position: sticky; top: 0; z-index: 2500;
@@ -1142,10 +820,7 @@
       <button data-screen="settings">Settings</button>
       <button data-screen="classes">Classes</button>
       <button data-screen="notes">Notes</button>
-      <button data-screen="atoms">Atoms</button>
       <button data-screen="coverage" class="active"><span class="school-only">Atoms</span><span class="tutee-only">Sessions</span></button>
-      <button data-screen="today">Today's Lesson</button>
-      <button data-screen="schedule">Schedule</button>
     </nav>
     <span class="backup-needed-indicator" id="backup-needed-indicator" aria-live="polite">BACKUP NEEDED</span>
     <div class="header-actions">
@@ -1162,25 +837,6 @@
 
 <main>
 
-  <!-- ============ TODAY'S LESSON ============ -->
-  <section id="screen-today" class="screen">
-    <div class="card">
-      <div class="row" style="justify-content: space-between; align-items: flex-start;">
-        <div>
-          <h2>Today's Lesson</h2>
-          <div class="subtitle">What to introduce, what to retrieve.</div>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: flex-end;">
-          <div>
-            <label for="today-date">Lesson date</label>
-            <select id="today-date"></select>
-          </div>
-        </div>
-      </div>
-      <div id="today-content"></div>
-    </div>
-  </section>
-
   <!-- ============ NOTES ============ -->
   <section id="screen-notes" class="screen">
     <div class="card">
@@ -1188,61 +844,6 @@
       <textarea id="class-notes" placeholder="Add any notes for this class..." style="min-height: 420px; width:100%; resize:vertical;"></textarea>
     </div>
   </section>
-
-  <!-- ============ ATOMS ============ -->
-  <section id="screen-atoms" class="screen">
-    <div class="card">
-      <h2>Add atoms</h2>
-      <div class="subtitle">Paste atom names, one per line. Set the initial instruction date for each one in the library below as you teach them.</div>
-      <textarea id="atom-bulk" placeholder="Find the total parts of a ratio
-Find the value of each part of a ratio
-Share a quantity in a given ratio
-..." style="min-height: 120px;"></textarea>
-      <div class="row" style="margin-top: 10px;">
-        <button class="btn" id="atom-bulk-add">Add atoms</button>
-      </div>
-      <details style="margin-top: 8px;">
-        <summary>Add a single atom (with date)</summary>
-        <div class="row" style="align-items: flex-end; margin-top: 10px;">
-          <div style="flex: 2 1 260px;">
-            <label for="atom-name">Atom name</label>
-            <input type="text" id="atom-name" placeholder="e.g. find the value of each part of a ratio">
-          </div>
-          <div style="flex: 0 1 170px;">
-            <label for="atom-initial">Initial instruction</label>
-            <input type="date" id="atom-initial">
-          </div>
-          <button class="btn" id="atom-add">Add atom</button>
-        </div>
-      </details>
-      <!-- Hidden field preserved so existing JS can still read it without errors.
-           Type is no longer part of the atom UI but old data with types is kept intact. -->
-      <select id="atom-type" style="display:none;"><option value="" selected></option></select>
-    </div>
-
-    <div class="card">
-      <h2>Atom library</h2>
-      <div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="subtitle" style="margin: 0;"><span id="atoms-count">0</span> atoms in this class. Unscheduled atoms appear first.</div>
-        <input type="text" id="atom-search" placeholder="Search atoms by name…" style="flex: 0 1 260px;">
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Initial instruction</th>
-            <th>Retrievals</th>
-            <th>Next suggested</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="atoms-tbody"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ============ LESSON DATES (LEGACY SCREEN, HIDDEN) ============ -->
-  <section id="screen-dates" class="screen" aria-hidden="true" style="display:none;"></section>
 
   <!-- ============ COVERAGE ============ -->
   <section id="screen-coverage" class="screen active">
@@ -1281,29 +882,6 @@ Share a quantity in a given ratio
       </div>
       <div class="coverage-status" id="coverage-status" aria-live="polite"></div>
       <div class="coverage-wrap" id="coverage-wrap"></div>
-    </div>
-  </section>
-
-  <!-- ============ SCHEDULE ============ -->
-  <section id="screen-schedule" class="screen">
-    <div class="card">
-      <h2>Schedule overview</h2>
-      <div class="subtitle">Every atom on every lesson date for the active class. Past retrievals show their outcome; future ones are projections assuming each subsequent retrieval is green.</div>
-      <div class="schedule-wrap" id="schedule-wrap">
-        <div id="schedule-empty" style="padding: 36px 20px; text-align: center; color: var(--text-muted);">
-          Add atoms and lesson dates to see the schedule.
-        </div>
-      </div>
-      <div class="schedule-legend">
-        <span><span class="swatch cell-I"></span>Initial instruction</span>
-        <span><span class="swatch cell-pass"></span>Green: successful retrieval</span>
-        <span><span class="swatch cell-struggle"></span>Amber: retrieval not secure</span>
-        <span><span class="swatch cell-reteach-event"></span>Red: re-teach required (sequence restarts)</span>
-        <span><span class="swatch cell-superseded"></span>Earlier retrievals, before a red</span>
-        <span><span class="swatch cell-skipped"></span>Grey: unscheduled retrieval</span>
-        <span><span class="swatch cell-pending"></span>Due next</span>
-        <span><span class="swatch cell-projected"></span>Projected</span>
-      </div>
     </div>
   </section>
 
@@ -1472,11 +1050,6 @@ Share a quantity in a given ratio
     </div>
 
 
-    <div class="card" id="interest-signals-card" style="display: none;">
-      <h2>Interest signals</h2>
-      <div class="subtitle">Logged locally when teachers click features that aren&apos;t built yet. Useful for deciding what to build next.</div>
-      <div id="interest-signals"></div>
-    </div>
 
     <div class="card">
       <h2>Your data</h2>
@@ -1487,7 +1060,6 @@ Share a quantity in a given ratio
           <button class="btn" id="data-export">Save backup file</button>
           <button class="btn ghost" id="data-import-btn">Restore from backup</button>
           <input type="file" id="data-import" accept="application/json" style="display:none;">
-          <button class="btn ghost" id="data-seed" style="display:none;">Load sample data</button>
         </div>
         <details style="margin-top: 12px;">
           <summary>Recent snapshots (auto-saved on every change)</summary>
@@ -1495,29 +1067,10 @@ Share a quantity in a given ratio
         </details>
       </div>
 
-      <div id="settings-share-transfer" style="display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
-        <div style="font-weight: 600; font-size: 13px;">Share &amp; transfer (between classes, teachers, years)</div>
-        <div class="subtitle" style="margin-top: 4px;">Anything exported here imports back in as a <strong>non-destructive merge</strong> into the <em>current</em> class &mdash; atoms are matched by id, existing ones keep their history, new ones are added. No classes are duplicated and nothing is wiped.</div>
-        <div class="row" style="margin-top: 10px;">
-          <button class="btn" id="atoms-export-btn">Export atoms</button>
-          <button class="btn ghost" id="class-merge-btn">Import into this class</button>
-          <input type="file" id="class-merge" accept="application/json" style="display:none;">
-          <button id="class-export" type="button" style="display:none;" aria-hidden="true"></button>
-        </div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.55;">
-          <strong>Export atoms</strong> &mdash; pick which atoms and exactly what to include (concept notes, example prompt &amp; response, retrieval history &amp; dates, instruction dates, teacher notes). Tick everything for a full class move with history; leave history off to share curriculum content with a team.<br>
-          <strong>Import into this class</strong> &mdash; non-destructive merge; reads any atoms or class export, plus Curriculum Writer atom files.
-        </div>
-        <!-- legacy Curriculum Writer import: now handled by "Import into this class" above; kept hidden so existing wiring stays valid -->
-        <button id="writer-sync-btn" style="display:none;" type="button">Import atoms (legacy)</button>
-        <input type="file" id="writer-sync" accept="application/json" style="display:none;">
-      </div>
-
       <div class="school-only" style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
         <div style="font-weight: 600; font-size: 13px;">Tools</div>
         <div class="row" style="margin-top: 8px;">
           <button class="btn ghost" id="data-backfill">Backfill past retrievals</button>
-          <button class="btn ghost" id="atoms-delete-btn" style="display:none;">Delete atoms</button>
         </div>
         <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;"><strong>Backfill</strong> reconstructs past retrievals for the current class from each atom's original instruction date and lesson calendar. Existing retrievals are left untouched.</div>
       </div>
@@ -1533,74 +1086,6 @@ Share a quantity in a given ratio
   </section>
 
 </main>
-
-<!-- ============ WELCOME MODAL (first run) ============ -->
-<div class="modal-backdrop" id="welcome-modal" style="display:none;">
-  <div class="modal" role="dialog" aria-modal="true" style="max-width: 540px;">
-    <div class="modal-header">
-      <div>
-        <h2>Welcome to Retrieval Tracker </h2>
-        <div class="modal-sub">A 30-second tour before you start</div>
-      </div>
-      <button class="modal-close" id="welcome-close" aria-label="Close">&times;</button>
-    </div>
-    <div style="font-size: 14px;">
-      <p style="margin-top: 0;">This is a free, browser-only tool for scheduling spaced retrieval. Everything is saved on your device.</p>
-      <p style="margin-bottom: 6px;"><strong>The main tabs:</strong></p>
-      <div style="display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 13px;">
-        <div style="font-weight: 600;">Classes</div><div>Up to 10. Each one fully independent, including its lesson dates.</div>
-        <div style="font-weight: 600;">Settings</div><div>Multiplier, backups, snapshots, signals.</div>
-        <div style="font-weight: 600;">Atoms</div><div>Add atoms, record retrievals, and inspect the active class.</div>
-      </div>
-      <p style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">If you want to see how it works before adding your own data, load the sample data &mdash; it sets up two classes with lessons and a few atoms.</p>
-      <div class="row" style="margin-top: 18px;">
-        <button class="btn" id="welcome-start">Get started</button>
-        <button class="btn ghost" id="welcome-sample">Load sample data &amp; show me around</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ============ WORKSHEET MODAL (fake-door) ============ -->
-<div class="modal-backdrop" id="worksheet-modal">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <div>
-        <h2>Worksheet generator</h2>
-        <div class="modal-sub">An idea we&apos;re testing</div>
-      </div>
-      <button class="modal-close" id="worksheet-close" aria-label="Close">&times;</button>
-    </div>
-    <div id="worksheet-body" style="font-size: 14px;">
-      <p>This is an idea we&apos;re exploring &mdash; an interleaved worksheet covering today&apos;s atoms, generated in one click. It isn&apos;t built yet and may not be.</p>
-      <p>If something like this would be useful for you, drop your email below and we&apos;ll let you know if we go ahead with it.</p>
-      <div class="row" style="margin-top: 10px; align-items: flex-end;">
-        <div style="flex: 1 1 220px;">
-          <label for="worksheet-email">Email (optional)</label>
-          <input type="email" id="worksheet-email" placeholder="you@example.com" style="width: 100%;">
-        </div>
-        <button class="btn" id="worksheet-submit">Submit</button>
-      </div>
-      <div id="worksheet-thanks" style="display:none; margin-top: 12px; font-size: 13px; color: var(--pass);">
-        Thanks for the signal.
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="golden-modal">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <div>
-        <h2>&#10022; Atom detail &amp; notes</h2>
-        <div class="modal-sub" id="golden-modal-sub"></div>
-      </div>
-      <button class="modal-close" id="golden-close" aria-label="Close">&times;</button>
-    </div>
-    <div id="golden-modal-body" style="font-size: 14px;"></div>
-  </div>
-</div>
 
 <!-- ============ ATOM HISTORY MODAL ============ -->
 <div class="modal-backdrop" id="history-modal">
@@ -1764,41 +1249,6 @@ Share a quantity in a given ratio
   </div>
 </div>
 
-<!-- ============ EXPORT / DELETE ATOMS MODAL ============ -->
-<div class="modal-backdrop" id="atoms-export-modal">
-  <div class="modal" role="dialog" aria-modal="true" style="max-width: 580px;">
-    <div class="modal-header">
-      <div>
-        <h2 id="atoms-picker-title">Export atoms</h2>
-        <div class="modal-sub" id="atoms-picker-sub">Tick the atoms and choose what to include, then export.</div>
-      </div>
-      <button class="modal-close" id="atoms-export-close" aria-label="Close">&times;</button>
-    </div>
-    <div class="row" style="margin-bottom: 8px; gap: 8px; align-items: center;">
-      <button class="btn ghost" id="atoms-export-all" type="button">Select all</button>
-      <button class="btn ghost" id="atoms-export-none" type="button">Select none</button>
-      <span style="font-size: 12px; color: var(--text-muted);" id="atoms-export-count"></span>
-    </div>
-    <div id="atoms-export-list" style="max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px;"></div>
-    <div id="atoms-export-includes" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
-      <div style="font-weight: 600; font-size: 13px; margin-bottom: 6px;">Include in the export</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 13px;">
-        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-concept" checked> Concept notes</label>
-        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-examples" checked> Example prompt &amp; response</label>
-        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-history"> Retrieval history &amp; dates</label>
-        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-instruction"> Instruction dates</label>
-        <label style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="exp-inc-notes"> Teacher notes</label>
-      </div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Tick everything for a full class move (history included); leave history off to share curriculum content only.</div>
-    </div>
-    <div class="row" style="margin-top: 14px; gap: 8px;">
-      <button class="btn" id="atoms-export-go">Export selected</button>
-      <button class="btn danger" id="atoms-delete-go">Delete selected</button>
-      <button class="btn ghost" id="atoms-export-cancel">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <!-- ============ IN-APP DIALOG (replaces alert / confirm / prompt) ============ -->
 <div class="modal-backdrop app-dialog" id="app-dialog">
   <div class="modal" role="alertdialog" aria-modal="true" aria-describedby="app-dialog-message">
@@ -1919,7 +1369,6 @@ window.addEventListener("keydown", (e) => {
   e.stopImmediatePropagation();
   finishAppDialog(appDialogCurrent.kind === "alert");
 }, true);
-const VALID_TYPES = ["Categorical", "Comparative", "Transformation", "Fact", "Routine"];
 
 function defaultSettings() {
   return { seed_interval: 1, multiplier: 2, interval_cap: 60 };
@@ -2309,36 +1758,6 @@ window.addEventListener("storage", (e) => {
   if ((e.key === null || e.key === STAMP_KEY || e.key === STORAGE_KEY) && readStoredStamp() !== knownStamp) markStale();
 });
 
-// ----- Worksheet fake-door: log clicks and email captures locally -----
-const WS_SIGNALS_KEY = "learning-engine-worksheet-signals-v1";
-
-function loadWorksheetSignals() {
-  try { return JSON.parse(localStorage.getItem(WS_SIGNALS_KEY) || '{"clicks":[],"emails":[]}'); }
-  catch (e) { return { clicks: [], emails: [] }; }
-}
-function saveWorksheetSignals(s) {
-  localStorage.setItem(WS_SIGNALS_KEY, JSON.stringify(s));
-}
-function logWorksheetClick(date, atomCount) {
-  const s = loadWorksheetSignals();
-  s.clicks.push({ ts: Date.now(), class_name: ctx().name, lesson_date: date, atom_count: atomCount });
-  saveWorksheetSignals(s);
-}
-function logWorksheetEmail(email) {
-  const s = loadWorksheetSignals();
-  s.emails.push({ ts: Date.now(), email, class_name: ctx().name });
-  saveWorksheetSignals(s);
-}
-
-function openWorksheetModal(atomCount) {
-  document.getElementById("worksheet-thanks").style.display = "none";
-  document.getElementById("worksheet-email").value = "";
-  document.getElementById("worksheet-modal").classList.add("open");
-}
-function closeWorksheetModal() {
-  document.getElementById("worksheet-modal").classList.remove("open");
-}
-
 function formatSnapTime(ts) {
   const d = new Date(ts);
   const now = new Date();
@@ -2461,11 +1880,6 @@ function migrateLegacySkip(atom) {
 }
 
 // ----- Scheduler engine -----
-function intervalForStep(step, settings) {
-  const raw = settings.seed_interval * Math.pow(settings.multiplier, step);
-  return Math.min(Math.max(1, Math.round(raw)), settings.interval_cap);
-}
-
 // The gap after a successful one. Rounding alone returns the same gap when the multiplier is
 // below 1.5 (e.g. round(1 × 1.4) = 1), which would freeze spacing, so growth is always at least
 // one day. Multipliers of 1.5 or more are unaffected.
@@ -2479,75 +1893,23 @@ function atomRetrievals(atom_id) {
     .sort((a, b) => a.lesson_date.localeCompare(b.lesson_date));
 }
 
-// Retrospective onboarding: when an atom was first taught before today but has no
-// recorded retrieval history, estimate how far through the normal spacing ladder it
-// would have progressed by now. This affects scheduling only: no fictitious retrieval
-// records are created. The inferred baseline is stored on the atom so the first real
-// outcome can continue from it. Atoms that already have retrieval history and no such
-// baseline are left completely unchanged.
-function retrospectiveBootstrap(atom, settings) {
-  if (atomStatus(atom) !== "scheduled") return null;
-  if (!atom.initial_instruction_date) return null;
-  const today = todayISO();
-  if (atom.initial_instruction_date >= today) return null;
-
-  const all = atomRetrievals(atom.id);
-  if (all.length > 0) return atom.retrospective_bootstrap || null;
-
-  const dates = sortedLessonDates();
-  if (dates.length === 0) return null;
-
-  let cursor = atom.initial_instruction_date;
-  let gap = Math.min(Math.max(1, settings.seed_interval), settings.interval_cap);
-  let virtualRetrievals = 0;
-  let safety = 500;
-
-  while (safety-- > 0) {
-    const target = addDays(cursor, gap);
-    const eligible = dates.filter(d => d > cursor && d <= target);
-    const next = eligible.length > 0
-      ? eligible[eligible.length - 1]
-      : (dates.find(d => d > cursor) || null);
-
-    if (!next || next > today) break;
-
-    cursor = next;
-    virtualRetrievals++;
-    gap = grownGap(gap, settings);
-  }
-
-  const baseline = {
-    last_date: cursor,
-    bootstrap_next_gap: gap,
-    bootstrap_count: virtualRetrievals,
-    settings: {
-      seed_interval: settings.seed_interval,
-      multiplier: settings.multiplier,
-      interval_cap: settings.interval_cap
-    }
-  };
-  atom.retrospective_bootstrap = baseline;
-  return baseline;
-}
-
-function getAtomSchedulingState(atom, options = {}) {
+function getAtomSchedulingState(atom) {
   if (atomStatus(atom) !== "scheduled") {
-    return { last_date: null, history: [], anchorDate: null, last_successful_gap: null, hasPassed: false, hasRealPass: false, bootstrapped: false, bootstrap_next_gap: null, bootstrap_count: 0 };
+    return { last_date: null, history: [], anchorDate: null, last_successful_gap: null, hasPassed: false };
   }
   // Spacing algorithm: a successful retrieval can expand the next interval, but a
   // timetable-induced delay cannot by itself make that expansion larger. The gap used
   // for growth is capped at the gap the scheduler had intended immediately before the
   // retrieval. This separates memory evidence from lesson-calendar constraints.
-  // Returns: { last_date, history, anchorDate, last_successful_gap, hasPassed, hasRealPass }.
-  // hasPassed includes retrospective onboarding so an old atom does not look newly taught,
-  // while hasRealPass is reserved for an actual recorded Pass (important for retrieve=N).
+  // Returns: { last_date, history, anchorDate, last_successful_gap, hasPassed }.
+  // hasPassed is true once a Pass has been recorded since the anchor (important for retrieve=N).
   // Missed outcomes are excluded from scheduling history — they don't count as
   // retrievals and don't change the spacing calculation. Legacy Skip records, if present
   // in imported data, are treated the same way for backward compatibility. A missed event
   // moves the next occurrence beyond the dealt-with scheduled lesson; simply ignoring a
   // recommendation creates no event at all.
   if (!atom.initial_instruction_date) {
-    return { last_date: null, history: [], anchorDate: null, last_successful_gap: null, hasPassed: false, hasRealPass: false, bootstrapped: false, bootstrap_next_gap: null, bootstrap_count: 0 };
+    return { last_date: null, history: [], anchorDate: null, last_successful_gap: null, hasPassed: false };
   }
   const settings = ctx().settings;
   const all = atomRetrievals(atom.id);
@@ -2566,14 +1928,10 @@ function getAtomSchedulingState(atom, options = {}) {
   // the spacing programme and therefore do not alter scheduler state.
   history = history.filter(r => r.outcome !== "miss" && r.outcome !== "skip" && r.outcome !== "ad_hoc");
 
-  // Retrospective onboarding is retained for backward compatibility, but normal
-  // scheduling uses only actual recorded retrieval history. Backfill can still
-  // explicitly opt into the no-bootstrap path via ignoreBootstrap.
-  const bootstrap = null;
-  let last_date = bootstrap ? bootstrap.last_date : anchorDate;
-  let last_successful_gap = bootstrap ? bootstrap.bootstrap_next_gap : null;
-  let hasPassed = !!bootstrap;
-  let hasRealPass = false;
+  // Scheduling uses only actual recorded retrieval history.
+  let last_date = anchorDate;
+  let last_successful_gap = null;
+  let hasPassed = false;
 
   // `plannedGapForNextRetrieval` is the interval the scheduler intended immediately
   // before the current historical retrieval. A late lesson therefore cannot inflate the
@@ -2602,10 +1960,8 @@ function getAtomSchedulingState(atom, options = {}) {
         planned,
         Math.max(inWindow ? planned : gap, Math.ceil(planned / settings.multiplier - 1e-9))
       );
-      if (bootstrap && i === 0) last_successful_gap = bootstrap.bootstrap_next_gap;
-      else last_successful_gap = effectiveSuccessfulGap;
+      last_successful_gap = effectiveSuccessfulGap;
       hasPassed = true;
-      hasRealPass = true;
       plannedGapForNextRetrieval = grownGap(last_successful_gap, settings);
     } else if (r.outcome === "struggle") {
       // A struggle does not increase spacing. If there has already been a successful
@@ -2613,12 +1969,6 @@ function getAtomSchedulingState(atom, options = {}) {
       plannedGapForNextRetrieval = last_successful_gap == null
         ? Math.min(Math.max(1, settings.seed_interval), settings.interval_cap)
         : Math.min(last_successful_gap, settings.interval_cap);
-
-      if (bootstrap && i === 0) {
-        // A first real check after onboarding should hold at the inferred current spacing
-        // level rather than falling all the way back to the 1-day seed.
-        hasPassed = true;
-      }
     }
 
     last_date = r.lesson_date;
@@ -2629,11 +1979,7 @@ function getAtomSchedulingState(atom, options = {}) {
     history,
     anchorDate,
     last_successful_gap,
-    hasPassed,
-    hasRealPass,
-    bootstrapped: !!bootstrap,
-    bootstrap_next_gap: bootstrap ? bootstrap.bootstrap_next_gap : null,
-    bootstrap_count: bootstrap ? bootstrap.bootstrap_count : 0
+    hasPassed
   };
 }
 
@@ -2653,17 +1999,8 @@ function plannedGap(sched, settings) {
   // intended. Calendar delays therefore cannot compound into longer future intervals.
   const lastEvent = sched.history[sched.history.length - 1];
   const lastWasStruggle = lastEvent && lastEvent.outcome === "struggle";
-  if (sched.bootstrapped && sched.history.length === 0) {
-    return Math.min(sched.bootstrap_next_gap, settings.interval_cap);
-  }
   if (!sched.hasPassed) {
     return Math.min(settings.seed_interval, settings.interval_cap);
-  }
-  if (sched.bootstrapped && sched.history.length === 1 && !sched.hasRealPass && lastWasStruggle) {
-    return Math.min(sched.bootstrap_next_gap, settings.interval_cap);
-  }
-  if (sched.bootstrapped && sched.history.length === 1 && sched.hasRealPass) {
-    return grownGap(sched.bootstrap_next_gap, settings);
   }
   if (lastWasStruggle) {
     return Math.min(sched.last_successful_gap, settings.interval_cap);
@@ -2671,14 +2008,14 @@ function plannedGap(sched, settings) {
   return grownGap(sched.last_successful_gap, settings);
 }
 
-function nextSuggestedDate(atom, options = {}) {
+function nextSuggestedDate(atom) {
   if (atomStatus(atom) !== "scheduled") return null;
   if (!atom.initial_instruction_date) return null;
-  const sched = getAtomSchedulingState(atom, options);
+  const sched = getAtomSchedulingState(atom);
   if (!sched.last_date) return null;
   // retrieve=N atoms are capped at the initial retrieval — once a real Pass has been
-  // recorded, no more scheduling. Retrospective onboarding alone must not suppress the first check.
-  if (atom.retrieve === "N" && sched.hasRealPass) return null;
+  // recorded, no more scheduling.
+  if (atom.retrieve === "N" && sched.hasPassed) return null;
   const dates = sortedLessonDates();
 
   // Defer is not handled here: it only suppresses the recommendation in the views
@@ -2712,7 +2049,7 @@ function noLessonAvailableNote(atom) {
   if (nextSuggestedDate(atom)) return null;
   const sched = getAtomSchedulingState(atom);
   if (!sched.last_date) return null;
-  if (atom.retrieve === "N" && sched.hasRealPass) return null;
+  if (atom.retrieve === "N" && sched.hasPassed) return null;
   const target = addDays(sched.last_date, plannedGap(sched, ctx().settings));
   return `No lesson in the calendar after ${formatDateNice(target)}`;
 }
@@ -2722,172 +2059,8 @@ function noLessonAvailableNote(atom) {
 function idealRetrievalDate(atom) {
   if (atomStatus(atom) !== "scheduled") return null;
   const sched = getAtomSchedulingState(atom);
-  if (!sched.last_date || (atom.retrieve === "N" && sched.hasRealPass)) return null;
+  if (!sched.last_date || (atom.retrieve === "N" && sched.hasPassed)) return null;
   return addDays(sched.last_date, plannedGap(sched, ctx().settings));
-}
-
-// Build the full event timeline for an atom: initial instruction, recorded retrievals,
-// the next pending retrieval, then future projections assuming each is passed.
-// Returns events: { date, type: 'I'|'R', n, status: 'recorded'|'pending'|'projected', outcome? }
-function fullScheduleForAtom(atom, maxProjections = 10) {
-  if (atomStatus(atom) !== "scheduled") return [];
-  if (!atom.initial_instruction_date) return [];
-  const events = [];
-  const sched = getAtomSchedulingState(atom);
-  const settings = ctx().settings;
-
-  // Always show the ORIGINAL initial instruction as an "I" cell.
-  events.push({ date: atom.initial_instruction_date, type: 'I', n: 0, status: 'recorded' });
-
-  // Walk every recorded event chronologically. Pre-reteach events (those before the most
-  // recent reteach) are marked 'superseded' so they render in faded red but stay visible —
-  // the teacher can see the failed attempt that triggered the re-teach. The reteach event
-  // itself is shown as a distinct marker so the reset point is obvious.
-  const allMyRetrievals = atomRetrievals(atom.id);
-  let currentSeqN = 0; // numbering of the CURRENT sequence (resets at the latest reteach)
-  for (const r of allMyRetrievals) {
-    // Historical Missed/Skipped records are not retrievals and are not shown.
-    if (isLegacyNonEvent(r)) continue;
-    const isPreReteach = r.lesson_date < sched.anchorDate;
-    const isTheReteach = (r.outcome === "reteach" && r.lesson_date === sched.anchorDate);
-    if (isPreReteach) {
-      events.push({ date: r.lesson_date, type: 'R', n: null, status: 'superseded', outcome: r.outcome });
-    } else if (isTheReteach) {
-      events.push({ date: r.lesson_date, type: 'reteach', n: 0, status: 'recorded', outcome: 'reteach' });
-      currentSeqN = 0;
-    } else {
-      if (r.outcome === "ad_hoc") {
-        events.push({ date: r.lesson_date, type: 'A', n: null, status: 'ad_hoc', outcome: 'ad_hoc' });
-      } else {
-        currentSeqN++;
-        events.push({ date: r.lesson_date, type: 'R', n: currentSeqN, status: 'recorded', outcome: r.outcome });
-      }
-    }
-  }
-
-  // Project forward unless atom is done (retrieve=N past initial pass)
-  if (atom.retrieve === "N" && sched.hasPassed) return events;
-
-  // Initial gap for the FIRST projection (pending) uses the current scheduling state.
-  let last_date = sched.last_date;
-  let n = sched.history.length + 1;
-  let firstGap = plannedGap(sched, settings);
-  const dates = sortedLessonDates();
-  let isFirstProjection = true;
-  let lastUsedGap = firstGap;
-  const deferActive = isDeferActive(atom);
-
-  for (let i = 0; i < maxProjections; i++) {
-    const gap = isFirstProjection ? firstGap : grownGap(lastUsedGap, settings);
-    const target = addDays(last_date, gap);
-    const minAcceptableGap = Math.ceil(gap * MIN_SNAP_GAP_FRACTION);
-    const eligible = dates.filter(d => {
-      if (!(d > last_date && d <= target)) return false;
-      const actualGap = daysBetween(last_date, d);
-      return actualGap >= minAcceptableGap;
-    });
-    // If no lesson inside the acceptable window exists, roll forward to the first lesson
-    // after the target (never to an earlier lesson). No such lesson ends the projection.
-    let candidate = eligible.length > 0 ? eligible[eligible.length - 1] : dates.find(d => d > target);
-    // An active Defer can only hold the pending retrieval back to the deferred lesson; it
-    // never brings it earlier than the underlying scheduled lesson.
-    if (isFirstProjection && deferActive && candidate && candidate < atom.deferUntil) {
-      candidate = dates.find(d => d >= atom.deferUntil && d > sched.last_date);
-    }
-    if (!candidate) break;
-    events.push({
-      date: candidate,
-      type: 'R',
-      n,
-      status: isFirstProjection ? 'pending' : 'projected'
-    });
-    last_date = candidate;
-    lastUsedGap = gap; // projections preserve the intended interval; the calendar cannot inflate it
-    n += 1;
-    isFirstProjection = false;
-    if (atom.retrieve === "N") break; // N atoms only get the initial retrieval projection
-  }
-
-  return events;
-}
-
-function todaysSchedule(isoDate) {
-  // Collapsed single Retrieval list (with is_first flag for tagging) + Initial Instruction.
-  // Sorted by retrieval_number ascending — most vulnerable atoms first.
-  const retrievals = [];
-  const initial_instructions = [];
-
-  for (const atom of ctx().atoms) {
-    if (atomStatus(atom) !== "scheduled") continue;
-    if (!atom.initial_instruction_date) continue;
-    const sched = getAtomSchedulingState(atom);
-    const onDate = ctx().retrievals.find(r => r.atom_id === atom.id && r.lesson_date === isoDate && !isLegacyNonEvent(r));
-
-    // Show in Initial Instruction whenever isoDate is the atom's original instruction date
-    // OR its current (post-reteach) anchor. This keeps the historical "first taught here"
-    // marker visible even when subsequent retrievals have happened, so navigating to a past
-    // lesson date still shows what was introduced that day.
-    if ((atom.initial_instruction_date === isoDate || sched.anchorDate === isoDate) && !onDate) {
-      initial_instructions.push(atom);
-      continue;
-    }
-
-    if (onDate) {
-      if (onDate.outcome === "ad_hoc") {
-        // Unscheduled retrievals are excluded from sched.history. They remain visible on the
-        // date they were recorded but do not affect scheduling.
-        retrievals.push({
-          atom,
-          scheduled_for: isoDate,
-          overdue: false,
-          retrieval_number: onDate.outcome === "ad_hoc" ? null : sched.history.length + 1,
-          is_first: !sched.hasPassed,
-          recorded_outcome: onDate.outcome
-        });
-        continue;
-      }
-      const idx = sched.history.findIndex(r => r.lesson_date === isoDate);
-      const priorHistory = idx > 0 ? sched.history.slice(0, idx) : [];
-      const hadPassedBefore = priorHistory.some(r => r.outcome === "pass");
-      retrievals.push({
-        atom,
-        scheduled_for: isoDate,
-        overdue: false,
-        retrieval_number: idx >= 0 ? idx + 1 : 1,
-        is_first: !hadPassedBefore,
-        recorded_outcome: onDate.outcome
-      });
-      continue;
-    }
-
-    const next = nextSuggestedDate(atom);
-    if (!next || next > isoDate || isDeferActive(atom, isoDate)) continue;
-
-    const hasPassedSinceAnchor = sched.history.some(r => r.outcome === "pass");
-    retrievals.push({
-      atom,
-      scheduled_for: next,
-      overdue: next < isoDate,
-      retrieval_number: sched.history.length + 1,
-      is_first: !hasPassedSinceAnchor,
-      planned_gap: plannedGap(sched, ctx().settings),
-      recorded_outcome: null
-    });
-  }
-
-  // Most vulnerable first = fewest retrievals first.
-  // Final tiebreaker is atom-library order (the order atoms appear in ctx().atoms),
-  // not alphabetical — matches the curriculum sequence the teacher pasted.
-  const atomLibraryIndex = new Map(ctx().atoms.map((a, i) => [a.id, i]));
-  retrievals.sort((a, b) =>
-    a.retrieval_number - b.retrieval_number ||
-    a.scheduled_for.localeCompare(b.scheduled_for) ||
-    ((atomLibraryIndex.get(a.atom.id) ?? 0) - (atomLibraryIndex.get(b.atom.id) ?? 0))
-  );
-  // Initial instructions keep atom-library order (the order atoms appear in ctx().atoms),
-  // not alphabetical. This matches the curriculum sequence the teacher pasted.
-
-  return { retrievals, initial_instructions };
 }
 
 // Teacher-facing names for the four recorded outcomes. The stored values are unchanged.
@@ -2935,19 +2108,6 @@ async function recordRetrieval(atom_id, lesson_date, outcome) {
   // computed from the most recent re-teach in getAtomSchedulingState.
   saveState();
   return true;
-}
-
-function clearOutcome(atom_id, lesson_date) {
-  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
-  const c = ctx();
-  c.retrievals = c.retrievals.filter(r => !(r.atom_id === atom_id && r.lesson_date === lesson_date));
-  saveState();
-}
-
-// Compatibility wrapper for the hidden legacy Today's Lesson view. New retrievals
-// are entered through Coverage and use recordRetrieval directly.
-async function recordOutcome(atom_id, lesson_date, outcome) {
-  await recordRetrieval(atom_id, lesson_date, outcome);
 }
 
 let recordRetrievalAtomId = null;
@@ -3651,101 +2811,6 @@ function renderCoverage() {
 
 }
 
-// ----- Render: Schedule overview -----
-function renderSchedule() {
-  const wrap = document.getElementById("schedule-wrap");
-  const empty = document.getElementById("schedule-empty");
-  const c = ctx();
-  const scheduledAtoms = c.atoms.filter(atom => atomStatus(atom) === "scheduled");
-  if (scheduledAtoms.length === 0 || c.lesson_dates.length === 0) {
-    const missing = [];
-    if (scheduledAtoms.length === 0) missing.push('scheduled atoms');
-    if (c.lesson_dates.length === 0) missing.push('<a href="#" data-sgoto="dates" style="color:var(--primary); border-bottom:1px dotted var(--primary);">lesson dates</a>');
-    wrap.innerHTML = `<div style="padding: 36px 20px; text-align: center; color: var(--text-muted);">Add ${missing.join(' and ')} to see the schedule.</div>`;
-    wrap.querySelectorAll('a[data-sgoto]').forEach(a => {
-      a.addEventListener("click", (e) => { e.preventDefault(); document.querySelector(`nav.tabs button[data-screen="${a.dataset.sgoto}"]`).click(); });
-    });
-    return;
-  }
-
-  const dates = sortedLessonDates();
-  const todayIso = todayISO();
-
-  // Build a lookup: events[atom.id][date] -> event
-  const eventsByAtom = {};
-  for (const atom of scheduledAtoms) {
-    const events = fullScheduleForAtom(atom);
-    const map = {};
-    for (const e of events) map[e.date] = e;
-    eventsByAtom[atom.id] = map;
-  }
-
-  // Build the table
-  const parts = [];
-  parts.push('<table class="schedule-grid"><thead><tr>');
-  parts.push('<th class="atom-col">Atom</th>');
-  for (const d of dates) {
-    const dt = fromISO(d);
-    const dayLabel = formatDateNice(d);
-    const dowLabel = dt.toLocaleDateString("en-GB", { weekday: "short" });
-    const todayClass = (d === todayIso) ? " today-col" : "";
-    parts.push(`<th class="date-col${todayClass}" title="${d}"><div style="font-size:10px;">${dowLabel}</div><div>${dayLabel}</div></th>`);
-  }
-  parts.push('</tr></thead><tbody>');
-
-  for (const atom of scheduledAtoms) {
-    const eMap = eventsByAtom[atom.id];
-    parts.push('<tr>');
-    parts.push(`<td class="atom-col" data-atom-id="${atom.id}" title="${escapeHtml(atom.name)}">${escapeHtml(atom.name)}</td>`);
-    for (const d of dates) {
-      const e = eMap[d];
-      if (!e) {
-        parts.push('<td></td>');
-        continue;
-      }
-      let label, klass, title;
-      if (e.type === 'I') {
-        label = 'I';
-        klass = 'cell-I';
-        title = `Initial instruction · ${d}`;
-      } else if (e.type === 'reteach') {
-        label = '↻';
-        klass = 'cell-reteach-event';
-        title = `${OUTCOME_LABELS.reteach} (sequence restarts) · ${d}`;
-      } else if (e.type === 'A') {
-        label = 'A';
-        klass = 'cell-skipped';
-        title = `${OUTCOME_LABELS.ad_hoc} · ${d} (does not affect the schedule)`;
-      } else if (e.status === 'superseded') {
-        label = 'R';
-        klass = 'cell-superseded';
-        title = `Earlier retrieval (${OUTCOME_LABELS[e.outcome] || e.outcome}) — before a later red · ${d}`;
-      } else if (e.status === 'recorded') {
-        label = 'R' + e.n;
-        klass = 'cell-' + e.outcome;
-        title = `Retrieval #${e.n} · ${OUTCOME_LABELS[e.outcome] || e.outcome} · ${d}`;
-      } else if (e.status === 'pending') {
-        label = 'R' + e.n;
-        klass = 'cell-pending';
-        title = `Retrieval #${e.n} · due next · ${d}`;
-      } else {
-        label = 'R' + e.n;
-        klass = 'cell-projected';
-        title = `Retrieval #${e.n} · projected (assumes green) · ${d}`;
-      }
-      parts.push(`<td class="${klass}" title="${title}">${label}</td>`);
-    }
-    parts.push('</tr>');
-  }
-  parts.push('</tbody></table>');
-  wrap.innerHTML = parts.join('');
-
-  // Click atom name -> open history modal
-  wrap.querySelectorAll('td.atom-col').forEach(td => {
-    td.addEventListener('click', () => openAtomHistory(td.dataset.atomId));
-  });
-}
-
 // ----- Atom history modal -----
 let historySortAtomId = null;
 let historySortNewestFirst = false;
@@ -4218,27 +3283,6 @@ document.querySelectorAll("#planned-record-modal [data-planned-outcome]").forEac
 });
 document.getElementById("planned-record-skip").addEventListener("click", () => handlePlannedOutcome("skip"));
 
-// Worksheet modal wiring
-document.getElementById("worksheet-close").addEventListener("click", closeWorksheetModal);
-document.getElementById("worksheet-modal").addEventListener("click", (e) => {
-  if (e.target.id === "worksheet-modal") closeWorksheetModal();
-});
-document.getElementById("golden-close").addEventListener("click", closeGoldenModal);
-document.getElementById("golden-modal").addEventListener("click", (e) => {
-  if (e.target.id === "golden-modal") closeGoldenModal();
-});
-document.getElementById("worksheet-submit").addEventListener("click", () => {
-  const email = document.getElementById("worksheet-email").value.trim();
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showAlert("Please enter a valid email address.");
-    return;
-  }
-  logWorksheetEmail(email);
-  document.getElementById("worksheet-thanks").style.display = "";
-  document.getElementById("worksheet-email").value = "";
-  renderSettings();
-});
-
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeRecordRetrieval();
@@ -4246,163 +3290,10 @@ document.addEventListener("keydown", (e) => {
     hidePlannedDoneToast();
     closeAtomHistory();
     closeAddAtoms();
-    closeWorksheetModal();
     closeSessionEditor();
     closeClassDetails();
-    if (document.getElementById("welcome-modal").classList.contains("open")) closeWelcome();
-    if (annotationActive) hideAnnotations();
   }
 });
-
-// ----- Render: Atoms screen -----
-function renderAtoms() {
-  const tbody = document.getElementById("atoms-tbody");
-  tbody.innerHTML = "";
-  const atoms = ctx().atoms;
-  if (atoms.length === 0) {
-    document.getElementById("atoms-count").textContent = "0";
-    tbody.innerHTML = `<tr class="empty"><td colspan="6">No atoms yet in this class. Add one above.</td></tr>`;
-    const seedLink = tbody.querySelector('a[data-goto-seed]');
-    if (seedLink) seedLink.addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="settings"]').click(); });
-    return;
-  }
-  // Precompute the lesson-date options for the Initial Instruction dropdown.
-  const sortedDates = sortedLessonDates();
-  const todayIso = todayISO();
-  const dateOptionsFor = (currentValue) => {
-    const opts = [`<option value="" ${!currentValue ? 'selected' : ''}>— not set —</option>`];
-    // If atom has a date that isn't in the lesson dates list (e.g. set via Edit), keep it visible
-    if (currentValue && !sortedDates.includes(currentValue)) {
-      opts.push(`<option value="${currentValue}" selected>${formatDateNice(currentValue)} (custom)</option>`);
-    }
-    for (const d of sortedDates) {
-      const todayTag = (d === todayIso) ? ' (today)' : '';
-      const selected = (currentValue === d) ? 'selected' : '';
-      opts.push(`<option value="${d}" ${selected}>${formatDateNice(d)}${todayTag}</option>`);
-    }
-    return opts.join("");
-  };
-
-  // Apply search filter if there's text in the search box.
-  const searchInput = document.getElementById("atom-search");
-  const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : "";
-  const visibleAtoms = searchTerm
-    ? atoms.filter(a => a.name.toLowerCase().includes(searchTerm))
-    : atoms;
-
-  // Update the count to reflect the filter, if any.
-  const countEl = document.getElementById("atoms-count");
-  if (countEl) {
-    countEl.textContent = searchTerm
-      ? `${visibleAtoms.length} of ${atoms.length}`
-      : String(atoms.length);
-  }
-
-  if (visibleAtoms.length === 0) {
-    tbody.innerHTML = `<tr class="empty"><td colspan="5">No atoms match &ldquo;${escapeHtml(searchTerm)}&rdquo;.</td></tr>`;
-    return;
-  }
-
-  // Sort: atoms without an initial instruction date float to the top so the next thing
-  // to teach is always at the top of the list (unscheduled in insertion order to preserve
-  // the curriculum sequence the teacher pasted). Scheduled atoms follow, sorted by
-  // initial_instruction_date (oldest first).
-  const sortedAtoms = visibleAtoms
-    .map((a, idx) => ({ a, idx }))
-    .sort((x, y) => {
-      const xHas = !!x.a.initial_instruction_date;
-      const yHas = !!y.a.initial_instruction_date;
-      if (xHas !== yHas) return xHas ? 1 : -1;
-      if (xHas && yHas) return x.a.initial_instruction_date.localeCompare(y.a.initial_instruction_date);
-      return x.idx - y.idx;
-    })
-    .map(x => x.a);
-
-  for (const atom of sortedAtoms) {
-    const retrievals = atomRetrievals(atom.id);
-    const next = nextSuggestedDate(atom);
-    const tr = document.createElement("tr");
-
-    // Initial Instruction: editable dropdown until the atom has ANY non-miss event recorded
-    // (includes pre-reteach attempts), then locked — changing it would orphan history.
-    const hasRecordedRetrievals = atomRetrievals(atom.id).some(r => r.outcome !== "miss" && r.outcome !== "skip");
-    const initSelect = hasRecordedRetrievals
-      ? `<div style="display:flex; align-items:center; gap:6px;">
-           <span style="padding: 5px 0; font-size: 13px; color: var(--text);">${formatDateNice(atom.initial_instruction_date)}</span>
-           <span style="font-size: 12px; color: var(--text-muted);" title="Locked">&#128274;</span>
-           <span class="help-icon" data-help="Locked because this atom already has recorded retrievals since this date. Changing it would orphan that history. To restart the atom's sequence from a new date, record a red retrieval (re-teach required).">?</span>
-         </div>`
-      : `<select class="inline-select ${!atom.initial_instruction_date ? 'not-set' : ''}" data-atom-id="${atom.id}" data-field="initial">${dateOptionsFor(atom.initial_instruction_date)}</select>`;
-
-    tr.innerHTML = `
-      <td>
-        <a href="#" class="atom-name-link" data-id="${atom.id}" style="color:var(--text); font-weight:600; text-decoration:none; border-bottom: 1px dotted var(--border-strong);">${escapeHtml(atom.name)}</a>
-      </td>
-      <td>${initSelect}</td>
-      <td>${retrievals.length}</td>
-      <td>${formatDateNice(next)}</td>
-      <td style="text-align:right;">
-        <button class="icon-btn" data-action="detail" data-id="${atom.id}" title="View / edit this atom's example prompt, response and concept notes">Detail</button>
-        <button class="icon-btn" data-action="history" data-id="${atom.id}">History</button>
-        <button class="icon-btn" data-action="rename" data-id="${atom.id}" title="Edit this atom's name">Rename</button>
-        <button class="icon-btn" data-action="edit" data-id="${atom.id}">Edit</button>
-        <button class="icon-btn" data-action="delete" data-id="${atom.id}">Delete</button>
-      </td>`;
-    tbody.appendChild(tr);
-  }
-  // Inline dropdown change handlers
-  tbody.querySelectorAll("select.inline-select").forEach(sel => {
-    sel.addEventListener("change", () => {
-      const id = sel.dataset.atomId;
-      const field = sel.dataset.field;
-      const atom = ctx().atoms.find(a => a.id === id);
-      if (!atom) return;
-      if (field === "type") {
-        atom.type = sel.value;
-      } else if (field === "initial") {
-        atom.initial_instruction_date = sel.value || null;
-      } else if (field === "retrieve") {
-        atom.retrieve = (sel.value === "N") ? "N" : "Y";
-      }
-      saveState();
-      renderAll();
-    });
-  });
-  tbody.querySelectorAll("button[data-action='delete']").forEach(b => {
-    b.addEventListener("click", async () => {
-      const id = b.dataset.id;
-      const c = ctx();
-      const atom = c.atoms.find(a => a.id === id);
-      if (!await showConfirm(`Delete "${atom.name}" and all its retrieval history?`, { okLabel: "Delete", danger: true })) return;
-      c.atoms = c.atoms.filter(a => a.id !== id);
-      c.retrievals = c.retrievals.filter(r => r.atom_id !== id);
-      prunePlanned(c);
-      saveState();
-      renderAll();
-    });
-  });
-  tbody.querySelectorAll("button[data-action='rename']").forEach(b => {
-    b.addEventListener("click", () => renameAtomDialog(b.dataset.id));
-  });
-  tbody.querySelectorAll("button[data-action='edit']").forEach(b => {
-    b.addEventListener("click", () => editAtomDialog(b.dataset.id));
-  });
-  tbody.querySelectorAll("button[data-action='history']").forEach(b => {
-    b.addEventListener("click", () => openAtomHistory(b.dataset.id));
-  });
-  tbody.querySelectorAll("button[data-action='detail']").forEach(b => {
-    b.addEventListener("click", () => openGoldenModal(b.dataset.id));
-  });
-  tbody.querySelectorAll("a.atom-name-link").forEach(a => {
-    a.addEventListener("click", (e) => { e.preventDefault(); openAtomHistory(a.dataset.id); });
-  });
-}
-
-function renderTypeBadge(type) {
-  const slug = type.toLowerCase();
-  const cls = VALID_TYPES.map(t => t.toLowerCase()).includes(slug) ? `type-${slug}` : "";
-  return `<span class="badge ${cls}">${escapeHtml(type)}</span>`;
-}
 
 async function renameAtomDialog(id, reopenHistory = false) {
   const atom = ctx().atoms.find(a => a.id === id);
@@ -4424,65 +3315,6 @@ async function renameAtomDialog(id, reopenHistory = false) {
   if (reopenHistory) openAtomHistory(atom.id);
   return true;
 }
-
-async function editAtomDialog(id) {
-  const atom = ctx().atoms.find(a => a.id === id);
-  if (!atom) return;
-  const hasRecordedRetrievals = atomRetrievals(atom.id).some(r => r.outcome !== "miss" && r.outcome !== "skip");
-  const name = await showPrompt("Atom name:", atom.name);
-  if (name === null) return;
-  const typeHelp = "Type — one of: " + VALID_TYPES.join(", ");
-  const type = await showPrompt(typeHelp, atom.type || "");
-  if (type === null) return;
-  let initial = null;
-  let updateInitial = false;
-  if (hasRecordedRetrievals) {
-    showAlert("Initial instruction date is locked because this atom has recorded retrievals. To restart the sequence from a new date, record a red retrieval (re-teach required).");
-  } else {
-    initial = await showPrompt("Initial instruction date (YYYY-MM-DD), or blank to clear:", atom.initial_instruction_date || "");
-    if (initial === null) return;
-    updateInitial = true;
-  }
-  atom.name = name.trim() || atom.name;
-  atom.type = (type || "").trim();
-  if (updateInitial) {
-    if (initial === "") atom.initial_instruction_date = null;
-    else if (/^\d{4}-\d{2}-\d{2}$/.test(initial.trim())) atom.initial_instruction_date = initial.trim();
-  }
-  saveState();
-  renderAll();
-}
-
-document.getElementById("atom-add").addEventListener("click", () => {
-  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
-  const name = document.getElementById("atom-name").value.trim();
-  const type = document.getElementById("atom-type").value;
-  const initial = document.getElementById("atom-initial").value;
-  if (!name) { showAlert("Atom name is required."); return; }
-  if (!initial) { showAlert("Initial instruction date is required."); return; }
-  ctx().atoms.push({
-    id: newId(), name, type, retrieve: "Y", initial_instruction_date: initial, notes: ""
-  });
-  saveState();
-  document.getElementById("atom-name").value = "";
-  document.getElementById("atom-type").value = "";
-  renderAll();
-});
-
-document.getElementById("atom-bulk-add").addEventListener("click", () => {
-  if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
-  const text = document.getElementById("atom-bulk").value;
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) { showAlert("Paste some atom names first."); return; }
-  for (const line of lines) {
-    ctx().atoms.push({
-      id: newId(), name: line, type: "", retrieve: "Y", initial_instruction_date: null, notes: ""
-    });
-  }
-  saveState();
-  document.getElementById("atom-bulk").value = "";
-  renderAll();
-});
 
 // ----- Render: Lesson Dates screen -----
 function renderDates() {
@@ -4671,267 +3503,6 @@ document.getElementById("date-generate").addEventListener("click", () => {
   showAlert(`Added ${added} new lesson date${added === 1 ? "" : "s"} to ${c.name}.`);
 });
 
-// ----- Atom detail popup (example prompt/response + concept notes, synced from the Curriculum Writer) -----
-function atomHasGolden(atom) {
-  return !!((atom.prompt && atom.prompt.trim()) || (atom.response && atom.response.trim()) || (atom.concept_notes && atom.concept_notes.trim()));
-}
-// One unified modal: the conceptual atomisation (example prompt/response/concept notes)
-// AND the teacher's running notes log, in a single view — so you can plan AND deliver
-// a topic from one place. Plus inline editing of the detail so atoms added inside the
-// LE (e.g. after a lesson) can have their detail written here, not only via the Writer.
-function openGoldenModal(atomId) {
-  const atom = ctx().atoms.find(a => a.id === atomId);
-  if (!atom) return;
-  renderGoldenModalView(atom);
-  document.getElementById("golden-modal").classList.add("open");
-}
-function renderGoldenModalView(atom) {
-  document.getElementById("golden-modal-sub").textContent = atom.name || "";
-  const block = (label, text, bg, border) => `
-    <div style="background:${bg}; border:1px solid ${border}; border-radius:12px; padding:11px 13px; margin-bottom:10px;">
-      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; color:var(--text-muted); margin-bottom:4px;">${label}</div>
-      <div style="white-space:pre-wrap; color:var(--text); line-height:1.5;">${text ? escapeHtml(text) : '<span style="color:var(--text-muted); font-style:italic;">— not set —</span>'}</div>
-    </div>`;
-
-  document.getElementById("golden-modal-body").innerHTML =
-    block("Example prompt", atom.prompt, "#f7f5ef", "var(--border)") +
-    block("Example response", atom.response, "#f7f5ef", "var(--border)") +
-    block("Concept notes", atom.concept_notes, "#fff7cc", "#e3c200") +
-    `<div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
-       <button class="btn ghost" id="golden-edit-btn" style="font-size:13px;">&#9998; Edit detail</button>
-     </div>`;
-  document.getElementById("golden-edit-btn").addEventListener("click", () => renderGoldenModalEdit(atom));
-}
-function renderGoldenModalEdit(atom) {
-  const field = (label, id, val, bg) => `
-    <div style="margin-bottom:10px;">
-      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; color:var(--text-muted); margin-bottom:4px;">${label}</div>
-      <textarea id="${id}" style="width:100%; min-height:70px; padding:8px 10px; border:1px solid var(--border-strong); border-radius:8px; font-family:inherit; font-size:13px; line-height:1.5; background:${bg}; color:var(--text); resize:vertical; box-sizing:border-box;">${val ? escapeHtml(val) : ""}</textarea>
-    </div>`;
-  document.getElementById("golden-modal-body").innerHTML =
-    `<div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Edit this atom&apos;s detail &mdash; its example prompt, response and concept notes. Use it to add detail for atoms you create here.</div>` +
-    field("Example prompt", "golden-edit-prompt", atom.prompt, "#fff") +
-    field("Example response", "golden-edit-response", atom.response, "#fff") +
-    field("Concept notes", "golden-edit-concept", atom.concept_notes, "#fff7cc") +
-    `<div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
-       <button class="btn" id="golden-save-btn" style="font-size:13px;">Save detail</button>
-       <button class="btn ghost" id="golden-canceledit-btn" style="font-size:13px;">Cancel</button>
-     </div>`;
-  document.getElementById("golden-save-btn").addEventListener("click", () => {
-    atom.prompt = document.getElementById("golden-edit-prompt").value;
-    atom.response = document.getElementById("golden-edit-response").value;
-    atom.concept_notes = document.getElementById("golden-edit-concept").value;
-    saveState();
-    renderGoldenModalView(atom);
-    renderAll(); // refresh row indicators so "Atom detail" now shows if detail was just added
-  });
-  document.getElementById("golden-canceledit-btn").addEventListener("click", () => renderGoldenModalView(atom));
-}
-function closeGoldenModal() {
-  document.getElementById("golden-modal").classList.remove("open");
-}
-
-// ----- Render: Today's Lesson -----
-function renderToday() {
-  const select = document.getElementById("today-date");
-  const dates = sortedLessonDates();
-  const previous = select.value;
-  select.innerHTML = "";
-  if (dates.length === 0) {
-    select.innerHTML = '<option>&mdash;</option>';
-  } else {
-    const today = todayISO();
-    let defaultDate = dates.find(d => d >= today) || dates[dates.length - 1];
-    for (const d of dates) {
-      const opt = document.createElement("option");
-      opt.value = d;
-      opt.textContent = formatDateNice(d);
-      select.appendChild(opt);
-    }
-    select.value = previous && dates.includes(previous) ? previous : defaultDate;
-  }
-  renderTodayContent();
-}
-
-document.getElementById("today-date").addEventListener("change", renderTodayContent);
-
-function renderTodayContent() {
-  const container = document.getElementById("today-content");
-  const date = document.getElementById("today-date").value;
-  container.innerHTML = "";
-  const c = ctx();
-  if (c.lesson_dates.length === 0) {
-    container.innerHTML = `<div class="empty-state"><h3>No lesson dates yet</h3><div>You need to tell the engine when <strong>${escapeHtml(c.name)}</strong> meets before it can schedule retrievals.</div><div class="cta-row"><a data-goto="dates">Set up lesson dates &rarr;</a></div></div>`;
-    container.querySelector('a[data-goto="dates"]').addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="dates"]').click(); });
-    return;
-  }
-  if (c.atoms.length === 0) {
-    container.innerHTML = `<div class="empty-state"><h3>No atoms yet</h3><div>Atoms are the smallest things you teach &mdash; add some to start tracking retrievals for <strong>${escapeHtml(c.name)}</strong>.</div><div class="cta-row"><a data-goto="coverage">Add atoms &rarr;</a></div></div>`;
-    container.querySelector('a[data-goto="coverage"]').addEventListener("click", (e) => { e.preventDefault(); document.querySelector('nav.tabs button[data-screen="coverage"]').click(); });
-    return;
-  }
-
-  const sched = todaysSchedule(date);
-
-  const overdueCount = sched.retrievals.filter(e => e.overdue).length;
-  if (overdueCount > 0) {
-    const help = document.createElement("div");
-    help.className = "helper";
-    help.innerHTML = `<strong>${overdueCount} overdue:</strong> these were scheduled for an earlier lesson and rolled forward to this one.`;
-    container.appendChild(help);
-  }
-
-  const totalItems = sched.retrievals.length + sched.initial_instructions.length;
-  if (totalItems === 0) {
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.innerHTML = `<h3>Nothing scheduled</h3><div>No atoms are due for instruction or retrieval on ${formatDateNice(date)}.</div>`;
-    container.appendChild(empty);
-    return;
-  }
-
-  appendSectionHeader(container, "Retrieval", sched.retrievals.length,
-    "Atoms to retrieve today. Ordered most vulnerable first (fewest retrievals so far).", "retrieval");
-  for (const entry of sched.retrievals) {
-    container.appendChild(renderRetrievalRow(entry, date));
-  }
-
-  appendSectionHeader(container, "Initial Instruction", sched.initial_instructions.length,
-    "Atoms first taught on this date.", "instruction");
-  for (const atom of sched.initial_instructions) {
-    container.appendChild(renderInstructionRow(atom, date));
-  }
-
-  // "Add next atom" — set the next not-yet-introduced atom's initial-instruction date to this lesson.
-  {
-    const nextAtom = ctx().atoms.find(a => !a.initial_instruction_date);
-    const addRow = document.createElement("div");
-    addRow.style.cssText = "margin-top: 12px;";
-    if (nextAtom) {
-      addRow.innerHTML = `<button class="btn ghost" id="add-next-instruction-btn" title="Introduce the next atom from your library on this date">+ Add next atom &mdash; ${escapeHtml(nextAtom.name)}</button>`;
-      container.appendChild(addRow);
-      document.getElementById("add-next-instruction-btn").addEventListener("click", () => {
-        nextAtom.initial_instruction_date = date;
-        saveState();
-        renderTodayContent();
-      });
-    } else if (ctx().atoms.length > 0) {
-      addRow.innerHTML = `<div style="font-size:12px; color:var(--text-muted); font-style:italic;">All atoms in this class already have an initial-instruction date.</div>`;
-      container.appendChild(addRow);
-    }
-  }
-}
-
-function appendSectionHeader(container, title, count, subtitle, sectionId) {
-  const wrap = document.createElement("div");
-  if (sectionId) wrap.dataset.section = sectionId;
-  wrap.style.cssText = "margin: 28px 0 10px; padding: 10px 0 8px 14px; border-left: 4px solid var(--primary); background: linear-gradient(90deg, var(--accent-bg), transparent 70%);";
-  wrap.innerHTML = `
-    <div style="display:flex; align-items:baseline; gap:10px;">
-      <h3 style="font-size:15px; font-weight:700; margin:0; color:var(--primary); text-transform:uppercase; letter-spacing:0.04em;">${escapeHtml(title)}</h3>
-      <span style="font-size:13px; color:var(--text-muted); font-weight:500;">${count}</span>
-    </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">${escapeHtml(subtitle)}</div>`;
-  container.appendChild(wrap);
-  if (count === 0) {
-    const none = document.createElement("div");
-    none.style.cssText = "padding: 14px 0 6px; color: var(--text-muted); font-size: 13px; font-style: italic;";
-    none.textContent = "Nothing in this section.";
-    container.appendChild(none);
-  }
-}
-
-function renderInstructionRow(atom, date) {
-  const row = document.createElement("div");
-  row.className = "retrieval-row";
-  const metaParts = [];
-  if (atom.retrieve === "N") metaParts.push('<span style="color:var(--text-muted); font-style:italic;" title="Long-term retrieval off: checked once after instruction, then not scheduled again">No long-term</span>');
-  // (Notes indicator removed 2026-06-08 — notes now live in the Atom detail modal, so the separate "N notes" button was redundant.)
-  // Golden-thread indicator (yellow) — show on initial-instruction atoms too when synced data exists.
-  if (atomHasGolden(atom)) {
-    metaParts.push(`<a class="golden-indicator" data-atom-id="${atom.id}" title="See this atom's example prompt, response & concept notes — example prompt/response + what to vary" style="color:#9a7b00; cursor:pointer; text-decoration:none; border-bottom:1px dotted #d4af00; font-weight:600;">&#10022; Atom detail</a>`);
-  }
-  const metaHtml = metaParts.length > 0
-    ? `<div class="meta">${metaParts.join(" &middot; ")}</div>`
-    : "";
-  row.innerHTML = `
-    <div class="retrieval-info">
-      <div class="name">${escapeHtml(atom.name)}</div>
-      ${metaHtml}
-    </div>
-    <div class="retrieval-actions">
-    </div>`;
-  row.querySelectorAll(".notes-indicator").forEach(a => {
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      openAtomHistory(a.dataset.atomId);
-    });
-  });
-  row.querySelectorAll(".golden-indicator").forEach(a => {
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      openGoldenModal(a.dataset.atomId);
-    });
-  });
-  return row;
-}
-
-function renderRetrievalRow(entry, date) {
-  const atom = entry.atom;
-  const row = document.createElement("div");
-  row.className = "retrieval-row";
-  if (entry.overdue) row.classList.add("overdue");
-
-  // Meta line: retrieval position, gap, long-term retrieval marker, notes indicator.
-  // Outcome is shown via selected button state — no redundant badge.
-  const metaParts = [];
-  if (entry.recorded_outcome === "ad_hoc") {
-    metaParts.push('<span style="color:var(--text-muted); font-weight:500;">Grey: unscheduled &mdash; schedule unchanged</span>');
-  } else {
-    metaParts.push(`${ordinal(entry.retrieval_number)} retrieval`);
-  }
-  if (entry.planned_gap !== undefined && !entry.is_first) {
-    metaParts.push(`${entry.planned_gap}d gap`);
-  }
-  if (atom.retrieve === "N") metaParts.push('<span style="color:var(--text-muted); font-style:italic;" title="Long-term retrieval off: checked once after instruction, then not scheduled again">No long-term</span>');
-  // (Notes indicator removed 2026-06-08 — notes now live in the Atom detail modal, so the separate "N notes" button was redundant.)
-  // Golden-thread indicator (yellow) — only if the atom carries golden-thread/parameter data synced from the Curriculum Writer.
-  if (atomHasGolden(atom)) {
-    metaParts.push(`<a class="golden-indicator" data-atom-id="${atom.id}" title="See this atom's example prompt, response & concept notes — what to vary today" style="color:#9a7b00; cursor:pointer; text-decoration:none; border-bottom:1px dotted #d4af00; font-weight:600;">&#10022; Atom detail</a>`);
-  }
-
-  const selected = entry.recorded_outcome;
-  row.innerHTML = `
-    <div class="retrieval-info">
-      <div class="name">${escapeHtml(atom.name)}</div>
-      <div class="meta">${metaParts.join(" &middot; ")}</div>
-    </div>
-    <div class="retrieval-actions">
-      ${["pass", "struggle", "reteach", "ad_hoc"].map(o => `<button type="button" class="outcome ${o === "ad_hoc" ? "ad-hoc" : o} ${selected === o ? "selected" : ""}" data-outcome="${o}" title="${OUTCOME_LABELS[o]}" aria-label="${OUTCOME_LABELS[o]}" aria-pressed="${selected === o}"></button>`).join("")}
-    </div>`;
-  row.querySelectorAll(".retrieval-actions button[data-outcome]").forEach(b => {
-    b.addEventListener("click", async () => {
-      const outcome = b.dataset.outcome;
-      if (selected === outcome) clearOutcome(atom.id, date);
-      else await recordOutcome(atom.id, date, outcome);
-      renderAll();
-    });
-  });
-  row.querySelectorAll(".notes-indicator").forEach(a => {
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      openAtomHistory(a.dataset.atomId);
-    });
-  });
-  row.querySelectorAll(".golden-indicator").forEach(a => {
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      openGoldenModal(a.dataset.atomId);
-    });
-  });
-  return row;
-}
-
 // ----- Render: Settings -----
 // Keep unsaved edits for the same class while the UI re-renders or the user
 // switches tabs. Changing class still loads that class's persisted settings.
@@ -4951,38 +3522,6 @@ function renderSettings() {
   }
   updateLadderDisplay();
   renderSnapshots();
-  renderInterestSignals();
-}
-
-function renderInterestSignals() {
-  const el = document.getElementById("interest-signals");
-  if (!el) return;
-  const sig = loadWorksheetSignals();
-  const clickCount = sig.clicks.length;
-  const emailCount = sig.emails.length;
-  if (clickCount === 0 && emailCount === 0) {
-    el.innerHTML = '<div style="font-size:13px; color:var(--text-muted); font-style:italic;">No clicks or email captures yet.</div>';
-    return;
-  }
-  let html = `<div style="display:flex; gap: 24px; margin-bottom: 12px;">
-    <div><div style="font-size: 26px; font-weight: 600; color: var(--primary);">${clickCount}</div><div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Worksheet clicks</div></div>
-    <div><div style="font-size: 26px; font-weight: 600; color: var(--primary);">${emailCount}</div><div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Email signups</div></div>
-  </div>`;
-  if (emailCount > 0) {
-    html += '<details><summary style="font-size: 13px;">Show emails</summary><div style="font-size: 13px; margin-top: 6px;">';
-    for (const e of sig.emails.slice().reverse()) {
-      html += `<div style="padding: 4px 0; border-bottom: 1px solid var(--border);">${escapeHtml(e.email)} <span style="color:var(--text-muted); font-size:11px;">&middot; ${escapeHtml(e.class_name)} &middot; ${formatSnapTime(e.ts)}</span></div>`;
-    }
-    html += '</div></details>';
-  }
-  if (clickCount > 0) {
-    html += '<details style="margin-top: 8px;"><summary style="font-size: 13px;">Show recent clicks</summary><div style="font-size: 13px; margin-top: 6px;">';
-    for (const c of sig.clicks.slice(-20).reverse()) {
-      html += `<div style="padding: 4px 0; border-bottom: 1px solid var(--border); color:var(--text-muted); font-size:12px;">${formatSnapTime(c.ts)} &middot; ${escapeHtml(c.class_name)} &middot; lesson ${c.lesson_date} &middot; ${c.atom_count} atoms</div>`;
-    }
-    html += '</div></details>';
-  }
-  el.innerHTML = html;
 }
 
 function renderSnapshots() {
@@ -5379,310 +3918,6 @@ document.getElementById("data-import").addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
-// ---- Non-destructive sync of atoms from the Curriculum Writer ----
-// Matches incoming atoms to existing ones by their Writer id (stable_id preferred,
-// else the positional unit_NNN id) stored on each atom as `writer_id`. Existing atoms
-// keep their LE id (so retrieval history, which keys off atom_id, is untouched),
-// their initial_instruction_date, retrieve flag and notes; only content fields update.
-// Unmatched atoms are appended. Nothing is deleted.
-document.getElementById("writer-sync-btn").addEventListener("click", () => {
-  document.getElementById("writer-sync").click();
-});
-document.getElementById("writer-sync").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    try {
-      const parsed = JSON.parse(reader.result);
-      const incoming = parsed.atoms;
-      if (!Array.isArray(incoming)) throw new Error("No 'atoms' array found — is this an atoms export file?");
-      const c = ctx();
-      if (!c || isTutee(c)) throw new Error("Select a class first: tutees have no atoms.");
-      const unitName = (parsed.unit && parsed.unit.name) ? parsed.unit.name : "this unit";
-      if (!await showConfirm(`Merge ${incoming.length} atom(s) from "${unitName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history — only their content is updated, and new atoms are added.`, { okLabel: "Merge" })) { e.target.value = ""; return; }
-      const byWriterId = new Map();
-      c.atoms.forEach(a => { if (a.writer_id) byWriterId.set(a.writer_id, a); });
-      let updated = 0, added = 0;
-      for (const inc of incoming) {
-        const wid = inc.stable_id || inc.id || null;
-        const content = {
-          name: inc.name || "",
-          type: inc.type || "",
-          retrieve: (inc.retrieve === "N") ? "N" : "Y",   // long-term-retrieval flag — Writer is source of truth
-          prompt: inc.prompt || "",
-          response: inc.response || "",
-          concept_notes: inc.notes || "",   // Writer's prose notes — SEPARATE from the teacher's running `notes` log
-          writer_unit: (parsed.unit && parsed.unit.id) || ""
-        };
-        const existing = wid ? byWriterId.get(wid) : null;
-        if (existing) {
-          // Update content ONLY — preserve id, initial_instruction_date, retrieve, notes, and (by extension) retrievals.
-          Object.assign(existing, content);
-          updated++;
-        } else {
-          c.atoms.push({
-            id: newId(),
-            writer_id: wid,
-            retrieve: "Y",
-            initial_instruction_date: null,
-            notes: "",
-            ...content
-          });
-          added++;
-        }
-      }
-      saveState();
-      renderAll();
-      showAlert(`Synced from "${unitName}".\n\nUpdated ${updated} existing atom(s) — retrieval history preserved.\nAdded ${added} new atom(s).\n\nSet initial instruction dates for the new atoms in the library below as you teach them.`);
-    } catch (err) {
-      showAlert("Couldn't sync that file: " + err.message);
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
-});
-
-// ---- Selective export: THIS class only (atoms + retrieval history) ----
-// Portable file. Importable with full history by "Import a class into this one",
-// and (content only) by the existing "Import atoms" merge, since it carries `atoms` + `unit`.
-document.getElementById("class-export").addEventListener("click", () => {
-  const c = ctx();
-  if (!c) { showAlert("No active class selected."); return; }
-  const payload = {
-    format: "le-class-export-v1",
-    exported_at: new Date().toISOString(),
-    unit: { name: c.name },              // lets the content-only "Import atoms" path show a name
-    class_name: c.name,
-    profile: c.profile || {},
-    lesson_dates: (c.lesson_dates || []).slice(),
-    atoms: (c.atoms || []).map(a => ({
-      id: a.id,
-      writer_id: a.writer_id || null,
-      name: a.name || "",
-      type: a.type || "",
-      retrieve: a.retrieve || "Y",
-      prompt: a.prompt || "",
-      response: a.response || "",
-      concept_notes: a.concept_notes || "",
-      initial_instruction_date: a.initial_instruction_date || null,
-      notes: a.notes || "",
-      status: atomStatus(a),
-      ...(atomStatus(a) === "archived" ? { archived_from_status: archivedFromStatus(a) } : {})
-    })),
-    retrievals: (c.retrievals || []).map(r => ({ atom_id: r.atom_id, lesson_date: r.lesson_date, outcome: r.outcome, ...(r.additional ? { additional: true } : {}) }))
-  };
-  const safeName = (c.name || "class").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "class";
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `le-class-${safeName}-${todayISO()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-// ---- Import a class export INTO the current class (non-destructive, carries history) ----
-// Match existing atoms by writer_id then id: existing keep their history (content refreshed);
-// NEW atoms are added WITH their initial-instruction date, retrieve flag, notes and retrieval
-// records. Never creates a class, never wipes. Going-forward scheduling uses YOUR lesson
-// calendar; the imported retrieval history is preserved for strength/history.
-document.getElementById("class-merge-btn").addEventListener("click", () => {
-  document.getElementById("class-merge").click();
-});
-document.getElementById("class-merge").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    try {
-      const parsed = JSON.parse(reader.result);
-      if (parsed.classes && Array.isArray(parsed.classes)) throw new Error("That looks like a full backup. Use \"Restore from backup\" instead.");
-      const incoming = parsed.atoms;
-      if (!Array.isArray(incoming)) throw new Error("No 'atoms' array found — is this a class export, selected-atoms, or Curriculum Writer file?");
-      const c = ctx();
-      if (!c || isTutee(c)) throw new Error("Select a class first: tutees have no atoms.");
-      const srcName = parsed.class_name || parsed.source_class || (parsed.unit && parsed.unit.name) || "another class";
-      // File types: le-class-export-v1 (atoms + history), le-atoms-export-v1 (content only),
-      // or a Curriculum Writer atoms file (content; concept notes live in `notes`, ids in `stable_id`).
-      const isLE = parsed.format === "le-class-export-v1" || parsed.format === "le-atoms-export-v1";
-      if (!await showConfirm(`Import "${srcName}" into the current class (${c.name})?\n\nNon-destructive: existing atoms keep their retrieval history (content is refreshed); new atoms are added. No classes are created, nothing is wiped.`, { okLabel: "Import" })) { e.target.value = ""; return; }
-      const byWriterId = new Map();
-      const byId = new Map();
-      c.atoms.forEach(a => { if (a.writer_id) byWriterId.set(a.writer_id, a); byId.set(a.id, a); });
-      const idMap = {};   // incoming atom id -> new local id (NEW atoms only)
-      let updated = 0, added = 0;
-      for (const inc of incoming) {
-        const wid = isLE ? (inc.writer_id || null) : (inc.stable_id || inc.id || null);
-        const content = {
-          name: inc.name || "",
-          type: inc.type || "",
-          prompt: inc.prompt || "",
-          response: inc.response || "",
-          concept_notes: isLE ? (inc.concept_notes || "") : (inc.notes || "")   // Writer files keep concept notes in `notes`
-        };
-        if (!isLE) content.writer_unit = (parsed.unit && parsed.unit.id) || "";
-        const existing = (wid && byWriterId.get(wid)) || byId.get(inc.id) || null;
-        if (existing) {
-          Object.assign(existing, content);   // refresh content; preserve id, history, dates, notes, retrieve
-          if (!ATOM_STATUSES.includes(existing.status)) existing.status = "scheduled";
-          updated++;
-        } else {
-          const newLocalId = newId();
-          idMap[inc.id] = newLocalId;
-          const atom = {
-            id: newLocalId,
-            writer_id: wid,
-            retrieve: (inc.retrieve === "N") ? "N" : "Y",
-            initial_instruction_date: inc.initial_instruction_date || null,
-            status: ATOM_STATUSES.includes(inc.status) ? inc.status : "scheduled",
-            notes: isLE ? (inc.notes || "") : "",   // Writer files: `notes` is concept notes (mapped above), not a teacher log
-            ...content
-          };
-          if (!ATOM_STATUSES.includes(atom.status)) atom.status = "scheduled";
-          if (atom.status === "archived" && inc.archived_from_status === "historic") atom.archived_from_status = "historic";
-          else if (atom.status === "archived") atom.archived_from_status = "scheduled";
-          c.atoms.push(atom);
-          if (wid) byWriterId.set(wid, atom);
-          byId.set(newLocalId, atom);
-          added++;
-        }
-      }
-      // Carry retrieval history for NEW atoms only (existing atoms keep their own — no dupes).
-      let historyRows = 0;
-      const incomingRetrievals = Array.isArray(parsed.retrievals) ? parsed.retrievals : [];
-      for (const r of incomingRetrievals) {
-        const localId = idMap[r.atom_id];
-        if (!localId) continue;
-        if (!c.retrievals.some(x => x.atom_id === localId && x.lesson_date === r.lesson_date)) {
-          c.retrievals.push({ atom_id: localId, lesson_date: r.lesson_date, outcome: r.outcome, ...(r.additional ? { additional: true } : {}) });
-          historyRows++;
-        }
-      }
-      saveState();
-      renderAll();
-      showAlert(`Imported "${srcName}" into "${c.name}".\n\nUpdated ${updated} existing atom(s) — history preserved.\nAdded ${added} new atom(s), carrying ${historyRows} retrieval record(s).`);
-    } catch (err) {
-      showAlert("Couldn't import that file: " + err.message);
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
-});
-
-// ---- Export SELECTED atoms (content only — for sharing curriculum with a team) ----
-// Produces an le-atoms-export-v1 file. No retrieval history; importable by "Import into this class".
-let _atomsExportIds = new Set();
-function renderAtomsExportList() {
-  const c = ctx();
-  const list = document.getElementById("atoms-export-list");
-  list.innerHTML = "";
-  (c.atoms || []).forEach(a => {
-    const row = document.createElement("label");
-    row.style.cssText = "display:flex; gap:8px; align-items:flex-start; padding:6px 4px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);";
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = _atomsExportIds.has(a.id);
-    cb.style.marginTop = "2px";
-    cb.addEventListener("change", () => {
-      if (cb.checked) _atomsExportIds.add(a.id); else _atomsExportIds.delete(a.id);
-      updateAtomsExportCount();
-    });
-    const txt = document.createElement("span");
-    txt.innerHTML = `<strong>${escapeHtml(a.name || "(unnamed)")}</strong>${a.type ? ` <span style="color:var(--text-muted)">· ${escapeHtml(a.type)}</span>` : ""}`;
-    row.appendChild(cb);
-    row.appendChild(txt);
-    list.appendChild(row);
-  });
-  updateAtomsExportCount();
-}
-function updateAtomsExportCount() {
-  const el = document.getElementById("atoms-export-count");
-  if (el) el.textContent = `${_atomsExportIds.size} selected`;
-}
-function closeAtomsExportModal() { document.getElementById("atoms-export-modal").classList.remove("open"); }
-function openAtomPicker(mode) {
-  const c = ctx();
-  if (!c) { showAlert("No active class selected."); return; }
-  if (!c.atoms || c.atoms.length === 0) { showAlert("This class has no atoms yet."); return; }
-  _atomsExportIds = new Set(c.atoms.map(a => a.id));   // default: all selected
-  const del = mode === "delete";
-  document.getElementById("atoms-picker-title").textContent = del ? "Delete atoms" : "Export atoms";
-  document.getElementById("atoms-picker-sub").textContent = del
-    ? "Tick the atoms to delete. A snapshot is saved first, so you can roll it back."
-    : "Tick the atoms and choose what to include, then export.";
-  document.getElementById("atoms-export-includes").style.display = del ? "none" : "";
-  document.getElementById("atoms-export-go").style.display = del ? "none" : "";
-  document.getElementById("atoms-delete-go").style.display = del ? "" : "none";
-  renderAtomsExportList();
-  document.getElementById("atoms-export-modal").classList.add("open");
-}
-document.getElementById("atoms-export-btn").addEventListener("click", () => openAtomPicker("export"));
-document.getElementById("atoms-delete-btn").addEventListener("click", () => openAtomPicker("delete"));
-document.getElementById("atoms-export-close").addEventListener("click", closeAtomsExportModal);
-document.getElementById("atoms-export-cancel").addEventListener("click", closeAtomsExportModal);
-document.getElementById("atoms-export-modal").addEventListener("click", (e) => { if (e.target.id === "atoms-export-modal") closeAtomsExportModal(); });
-document.getElementById("atoms-export-all").addEventListener("click", () => { _atomsExportIds = new Set((ctx().atoms || []).map(a => a.id)); renderAtomsExportList(); });
-document.getElementById("atoms-export-none").addEventListener("click", () => { _atomsExportIds = new Set(); renderAtomsExportList(); });
-document.getElementById("atoms-export-go").addEventListener("click", () => {
-  const c = ctx();
-  if (!c) return;
-  const chosen = (c.atoms || []).filter(a => _atomsExportIds.has(a.id));
-  if (chosen.length === 0) { showAlert("Select at least one atom to export."); return; }
-  const incConcept = document.getElementById("exp-inc-concept").checked;
-  const incExamples = document.getElementById("exp-inc-examples").checked;
-  const incHistory = document.getElementById("exp-inc-history").checked;
-  const incInstruction = document.getElementById("exp-inc-instruction").checked;
-  const incNotes = document.getElementById("exp-inc-notes").checked;
-  const atoms = chosen.map(a => {
-    const o = { id: a.id, writer_id: a.writer_id || null, name: a.name || "", type: a.type || "", retrieve: a.retrieve || "Y", status: atomStatus(a) };
-    if (o.status === "archived") o.archived_from_status = archivedFromStatus(a);
-    if (incExamples) { o.prompt = a.prompt || ""; o.response = a.response || ""; }
-    if (incConcept) o.concept_notes = a.concept_notes || "";
-    if (incInstruction) o.initial_instruction_date = a.initial_instruction_date || null;
-    if (incNotes) o.notes = a.notes || "";
-    return o;
-  });
-  const payload = {
-    format: incHistory ? "le-class-export-v1" : "le-atoms-export-v1",
-    exported_at: new Date().toISOString(),
-    unit: { name: c.name },
-    source_class: c.name,
-    class_name: c.name,
-    atoms
-  };
-  if (incHistory) {
-    const ids = new Set(chosen.map(a => a.id));
-    payload.retrievals = (c.retrievals || []).filter(r => ids.has(r.atom_id)).map(r => ({ atom_id: r.atom_id, lesson_date: r.lesson_date, outcome: r.outcome }));
-  }
-  const safeName = (c.name || "atoms").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "atoms";
-  const kind = incHistory ? "class" : "atoms";
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `le-${kind}-${safeName}-${chosen.length}-${todayISO()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  closeAtomsExportModal();
-});
-
-// ---- Delete SELECTED atoms (from the same picker) — snapshot first, reversible ----
-document.getElementById("atoms-delete-go").addEventListener("click", async () => {
-  const c = ctx();
-  if (!c) return;
-  const ids = new Set([..._atomsExportIds].filter(id => (c.atoms || []).some(a => a.id === id)));
-  if (ids.size === 0) { showAlert("Select at least one atom to delete."); return; }
-  if (!await showConfirm(`Delete ${ids.size} selected atom(s) from "${c.name}"?\n\nTheir retrieval history is removed too. A snapshot is saved first, so you can roll it back from "Recent snapshots".`, { okLabel: "Delete", danger: true })) return;
-  snapshotState();
-  c.atoms = (c.atoms || []).filter(a => !ids.has(a.id));
-  c.retrievals = (c.retrievals || []).filter(r => !ids.has(r.atom_id));
-  prunePlanned(c);
-  saveState();
-  renderAll();
-  closeAtomsExportModal();
-});
-
 document.getElementById("data-clear").addEventListener("click", async () => {
   const typed = await showPrompt('This will permanently delete ALL classes, atoms, lesson dates and retrievals.\n\nYour last 20 snapshots will still be available in "Recent snapshots" if you change your mind.\n\nType DELETE (in capitals) to confirm:', "", { okLabel: "Delete everything", danger: true });
   if (typed === null) return;
@@ -5696,9 +3931,8 @@ document.getElementById("data-clear").addEventListener("click", async () => {
 });
 
 // Backfill: for the current class, reconstruct the genuine historical schedule
-// from each atom's original instruction date, ignoring any retrospective bootstrap,
-// and mark each past unactioned scheduled retrieval as Pass. This turns an inferred
-// onboarding baseline into real historical retrieval records without inventing dates.
+// from each atom's original instruction date and mark each past unactioned scheduled
+// retrieval as Pass, placing records only on existing lesson dates.
 // Existing recorded outcomes are never overwritten. A snapshot is auto-saved first.
 document.getElementById("data-backfill").addEventListener("click", async () => {
   if (isTutee()) return; // school data only; a Tutee has no atoms, dates or retrievals
@@ -5725,7 +3959,7 @@ document.getElementById("data-backfill").addEventListener("click", async () => {
     }
     let safety = 500; // hard cap to prevent any pathological loop
     while (safety-- > 0) {
-      const next = nextSuggestedDate(atom, { ignoreBootstrap: true });
+      const next = nextSuggestedDate(atom);
       // Only lessons strictly before today: today's lesson may not have happened yet.
       if (!next || next >= todayIso) break;
       // Defensive: don't overwrite anything that's already there.
@@ -5740,8 +3974,6 @@ document.getElementById("data-backfill").addEventListener("click", async () => {
         break;
       }
       c.retrievals.push({ atom_id: atom.id, lesson_date: next, outcome: "pass" });
-      // Once genuine history exists, any inferred baseline is no longer needed.
-      atom.retrospective_bootstrap = null;
       filled++;
     }
   }
@@ -5754,68 +3986,6 @@ document.getElementById("data-backfill").addEventListener("click", async () => {
   showAlert(`Backfilled ${filled} retrieval${filled === 1 ? "" : "s"} for "${c.name}".${skippedMessage} A snapshot of the previous state was saved.${collisionMessage}`);
 });
 
-document.getElementById("data-seed").addEventListener("click", async () => {
-  if (state.classes.some(c => (c.atoms || []).length > 0 || (c.sessions || []).length > 0) && !await showConfirm("Replace current data with sample data?", { okLabel: "Replace data", danger: true })) return;
-  state = makeSampleState();
-  saveState();
-  renderAll();
-  document.querySelector('nav.tabs button[data-screen="today"]').click();
-});
-
-function makeSampleState() {
-  const today = new Date();
-  function lessonDates(dows) {
-    const out = [];
-    const start = new Date(today); start.setDate(start.getDate() - 14);
-    const end = new Date(today); end.setDate(end.getDate() + 42);
-    let cur = new Date(start);
-    while (cur <= end) {
-      if (dows.includes(cur.getDay())) out.push(toISO(cur));
-      cur.setDate(cur.getDate() + 1);
-    }
-    return out;
-  }
-  const c1 = defaultClass("8X3 Maths");
-  c1.lesson_dates = lessonDates([1, 3, 5]); // Mon/Wed/Fri
-  const todayIsoSample = toISO(today);
-  // Anchor sample data to "today" so it always opens cleanly: today populates Initial
-  // Instruction; the previous lesson populates Retrieval as 1st retrievals.
-  const todayLesson = c1.lesson_dates.find(d => d >= todayIsoSample) || c1.lesson_dates[c1.lesson_dates.length - 1];
-  const todayIdx = c1.lesson_dates.indexOf(todayLesson);
-  const prevLesson = todayIdx > 0 ? c1.lesson_dates[todayIdx - 1] : todayLesson;
-  // An "older" atom seeded a few lessons back so the Schedule tab has some history to look at.
-  const olderLesson = todayIdx >= 5 ? c1.lesson_dates[todayIdx - 5] : c1.lesson_dates[0];
-
-  c1.atoms = [
-    // Two atoms introduced today — populate Initial Instruction.
-    { id: newId(), name: "Compare two ratios to determine which gives the larger share", type: "", retrieve: "Y", initial_instruction_date: todayLesson, notes: "" },
-    { id: newId(), name: "Convert a ratio a:b into the fraction a/(a+b)", type: "", retrieve: "Y", initial_instruction_date: todayLesson, notes: "" },
-    // Two atoms introduced last lesson — populate Retrieval (1st retrievals due today).
-    { id: newId(), name: "Identify a ratio expressed in word form", type: "", retrieve: "Y", initial_instruction_date: prevLesson, notes: "" },
-    { id: newId(), name: "Find the total parts of a ratio", type: "", retrieve: "Y", initial_instruction_date: prevLesson, notes: "" },
-    // Older atom with passes recorded — shows in Schedule but next retrieval is future, so Today's Lesson stays clean.
-    // Marked as long-term retrieval off (No): checked once, then not scheduled again.
-    { id: newId(), name: "Equivalent ratios share the same simplest form", type: "", retrieve: "N", initial_instruction_date: olderLesson, notes: "" }
-  ];
-  c1.retrievals = [];
-  if (todayIdx >= 5) {
-    const olderId = c1.atoms[4].id;
-    c1.retrievals.push({ atom_id: olderId, lesson_date: c1.lesson_dates[todayIdx - 4], outcome: "pass" });
-    c1.retrievals.push({ atom_id: olderId, lesson_date: c1.lesson_dates[todayIdx - 2], outcome: "pass" });
-  }
-
-  // Second class — minimal, just to demo multi-class.
-  const c2 = defaultClass("9Y1 Maths");
-  c2.lesson_dates = lessonDates([2, 4]); // Tue/Thu
-  const c2Today = c2.lesson_dates.find(d => d >= todayIsoSample) || c2.lesson_dates[c2.lesson_dates.length - 1];
-  c2.atoms = [
-    { id: newId(), name: "Pythagoras' theorem: a^2 + b^2 = c^2", type: "", retrieve: "Y", initial_instruction_date: c2Today, status: "scheduled", notes: "" },
-    { id: newId(), name: "Identify the hypotenuse in a right-angled triangle", type: "", retrieve: "Y", initial_instruction_date: c2Today, status: "scheduled", notes: "" }
-  ];
-
-  return { classes: [c1, c2], active_class_id: c1.id };
-}
-
 function escapeHtml(s) {
   if (s == null) return "";
   return String(s).replace(/[&<>"']/g, c => ({
@@ -5823,28 +3993,16 @@ function escapeHtml(s) {
   }[c]));
 }
 
-function ordinal(n) {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-}
-
 function renderAll() {
   renderClassSwitcher();
-  // A Tutee never enters the school views (Atoms, lesson dates, Today, Schedule).
+  // A Tutee never enters the school views (Atoms, lesson dates).
   document.body.classList.toggle("tutee-mode", isTutee());
   if (isTutee()) {
     renderSessions();
   } else {
-    // The old Atoms library, Today's Lesson and Schedule have no visible tab, so they are drawn
-    // only while open. Opening one re-renders everything, so it is never stale when shown.
-    const open = id => document.getElementById(id).classList.contains("active");
-    if (open("screen-atoms")) renderAtoms();
     renderDates();
     renderHolidays();
-    if (open("screen-today")) renderToday();
     renderCoverage();
-    if (open("screen-schedule")) renderSchedule();
   }
   renderNotes();
   renderClasses();
@@ -5852,7 +4010,6 @@ function renderAll() {
 }
 
 // ----- Init defaults for date pickers -----
-document.getElementById("atom-initial").value = todayISO();
 document.getElementById("date-single").value = todayISO();
 
 document.getElementById("coverage-filter").addEventListener("change", renderCoverage);
@@ -5881,8 +4038,6 @@ document.getElementById("class-notes").addEventListener("blur", () => {
   saveState();
 });
 
-// Atom library search — re-render atoms on every keystroke.
-document.getElementById("atom-search").addEventListener("input", renderAtoms);
 document.getElementById("date-from").value = todayISO();
 document.getElementById("weekA-start").value = todayISO();
 {
@@ -5899,175 +4054,6 @@ document.addEventListener("visibilitychange", () => {
     renderAll();
   }
 });
-
-// ----- Interest signals panel: hidden by default, shown only with ?signals=1
-// or once localStorage key 'le-show-signals' is set (visiting once sticks). -----
-(function setupSignalsPanelVisibility() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("signals") === "1") {
-    localStorage.setItem("le-show-signals", "1");
-  } else if (params.get("signals") === "0") {
-    localStorage.removeItem("le-show-signals");
-  }
-  if (localStorage.getItem("le-show-signals") === "1") {
-    const card = document.getElementById("interest-signals-card");
-    if (card) card.style.display = "";
-  }
-})();
-
-// ----- Annotation overlay: inline boxes that explain the current view -----
-const annotationDefs = {
-  today: [
-    {
-      anchor: () => document.querySelector('#today-content [data-section="retrieval"]'),
-      placement: "before",
-      text: "These are atoms due for retrieval today. Most vulnerable first — the ones the class has done least."
-    },
-    {
-      anchor: () => document.querySelector('#today-content .retrieval-row .retrieval-actions'),
-      placement: "after-parent",
-      text: "Tap a colour on each atom. Green (successful) stretches the next interval; amber (not secure) holds it; red (re-teach required) restarts the sequence; grey records an unscheduled retrieval that leaves the schedule unchanged. If a retrieval doesn't happen, simply leave it unrecorded."
-    },
-    {
-      anchor: () => document.querySelector('#today-content [data-section="instruction"]'),
-      placement: "before",
-      text: "Atoms first taught today. After this lesson they'll join the retrieval schedule."
-    },
-    {
-      anchor: () => document.querySelector('#today-content'),
-      placement: "append",
-      text: "Try the Schedule tab next — click it at the top to see every atom across every lesson date."
-    }
-  ],
-  schedule: [
-    {
-      anchor: () => document.querySelector('#screen-schedule .schedule-wrap'),
-      placement: "before",
-      text: "Every atom across every lesson date. Coloured cells are recorded outcomes; muted ones are projected forward assuming each retrieval is green. Click any atom name on the left to see its full history."
-    },
-    {
-      anchor: () => document.querySelector('#screen-schedule .schedule-legend'),
-      placement: "after",
-      text: "Quick key for what each cell means."
-    }
-  ],
-  atoms: [
-    {
-      anchor: () => document.getElementById("atom-bulk")?.closest(".card"),
-      placement: "before",
-      text: "Paste atom names in bulk here, one per line. Set the initial instruction date per atom in the library below as you teach them. There's also an 'Add a single atom' panel underneath if you want all fields up front."
-    },
-    {
-      anchor: () => document.getElementById("atoms-tbody")?.closest(".card"),
-      placement: "before",
-      text: "Your atom library. Each row has inline dropdowns for the Long-term flag and Initial instruction date. Once an atom has retrievals recorded, the date locks to protect the schedule."
-    }
-  ],
-  dates: [
-    {
-      anchor: () => document.getElementById("dates-list")?.closest(".card") || document.querySelector("#screen-dates .card"),
-      placement: "before",
-      text: "Tell the engine when this class meets. Add dates one at a time or use the recurring pattern generator — weekly or fortnightly. Retrievals snap to these dates."
-    }
-  ],
-  classes: [
-    {
-      anchor: () => document.querySelector("#screen-classes .card"),
-      placement: "before",
-      text: "Each class is fully independent — its own atoms, lesson dates, retrievals and spacing settings."
-    }
-  ],
-  settings: [
-    {
-      anchor: () => document.getElementById("set-seed")?.closest(".card"),
-      placement: "before",
-      text: "Per-class spacing settings. Seed interval is the target gap for the first retrieval; multiplier stretches each subsequent successful gap; the cap is the longest a gap can ever grow."
-    },
-    {
-      anchor: () => document.getElementById("data-export")?.closest(".card"),
-      placement: "before",
-      text: "Save & restore. Back up to a file, restore from a snapshot, or load sample data. Snapshots auto-save on every change so you can roll back if something goes wrong."
-    }
-  ]
-};
-
-let annotationActive = false;
-
-function showAnnotations() {
-  annotationActive = true;
-  renderAnnotations();
-}
-
-function hideAnnotations() {
-  annotationActive = false;
-  document.querySelectorAll(".annotation-box, .annotation-done").forEach(el => el.remove());
-}
-
-function renderAnnotations() {
-  // Always clean up first so re-renders don't stack
-  document.querySelectorAll(".annotation-box, .annotation-done").forEach(el => el.remove());
-  if (!annotationActive) return;
-
-  const activeBtn = document.querySelector("nav.tabs button.active");
-  if (!activeBtn) return;
-  const screen = activeBtn.dataset.screen;
-  const defs = annotationDefs[screen];
-  if (!defs || defs.length === 0) return;
-
-  defs.forEach((def, i) => {
-    const anchor = def.anchor();
-    if (!anchor) return;
-    const box = document.createElement("div");
-    box.className = "annotation-box";
-    box.innerHTML = `<div class="number">${i + 1}</div><div class="text">${escapeHtml(def.text)}</div>`;
-    if (def.placement === "before") {
-      anchor.parentNode.insertBefore(box, anchor);
-    } else if (def.placement === "after") {
-      anchor.parentNode.insertBefore(box, anchor.nextSibling);
-    } else if (def.placement === "after-parent") {
-      const parent = anchor.parentNode;
-      parent.parentNode.insertBefore(box, parent.nextSibling);
-    } else if (def.placement === "append") {
-      anchor.appendChild(box);
-    }
-  });
-
-  // Done button (fixed in viewport corner)
-  const done = document.createElement("button");
-  done.className = "annotation-done";
-  done.textContent = "Got it";
-  done.addEventListener("click", hideAnnotations);
-  document.body.appendChild(done);
-}
-
-// ----- Welcome modal: show once on first run -----
-const WELCOME_SEEN_KEY = "learning-engine-welcome-seen-v2";
-function closeWelcome() {
-  document.getElementById("welcome-modal").classList.remove("open");
-  localStorage.setItem(WELCOME_SEEN_KEY, "1");
-}
-function maybeShowWelcome() {
-  // Onboarding is disabled in the final UI.
-  return;
-}
-function showWelcome() {
-  document.getElementById("welcome-modal").classList.add("open");
-}
-document.getElementById("welcome-close").addEventListener("click", closeWelcome);
-document.getElementById("welcome-start").addEventListener("click", closeWelcome);
-document.getElementById("welcome-sample").addEventListener("click", () => {
-  closeWelcome();
-  // Load sample data for demonstration.
-  document.getElementById("data-seed").click();
-  setTimeout(() => {
-    document.querySelector('nav.tabs button[data-screen="today"]').click();
-    setTimeout(showAnnotations, 100);
-  }, 100);
-});
-document.getElementById("welcome-modal").addEventListener("click", (e) => {
-  if (e.target.id === "welcome-modal") closeWelcome();
-});
-maybeShowWelcome();
 
 </script>
 </body>
